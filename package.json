@@ -11,6 +11,14 @@
   ],
   "author": "xltorg",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/xiaoLangtou/xlt-token.git"
+  },
+  "bugs": {
+    "url": "https://github.com/xiaoLangtou/xlt-token/issues"
+  },
+  "homepage": "https://github.com/xiaoLangtou/xlt-token#readme",
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.cts",
