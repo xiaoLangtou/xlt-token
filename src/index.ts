@@ -17,6 +17,8 @@ export {
 // 存储接口与实现
 export { XltTokenStore } from './store/xlt-token-store.interface';
 export { MemoryStore } from './store/memory-store';
+export { RedisStore,XLT_REDIS_CLIENT } from './store/redis-store';
+
 
 // Token 策略接口与实现
 export { TokenStrategy } from './token/token-strategy.interface';
@@ -36,3 +38,5 @@ export { NotLoginException } from './exceptions/not-login.exception';
 
 // 常量
 export { NotLoginType } from './const/index';
+
+
