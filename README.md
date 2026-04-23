@@ -4,6 +4,9 @@
 
 [![npm version](https://badge.fury.io/js/xlt-token.svg)](https://www.npmjs.com/package/xlt-token)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Docs](https://img.shields.io/badge/docs-online-16a34a?logo=vitepress&logoColor=white)](https://xiaolangtou.github.io/xlt-token/)
+
+📖 **在线文档**: https://xiaolangtou.github.io/xlt-token/
 
 xlt-token 是一个为 NestJS 设计的轻量级 token 认证库，灵感来源于 Java 的 Sa-Token。它提供了灵活的 token 管理、会话控制、多端登录支持，以及可插拔的存储策略。
 
@@ -421,5 +424,6 @@ MIT
 
 ## 相关链接
 
+- [在线文档](https://xiaolangtou.github.io/xlt-token/) - 完整使用指南与 API 参考
 - [Sa-Token](https://sa-token.cc/) - 灵感来源
 - [NestJS](https://nestjs.com/) - NestJS 官方文档
