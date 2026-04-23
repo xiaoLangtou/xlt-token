@@ -15,14 +15,14 @@ export default defineConfig({
     ['meta', { name: 'og:type', content: 'website' }],
     ['meta', { name: 'og:title', content: 'xlt-token' }],
     ['meta', { name: 'og:description', content: 'NestJS Token 鉴权库' }],
-    // Geist 字体（Google Fonts）
-    ['link', { rel: 'preconnect', href: 'https://fonts.googleapis.com' }],
-    ['link', { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' }],
+    // Geist 字体（fonts.loli.net 国内镜像，替代 Google Fonts）
+    ['link', { rel: 'preconnect', href: 'https://fonts.loli.net' }],
+    ['link', { rel: 'preconnect', href: 'https://gstatic.loli.net', crossorigin: '' }],
     [
       'link',
       {
         rel: 'stylesheet',
-        href: 'https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap',
+        href: 'https://fonts.loli.net/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap',
       },
     ],
   ],
