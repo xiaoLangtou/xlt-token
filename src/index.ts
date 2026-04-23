@@ -32,6 +32,7 @@ export { TokenValue } from './decorators/token-value.decorator';
 
 // 守卫
 export { XltTokenGuard } from './guards/xlt-token.guard';
+export { XltAbstractLoginGuard } from './guards/xlt-abstract-login.guard';
 
 // 异常
 export { NotLoginException } from './exceptions/not-login.exception';

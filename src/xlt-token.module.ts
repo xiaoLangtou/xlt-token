@@ -18,6 +18,7 @@ export interface XltTokenModuleOptions {
   store?: { useClass: new (...args: any[]) => XltTokenStore } | { useValue: XltTokenStore };
   strategy?: { useClass: new (...args: any[]) => TokenStrategy };
   isGlobal?: boolean;
+  providers?: Provider[];
 }
 
 export interface XltTokenModuleAsyncOptions extends Pick<ModuleMetadata, 'imports'> {
@@ -26,12 +27,13 @@ export interface XltTokenModuleAsyncOptions extends Pick<ModuleMetadata, 'import
   store?: { useClass: new (...args: any[]) => XltTokenStore } | { useValue: XltTokenStore };
   strategy?: { useClass: new (...args: any[]) => TokenStrategy };
   isGlobal?: boolean;
+  providers?: Provider[];
 }
 
 @Module({})
 export class XltTokenModule {
   static forRoot(options: XltTokenModuleOptions = {}) {
-    const { config: userConfig, store, strategy, isGlobal = false } = options;
+    const { config: userConfig, store, strategy, isGlobal = false, providers = [] } = options;
 
     const configProvider: Provider = {
       provide: XLT_TOKEN_CONFIG,
@@ -59,7 +61,7 @@ export class XltTokenModule {
 
     const moduleDefinition = {
       module: XltTokenModule,
-      providers: [configProvider, storeProvider, strategyProvider, StpLogic, initProvider],
+      providers: [configProvider, storeProvider, strategyProvider, StpLogic, initProvider, ...providers],
       exports: [XLT_TOKEN_CONFIG, XLT_TOKEN_STORE, XLT_TOKEN_STRATEGY, StpLogic],
       global: isGlobal,
     };
@@ -68,7 +70,7 @@ export class XltTokenModule {
   }
 
   static forRootAsync(options: XltTokenModuleAsyncOptions) {
-    const { useFactory, inject = [], imports = [], store, strategy, isGlobal = false } = options;
+    const { useFactory, inject = [], imports = [], store, strategy, isGlobal = false, providers = [] } = options;
 
     const asyncConfigProvider: Provider = {
       provide: XLT_TOKEN_CONFIG,
@@ -102,7 +104,7 @@ export class XltTokenModule {
     const moduleDefinition = {
       module: XltTokenModule,
       imports,
-      providers: [asyncConfigProvider, storeProvider, strategyProvider, StpLogic, initProvider],
+      providers: [asyncConfigProvider, storeProvider, strategyProvider, StpLogic, initProvider, ...providers],
       exports: [XLT_TOKEN_CONFIG, XLT_TOKEN_STORE, XLT_TOKEN_STRATEGY, StpLogic],
       global: isGlobal,
     };

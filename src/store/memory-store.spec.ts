@@ -1,4 +1,4 @@
-import { MemoryStore } from '../../../Xlt-Admin-Backend/src/config/xlt-token/store/memory-store';
+import { MemoryStore } from './memory-store';
 
 describe('MemoryStore', () => {
   let store: MemoryStore;

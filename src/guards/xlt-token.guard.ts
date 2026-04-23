@@ -1,8 +1,8 @@
 // 全局守卫
 
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import { CanActivate, ExecutionContext, Inject, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { XltTokenConfig } from '../core/xlt-token-config';
+import { XLT_TOKEN_CONFIG, XltTokenConfig } from '../core/xlt-token-config';
 import { StpLogic } from '../auth/stp-logic';
 import { XLT_CHECK_LOGIN_KEY, XLT_IGNORE_KEY } from '../const';
 
@@ -10,7 +10,7 @@ import { XLT_CHECK_LOGIN_KEY, XLT_IGNORE_KEY } from '../const';
 export class XltTokenGuard implements CanActivate {
   constructor(
     private readonly reflector: Reflector,
-    private readonly config: XltTokenConfig,
+    @Inject(XLT_TOKEN_CONFIG) private readonly config: XltTokenConfig,
     private readonly stpLogic: StpLogic,
   ) {}
 
