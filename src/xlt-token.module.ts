@@ -12,6 +12,8 @@ import { UuidStrategy } from './token/uuid-strategy';
 import { TokenStrategy } from './token/token-strategy.interface';
 import { StpLogic } from './auth/stp-logic';
 import { setStpLogic } from './auth/stp-util';
+import { StpInterface, XLT_STP_INTERFACE } from './perm/stp-interface';
+import { StpPermLogic } from './perm/stp-perm-logic';
 
 export interface XltTokenModuleOptions {
   config?: Partial<XltTokenConfig>;
@@ -19,6 +21,7 @@ export interface XltTokenModuleOptions {
   strategy?: { useClass: new (...args: any[]) => TokenStrategy };
   isGlobal?: boolean;
   providers?: Provider[];
+  stpInterface?: new (...args: any[]) => StpInterface;
 }
 
 export interface XltTokenModuleAsyncOptions extends Pick<ModuleMetadata, 'imports'> {
@@ -28,87 +31,97 @@ export interface XltTokenModuleAsyncOptions extends Pick<ModuleMetadata, 'import
   strategy?: { useClass: new (...args: any[]) => TokenStrategy };
   isGlobal?: boolean;
   providers?: Provider[];
+  stpInterface?: new (...args: any[]) => StpInterface;
 }
 
 @Module({})
 export class XltTokenModule {
-  static forRoot(options: XltTokenModuleOptions = {}) {
-    const { config: userConfig, store, strategy, isGlobal = false, providers = [] } = options;
+  private static createStoreProvider(
+    store?: XltTokenModuleOptions['store'],
+  ): Provider {
+    if (!store) return { provide: XLT_TOKEN_STORE, useClass: MemoryStore };
+    return 'useClass' in store
+      ? { provide: XLT_TOKEN_STORE, useClass: store.useClass }
+      : { provide: XLT_TOKEN_STORE, useValue: store.useValue };
+  }
 
-    const configProvider: Provider = {
-      provide: XLT_TOKEN_CONFIG,
-      useValue: userConfig ? { ...DEFAULT_XLT_TOKEN_CONFIG, ...userConfig } : DEFAULT_XLT_TOKEN_CONFIG,
-    };
-
-    const storeProvider: Provider = !store
-      ? { provide: XLT_TOKEN_STORE, useClass: MemoryStore }
-      : 'useClass' in store
-        ? { provide: XLT_TOKEN_STORE, useClass: store.useClass }
-        : { provide: XLT_TOKEN_STORE, useValue: store.useValue };
-
-    const strategyProvider: Provider = strategy?.useClass
+  private static createStrategyProvider(
+    strategy?: XltTokenModuleOptions['strategy'],
+  ): Provider {
+    return strategy?.useClass
       ? { provide: XLT_TOKEN_STRATEGY, useClass: strategy.useClass }
       : { provide: XLT_TOKEN_STRATEGY, useClass: UuidStrategy };
+  }
 
-    const initProvider: Provider = {
-      provide: 'XLT_TOKEN_INIT',
-      useFactory: (stpLogic: StpLogic) => {
-        setStpLogic(stpLogic);
-        return true;
+  private static createStpInterfaceProvider(
+    stpInterface?: new (...args: any[]) => StpInterface,
+  ): Provider {
+    if (stpInterface) return { provide: XLT_STP_INTERFACE, useClass: stpInterface };
+    return {
+      provide: XLT_STP_INTERFACE,
+      useValue: {
+        getPermissionList: () => { throw new Error('StpInterface not registered: getPermissionList'); },
+        getRoleList: () => { throw new Error('StpInterface not registered: getRoleList'); },
       },
-      inject: [StpLogic],
     };
+  }
 
-    const moduleDefinition = {
+  private static readonly initProvider: Provider = {
+    provide: 'XLT_TOKEN_INIT',
+    useFactory: (stpLogic: StpLogic) => {
+      setStpLogic(stpLogic);
+      return true;
+    },
+    inject: [StpLogic],
+  };
+
+  private static readonly moduleExports = [XLT_TOKEN_CONFIG, XLT_TOKEN_STORE, XLT_TOKEN_STRATEGY, StpLogic, StpPermLogic];
+
+  static forRoot(options: XltTokenModuleOptions = {}) {
+    const { config: userConfig, store, strategy, isGlobal = false, providers = [], stpInterface } = options;
+
+    return {
       module: XltTokenModule,
-      providers: [configProvider, storeProvider, strategyProvider, StpLogic, initProvider, ...providers],
-      exports: [XLT_TOKEN_CONFIG, XLT_TOKEN_STORE, XLT_TOKEN_STRATEGY, StpLogic],
+      providers: [
+        { provide: XLT_TOKEN_CONFIG, useValue: { ...DEFAULT_XLT_TOKEN_CONFIG, ...userConfig } },
+        XltTokenModule.createStoreProvider(store),
+        XltTokenModule.createStrategyProvider(strategy),
+        XltTokenModule.createStpInterfaceProvider(stpInterface),
+        StpLogic,
+        XltTokenModule.initProvider,
+        StpPermLogic,
+        ...providers,
+      ],
+      exports: XltTokenModule.moduleExports,
       global: isGlobal,
     };
-
-    return moduleDefinition;
   }
 
   static forRootAsync(options: XltTokenModuleAsyncOptions) {
-    const { useFactory, inject = [], imports = [], store, strategy, isGlobal = false, providers = [] } = options;
+    const { useFactory, inject = [], imports = [], store, strategy, isGlobal = false, providers = [], stpInterface } = options;
 
-    const asyncConfigProvider: Provider = {
-      provide: XLT_TOKEN_CONFIG,
-      useFactory: async (...args: any[]) => {
-        const moduleOptions = await useFactory(...args);
-        const userConfig = moduleOptions.config || {};
-        return { ...DEFAULT_XLT_TOKEN_CONFIG, ...userConfig };
-      },
-      inject,
-    };
-
-    const storeProvider: Provider = !store
-      ? { provide: XLT_TOKEN_STORE, useClass: MemoryStore }
-      : 'useClass' in store
-        ? { provide: XLT_TOKEN_STORE, useClass: store.useClass }
-        : { provide: XLT_TOKEN_STORE, useValue: store.useValue };
-
-    const strategyProvider: Provider = strategy?.useClass
-      ? { provide: XLT_TOKEN_STRATEGY, useClass: strategy.useClass }
-      : { provide: XLT_TOKEN_STRATEGY, useClass: UuidStrategy };
-
-    const initProvider: Provider = {
-      provide: 'XLT_TOKEN_INIT',
-      useFactory: (stpLogic: StpLogic) => {
-        setStpLogic(stpLogic);
-        return true;
-      },
-      inject: [StpLogic],
-    };
-
-    const moduleDefinition = {
+    return {
       module: XltTokenModule,
       imports,
-      providers: [asyncConfigProvider, storeProvider, strategyProvider, StpLogic, initProvider, ...providers],
-      exports: [XLT_TOKEN_CONFIG, XLT_TOKEN_STORE, XLT_TOKEN_STRATEGY, StpLogic],
+      providers: [
+        {
+          provide: XLT_TOKEN_CONFIG,
+          useFactory: async (...args: any[]) => {
+            const { config = {} } = await useFactory(...args);
+            return { ...DEFAULT_XLT_TOKEN_CONFIG, ...config };
+          },
+          inject,
+        },
+        XltTokenModule.createStoreProvider(store),
+        XltTokenModule.createStrategyProvider(strategy),
+        XltTokenModule.createStpInterfaceProvider(stpInterface),
+        StpLogic,
+        XltTokenModule.initProvider,
+        StpPermLogic,
+        ...providers,
+      ],
+      exports: XltTokenModule.moduleExports,
       global: isGlobal,
     };
-
-    return moduleDefinition;
   }
 }

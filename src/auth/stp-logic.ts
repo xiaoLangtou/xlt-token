@@ -7,6 +7,7 @@ import { XltTokenStore } from '../store/xlt-token-store.interface';
 import { TokenStrategy } from '../token/token-strategy.interface';
 import { NotLoginType } from '../const';
 import { NotLoginException } from '../exceptions/not-login.exception';
+import { XltSession } from '../session/xlt-session';
 
 @Injectable()
 export class StpLogic {
@@ -14,8 +15,14 @@ export class StpLogic {
     @Inject(XLT_TOKEN_CONFIG) private config: XltTokenConfig,
     @Inject(XLT_TOKEN_STORE) private store: XltTokenStore,
     @Inject(XLT_TOKEN_STRATEGY) private strategy: TokenStrategy,
-  ) {}
+  ) {
+  }
 
+  /**
+   * 登录
+   * @param loginId
+   * @param options
+   */
   async login(
     loginId: string | number,
     options: { timeout?: number; device?: string; token?: string } = {},
@@ -54,6 +61,10 @@ export class StpLogic {
     return token;
   }
 
+  /**
+   * 获取 token 值
+   * @param req
+   */
   async getTokenValue(req: Request): Promise<string | null> {
     if (this.config.isReadHeader) {
       const raw = req.headers[this.config.tokenName.toLowerCase()];
@@ -76,11 +87,19 @@ export class StpLogic {
     return null;
   }
 
+  /**
+   * 是否登录
+   * @param req
+   */
   async isLogin(req: Request): Promise<boolean> {
     const result = await this._resolveLoginId(req);
     return result.ok;
   }
 
+  /**
+   * 检查登录
+   * @param req
+   */
   async checkLogin(req: Request): Promise<{ ok: boolean; loginId?: string; token?: string; reason?: NotLoginType }> {
     const result = await this._resolveLoginId(req);
 
@@ -91,6 +110,10 @@ export class StpLogic {
     return { ok: result.ok, loginId: result.loginId, token: result.token };
   }
 
+  /**
+   * 登出
+   * @param token
+   */
   async logout(token: string): Promise<boolean | null> {
     if (!token) return null;
 
@@ -100,10 +123,15 @@ export class StpLogic {
     await this.store.delete(this.tokenKey(token));
     await this.store.delete(this.lastActiveKey(token));
     await this.store.delete(this.sessionKey(loginId));
+    await this.store.delete(this.sessionDataKey(loginId));
 
     return true;
   }
 
+  /**
+   * 根据登录id登出
+   * @param loginId
+   */
   async logoutByLoginId(loginId: string): Promise<boolean | null> {
     if (!loginId) return null;
 
@@ -112,9 +140,14 @@ export class StpLogic {
     await this.store.delete(this.sessionKey(loginId));
     await this.store.delete(this.tokenKey(token));
     await this.store.delete(this.lastActiveKey(token));
+    await this.store.delete(this.sessionDataKey(loginId));
     return true;
   }
 
+  /**
+   * 踢人下线
+   * @param loginId
+   */
   async kickout(loginId: string): Promise<boolean | null> {
     if (!loginId) return null;
     const sessionKey = this.sessionKey(loginId);
@@ -123,9 +156,16 @@ export class StpLogic {
 
     await this.store.update(this.tokenKey(token), NotLoginType.KICK_OUT);
     await this.store.delete(sessionKey);
+    await this.store.delete(this.sessionDataKey(loginId));
+    this.writeOfflineRecord(token, NotLoginType.KICK_OUT);
     return true;
   }
 
+  /**
+   * 刷新 token 过期时间
+   * @param token
+   * @param timeout
+   */
   async renewTimeout(token: string, timeout: number): Promise<boolean | null> {
     if (!token) return null;
 
@@ -143,6 +183,37 @@ export class StpLogic {
     return true;
   }
 
+  /**
+   * 获取 session
+   * @param loginId
+   */
+  getSession(loginId: string) {
+    const key = this.sessionDataKey(loginId);
+    return new XltSession(loginId, this.store, key, this.config.timeout);
+  }
+
+
+  /**
+   * 获取下线记录
+   * @param token
+   */
+  async getOfflineRecords(token: string): Promise<{ reason: string; time: number } | null> {
+    if (!token) return null;
+    if (!this.config.offlineRecordEnabled) return null;
+
+    const key = this.offlineRecordKey(token);
+
+    const raw = await this.store.get(key);
+
+    return raw ? JSON.parse(raw) : null as { reason: string; time: number } | null;
+  }
+
+
+  /**
+   * 解析登录id
+   * @param req
+   * @private
+   */
   private async _resolveLoginId(
     req: Request,
   ): Promise<{ ok: boolean; loginId?: string; token?: string; reason?: NotLoginType }> {
@@ -169,7 +240,7 @@ export class StpLogic {
   }
 
   /**
-   * 生成token
+   * 生成token key
    * @param token
    * @private
    */
@@ -178,12 +249,26 @@ export class StpLogic {
   }
 
   /**
-   * 生成session
+   * 生成session key
    * @param loginId
    * @private
    */
+
   private sessionKey(loginId: string): string {
     return `${this.config.tokenName}:login:session:${loginId}`;
+  }
+
+  /**
+   * 生成sessionData key
+   * @param loginId
+   * @private
+   */
+  private sessionDataKey(loginId: string): string {
+    return `${this.config.tokenName}:login:session-data:${loginId}`;
+  }
+
+  private offlineRecordKey(token: string): string {
+    return `${this.config.tokenName}:login:offline:${token}`;
   }
 
   /**
@@ -195,11 +280,28 @@ export class StpLogic {
     return `${this.config.tokenName}:login:lastActive:${token}`;
   }
 
+  /**
+   * 处理被顶下线
+   * @param loginId
+   * @private
+   */
   private async replaced(loginId: string) {
     const oldToken = await this.store.get(this.sessionKey(loginId));
     if (oldToken) {
       await this.store.update(this.tokenKey(oldToken), NotLoginType.BE_REPLACED);
       await this.store.delete(this.sessionKey(String(loginId)));
+      this.writeOfflineRecord(oldToken, NotLoginType.BE_REPLACED);
     }
+
   }
+
+  private async writeOfflineRecord(token: string, reason: string): Promise<void> {
+    if (!this.config.offlineRecordEnabled) return;
+
+    const key = this.offlineRecordKey(token);
+    const record = JSON.stringify({ token, reason, time: Date.now() });
+    await this.store.set(key, record, this.config.offlineRecordTimeout ?? 3600);
+  }
+
+
 }

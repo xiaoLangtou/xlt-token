@@ -13,6 +13,8 @@ interface MemoryEntry {
 
 @Injectable()
 export class MemoryStore implements XltTokenStore {
+  // setTimeout delay 上限（32 位有符号整数毫秒，约 24.8 天）
+  private static readonly MAX_TIMER_DELAY_MS = 2 ** 31 - 1;
   private readonly store = new Map<string, MemoryEntry>();
 
   async get(key: string): Promise<string | null> {
@@ -85,9 +87,6 @@ export class MemoryStore implements XltTokenStore {
       entry.timer = null;
     }
   }
-
-  // setTimeout delay 上限（32 位有符号整数毫秒，约 24.8 天）
-  private static readonly MAX_TIMER_DELAY_MS = 2 ** 31 - 1;
 
   private scheduleExpire(key: string, entry: MemoryEntry, timeoutSec: number): void {
     if (timeoutSec === -1) return;

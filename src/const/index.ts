@@ -13,3 +13,22 @@ export type NotLoginType = (typeof NotLoginType)[keyof typeof NotLoginType];
 
 export const XLT_IGNORE_KEY = 'XltIgnore';
 export const XLT_CHECK_LOGIN_KEY = 'XltCheckLogin';
+
+
+/**
+ * 权限检查模式
+ */
+export const XltMode = {
+  AND: 'AND',
+  OR: 'OR',
+} as const;
+
+export type XltMode = typeof XltMode[keyof typeof XltMode];
+
+
+export const XLT_PERMISSION_KEY = 'XltCheckPermission';
+
+export const XLT_ROLE_KEY = 'xltCheckRole';
+
+
+
