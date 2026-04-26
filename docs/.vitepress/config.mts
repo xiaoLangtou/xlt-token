@@ -43,9 +43,10 @@ export default defineConfig({
       { text: '参考', link: '/reference/src-reference', activeMatch: '/reference/' },
       { text: '路线图', link: '/roadmap/p1', activeMatch: '/roadmap/' },
       {
-        text: 'v0.1.3',
+        text: 'v1.0.0-rc.1',
         items: [
-          { text: '更新日志', link: 'https://github.com/xiaoLangtou/xlt-token/releases' },
+          { text: '更新日志', link: 'https://github.com/xiaoLangtou/xlt-token/blob/master/CHANGELOG.md' },
+          { text: 'GitHub Releases', link: 'https://github.com/xiaoLangtou/xlt-token/releases' },
           { text: 'npm', link: 'https://www.npmjs.com/package/xlt-token' },
         ],
       },
@@ -68,6 +69,7 @@ export default defineConfig({
           items: [
             { text: '核心 API', link: '/core/core-api' },
             { text: '守卫与装饰器', link: '/core/guards-and-decorators' },
+            { text: '权限与会话', link: '/core/permissions-and-session' },
             { text: '存储层', link: '/core/storage' },
             { text: 'Token 策略', link: '/core/token-strategy' },
             { text: '异常处理', link: '/core/exceptions' },
@@ -168,6 +170,7 @@ export default defineConfig({
     '08-exceptions.md': 'core/exceptions.md',
     '09-recipes.md': 'core/recipes.md',
     '10-roadmap-p1.md': 'roadmap/p1.md',
+    '11-permissions-and-session.md': 'core/permissions-and-session.md',
     'SRC-REFERENCE.md': 'reference/src-reference.md',
     'archive/00-roadmap.md': 'reference/archive/roadmap.md',
     'archive/03-integration.md': 'reference/archive/integration.md',

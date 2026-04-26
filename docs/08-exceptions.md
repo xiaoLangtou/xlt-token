@@ -1,6 +1,14 @@
 # 08 · 异常与错误处理
 
-`NotLoginException` 的六种 `reason` 来源 + 前后端配合的最佳实践。
+库提供三种业务异常 + 配套的前后端最佳实践。
+
+## 异常一览
+
+| 异常 | HTTP 状态 | 触发场景 | 文档锚点 |
+| --- | --- | --- | --- |
+| `NotLoginException` | **401** | 未登录 / token 无效 / 被顶 / 被踢 / 冻结 / 超时 | [↓](#notloginexception) |
+| `NotPermissionException` | **403** | `@XltCheckPermission` 校验失败 | [↓](#notpermissionexception) |
+| `NotRoleException` | **403** | `@XltCheckRole` 校验失败 | [↓](#notroleexception) |
 
 ## `NotLoginException`
 
@@ -47,6 +55,48 @@ value === 'KICK_OUT' → KICK_OUT
 activeTimeout > 0:
   ├─ no lastActive → TOKEN_FREEZE
   └─ idle > activeTimeout → TOKEN_TIMEOUT
+```
+
+## `NotPermissionException`
+
+源码：`src/exceptions/not-permission.exception.ts`
+
+- 继承 `ForbiddenException`，HTTP 状态码 **403**
+- 由 `StpPermLogic.checkPermission` 在校验失败时抛出（`@XltCheckPermission` 自动触发）
+
+公开字段：
+
+```ts
+class NotPermissionException extends ForbiddenException {
+  readonly permission: string | string[];   // 校验时声明的权限
+  readonly mode: XltMode;                    // AND / OR
+}
+```
+
+响应体（默认 Nest 行为）：
+
+```json
+{
+  "statusCode": 403,
+  "message": "Forbidden resource",
+  "error": "Forbidden"
+}
+```
+
+## `NotRoleException`
+
+源码：`src/exceptions/not-role.exception.ts`
+
+- 继承 `ForbiddenException`，HTTP 状态码 **403**
+- 由 `StpPermLogic.checkRole` 在校验失败时抛出（`@XltCheckRole` 自动触发）
+
+公开字段：
+
+```ts
+class NotRoleException extends ForbiddenException {
+  readonly role: string | string[];
+  readonly mode: XltMode;
+}
 ```
 
 ## 全局异常过滤器（示例）

@@ -189,7 +189,42 @@ logout(@TokenValue() token: string) {
 }
 ```
 
-### 四个装饰器总览
+### `@XltCheckPermission(perms, options?)`
+
+声明式权限校验。校验失败抛 `NotPermissionException`（HTTP **403**）。
+
+```ts
+@XltCheckPermission('user:read')
+@Get('users')
+list() {}
+
+@XltCheckPermission(['user:read', 'user:write'], { mode: XltMode.AND })
+@Post('users')
+create() {}
+```
+
+| 参数 | 类型 | 说明 |
+| --- | --- | --- |
+| `perms` | `string \| string[]` | 单个权限或权限数组 |
+| `options.mode` | `XltMode.AND`（默认）/ `XltMode.OR` | 多个权限的组合策略 |
+
+支持通配符匹配（`user:*` 命中 `user:read` 等）。需要在 Module 里注册 `stpInterface`，详见 [11 · 权限与会话](./11-permissions-and-session.md)。
+
+### `@XltCheckRole(roles, options?)`
+
+声明式角色校验。校验失败抛 `NotRoleException`（HTTP **403**）。API 与 `@XltCheckPermission` 完全一致。
+
+```ts
+@XltCheckRole('admin')
+@Delete(':id')
+remove() {}
+
+@XltCheckRole(['admin', 'super'], { mode: XltMode.OR })
+@Patch(':id')
+sensitive() {}
+```
+
+### 六个装饰器总览
 
 | 装饰器 | 用在哪 | 作用 | 依赖什么 |
 | --- | --- | --- | --- |
@@ -197,6 +232,8 @@ logout(@TokenValue() token: string) {
 | `@XltCheckLogin()` | 方法 / 类 | `defaultCheck=false` 下开启校验 | Reflector 读元数据 |
 | `@LoginId()` | 参数 | 注入 `request.stpLoginId` | 守卫已校验通过 |
 | `@TokenValue()` | 参数 | 注入 `request.stpToken` | 守卫已校验通过 |
+| `@XltCheckPermission()` | 方法 / 类 | 校验权限，失败抛 403 | `stpInterface` 已注册 |
+| `@XltCheckRole()` | 方法 / 类 | 校验角色，失败抛 403 | `stpInterface` 已注册 |
 
 ⚠️ `@LoginId` / `@TokenValue` 依赖守卫挂到 `request` 上的字段。**如果你没注册全局守卫，或该路由没经过 Guard**（如标注了 `@XltIgnore()`），它们会是 `undefined`。
 
