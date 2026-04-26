@@ -18,13 +18,17 @@ export abstract class XltAbstractLoginGuard implements CanActivate {
   async canActivate(ctx: ExecutionContext): Promise<boolean> {
     if (!this.requiresLogin(ctx)) return true;
 
-
     const request = ctx.switchToHttp().getRequest();
-    const result = await this.stpLogic.checkLogin(request);
 
-    if (!result.ok) {
-      await this.onAuthFail?.(result, request);
-      throw new NotLoginException(result.reason ?? NotLoginType.NOT_TOKEN);
+    let result: { ok: boolean; loginId?: string; token?: string; reason?: NotLoginType };
+    try {
+      result = await this.stpLogic.checkLogin(request);
+    } catch (err) {
+      // checkLogin 失败时统一抛 NotLoginException，先触发钩子再向上抛
+      if (err instanceof NotLoginException) {
+        await this.onAuthFail?.({ ok: false, reason: err.type, token: err.token }, request);
+      }
+      throw err;
     }
 
     request.stpLoginId = result.loginId;

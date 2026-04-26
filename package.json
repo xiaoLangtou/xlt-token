@@ -1,6 +1,6 @@
 {
   "name": "xlt-token",
-  "version": "0.1.5",
+  "version": "1.0.0-rc.1",
   "description": "NestJS token authentication library inspired by Sa-Token",
   "keywords": [
     "nestjs",
@@ -31,14 +31,22 @@
   },
   "sideEffects": false,
   "files": [
-    "dist"
+    "dist",
+    "LICENSE",
+    "README.md"
   ],
   "scripts": {
     "build": "tsdown",
     "build:watch": "tsdown --watch",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:ui": "vitest --ui",
     "test:cov": "vitest run --coverage",
+    "test:e2e": "vitest run --config test/vitest.e2e.config.ts",
+    "test:e2e:cov": "vitest run --config test/vitest.e2e.config.ts --coverage",
+    "test:all": "pnpm test:cov && pnpm test:e2e",
+    "test:junit": "vitest run --reporter=junit --outputFile=reports/junit.xml",
+    "test:e2e:junit": "vitest run --config test/vitest.e2e.config.ts --reporter=junit --outputFile=reports/junit-e2e.xml",
     "prepublishOnly": "pnpm run build",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
@@ -71,13 +79,19 @@
     "@nestjs/core": "^10.0.0",
     "@nestjs/platform-express": "^10.0.0",
     "@nestjs/testing": "^10.0.0",
+    "@swc/core": "^1.15.30",
     "@types/express": "^4.17.0",
     "@types/node": "^20.0.0",
+    "@types/supertest": "^7.2.0",
     "@types/uuid": "^10.0.0",
+    "@vitest/coverage-v8": "^2.1.9",
+    "@vitest/ui": "^2.1.9",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.0",
+    "supertest": "^7.2.2",
     "tsdown": "^0.20.0",
     "typescript": "^5.1.0",
+    "unplugin-swc": "^1.5.9",
     "vitepress": "^1.6.4",
     "vitest": "^2.0.0"
   }
