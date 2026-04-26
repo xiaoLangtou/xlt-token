@@ -41,7 +41,7 @@ export default defineConfig({
       { text: '指南', link: '/guide/getting-started', activeMatch: '/guide/' },
       { text: '核心', link: '/core/core-api', activeMatch: '/core/' },
       { text: '参考', link: '/reference/src-reference', activeMatch: '/reference/' },
-      { text: '路线图', link: '/roadmap/p1', activeMatch: '/roadmap/' },
+      { text: '路线图', link: '/roadmap/1-1-0', activeMatch: '/roadmap/' },
       {
         text: 'v1.0.0-rc.1',
         items: [
@@ -92,6 +92,7 @@ export default defineConfig({
             { text: '接入迁移（旧）', link: '/reference/archive/integration' },
             { text: '实现现状快照', link: '/reference/archive/status' },
             { text: 'npm 抽包记录', link: '/reference/archive/npm-package' },
+            { text: 'P1 原始规划（已实现）', link: '/reference/archive/roadmap-p1' },
           ],
         },
       ],
@@ -99,7 +100,7 @@ export default defineConfig({
         {
           text: '路线图',
           items: [
-            { text: 'P1 权限与会话', link: '/roadmap/p1' },
+            { text: '1.1.0 规划', link: '/roadmap/1-1-0' },
           ],
         },
       ],
@@ -169,8 +170,9 @@ export default defineConfig({
     '07-token-strategy.md': 'core/token-strategy.md',
     '08-exceptions.md': 'core/exceptions.md',
     '09-recipes.md': 'core/recipes.md',
-    '10-roadmap-p1.md': 'roadmap/p1.md',
+    '10-roadmap-1.1.0.md': 'roadmap/1-1-0.md',
     '11-permissions-and-session.md': 'core/permissions-and-session.md',
+    'archive/10-roadmap-p1.md': 'reference/archive/roadmap-p1.md',
     'SRC-REFERENCE.md': 'reference/src-reference.md',
     'archive/00-roadmap.md': 'reference/archive/roadmap.md',
     'archive/03-integration.md': 'reference/archive/integration.md',
