@@ -2,9 +2,9 @@
 import { Request } from 'express';
 import { Inject, Injectable } from '@nestjs/common';
 import { isNull, isUndefined } from 'es-toolkit';
-import { XLT_TOKEN_CONFIG, XLT_TOKEN_STORE, XLT_TOKEN_STRATEGY, XltTokenConfig } from '../core/xlt-token-config';
-import { XltTokenStore } from '../store/xlt-token-store.interface';
-import { TokenStrategy } from '../token/token-strategy.interface';
+import { XLT_TOKEN_CONFIG, XLT_TOKEN_STORE, XLT_TOKEN_STRATEGY, type XltTokenConfig } from '../core/xlt-token-config';
+import type { XltTokenStore } from '../store/xlt-token-store.interface';
+import type { TokenStrategy } from '../token/token-strategy.interface';
 import { NotLoginType } from '../const';
 import { NotLoginException } from '../exceptions/not-login.exception';
 import { XltSession } from '../session/xlt-session';

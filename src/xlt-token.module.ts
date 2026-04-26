@@ -11,7 +11,7 @@ import { XltTokenStore } from './store/xlt-token-store.interface';
 import { UuidStrategy } from './token/uuid-strategy';
 import { TokenStrategy } from './token/token-strategy.interface';
 import { StpLogic } from './auth/stp-logic';
-import { setStpLogic } from './auth/stp-util';
+import { setStpLogic, setStpPermLogic } from './auth/stp-util';
 import { StpInterface, XLT_STP_INTERFACE } from './perm/stp-interface';
 import { StpPermLogic } from './perm/stp-perm-logic';
 
@@ -68,11 +68,12 @@ export class XltTokenModule {
 
   private static readonly initProvider: Provider = {
     provide: 'XLT_TOKEN_INIT',
-    useFactory: (stpLogic: StpLogic) => {
+    useFactory: (stpLogic: StpLogic, stpPermLogic: StpPermLogic) => {
       setStpLogic(stpLogic);
+      setStpPermLogic(stpPermLogic);
       return true;
     },
-    inject: [StpLogic],
+    inject: [StpLogic, StpPermLogic],
   };
 
   private static readonly moduleExports = [XLT_TOKEN_CONFIG, XLT_TOKEN_STORE, XLT_TOKEN_STRATEGY, StpLogic, StpPermLogic];

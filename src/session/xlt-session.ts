@@ -1,4 +1,4 @@
-import { XltTokenStore } from '../store/xlt-token-store.interface';
+import type { XltTokenStore } from '../store/xlt-token-store.interface';
 
 export class XltSession {
   private data: Record<string, unknown> | null = null;
@@ -61,6 +61,12 @@ export class XltSession {
     this.data = null;
     await this.store.delete(this.storeKey);
   }
+
+  async keys(): Promise<string[]> {
+    const data = await this.load();
+    return data ? Object.keys(data) : [];
+  }
+
 
   /**
    * 加载会话数据

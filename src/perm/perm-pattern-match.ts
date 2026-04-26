@@ -10,10 +10,9 @@ export function matchPermission(pattern: string, target: string): boolean {
   const patternSegments = pattern.split(':');
   const targetSegments = target.split(':');
 
-
-  patternSegments.forEach((patternSegment, index) => {
-    if (patternSegment === '*') return true;
-    if (patternSegment !== targetSegments[index]) return false;
-  });
+  for (let i = 0; i < patternSegments.length; i++) {
+    if (patternSegments[i] === '*') return true;
+    if (patternSegments[i] !== targetSegments[i]) return false;
+  }
   return patternSegments.length === targetSegments.length;
 }

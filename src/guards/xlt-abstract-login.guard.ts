@@ -1,6 +1,6 @@
 import { CanActivate, ExecutionContext, Inject, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { XLT_TOKEN_CONFIG, XltTokenConfig } from '../core/xlt-token-config';
+import { XLT_TOKEN_CONFIG, type XltTokenConfig } from '../core/xlt-token-config';
 import { StpLogic } from '../auth/stp-logic';
 import { NotLoginException } from '../exceptions/not-login.exception';
 import { NotLoginType, XLT_CHECK_LOGIN_KEY, XLT_IGNORE_KEY } from '../const';
@@ -65,4 +65,15 @@ export abstract class XltAbstractLoginGuard implements CanActivate {
     request: any,
   ): void | Promise<void>;
 
+
+
+  protected onPermissionDenied?(
+    result: {
+      ok: boolean;
+      loginId?: string | undefined;
+      token?: string | undefined;
+      reason?: NotLoginType | undefined;
+    },
+    request: any,
+  ): void | Promise<void>;
 }

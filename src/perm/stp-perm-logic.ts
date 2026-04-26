@@ -1,9 +1,11 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { StpInterface, XLT_STP_INTERFACE } from './stp-interface';
-import { XLT_TOKEN_CONFIG, XLT_TOKEN_STORE, XltTokenConfig } from '../core/xlt-token-config';
-import { XltTokenStore } from '../store/xlt-token-store.interface';
+import { type StpInterface, XLT_STP_INTERFACE } from './stp-interface';
+import { XLT_TOKEN_CONFIG, XLT_TOKEN_STORE, type XltTokenConfig } from '../core/xlt-token-config';
+import type { XltTokenStore } from '../store/xlt-token-store.interface';
 import { XltMode } from '../const';
 import { matchPermission } from './perm-pattern-match';
+import { NotPermissionException } from '../exceptions/not-permission.exception';
+import { NotRoleException } from '../exceptions/not-role.exception';
 
 @Injectable()
 export class StpPermLogic {
@@ -19,23 +21,26 @@ export class StpPermLogic {
     if (!loginId || !permission) return false;
     const permissionList = await this.stpInterface.getPermissionList(loginId);
     if (!permissionList || permissionList.length <= 0) return false;
-    if (!permissionList.includes(permission)) return false;
     return permissionList.some((p) => matchPermission(p, permission));
   }
 
 
-  async checkPermission(loginId: string, permissions: string[], mode: XltMode): Promise<boolean> {
-    if (!loginId || !permissions) return false;
-
+  async checkPermission(loginId: string, permissions: string[], mode: XltMode): Promise<void> {
+    if (!loginId || !permissions) throw new NotPermissionException(permissions, mode);
     if (mode === XltMode.AND) {
-
       const hasPermissions = await Promise.all(permissions.map(async (p) => await this.hasPermission(loginId, p)));
       const result = hasPermissions.every((p) => p);
-      return result;
+      if (!result){
+        throw new NotPermissionException(permissions, mode);
+      }
+
     } else {
       const hasPermissions = await Promise.all(permissions.map(async (p) => await this.hasPermission(loginId, p)));
       const result = hasPermissions.some((p) => p);
-      return result;
+      if (!result){
+        throw new NotPermissionException(permissions, mode);
+      }
+
     }
 
   }
@@ -51,16 +56,20 @@ export class StpPermLogic {
   }
 
 
-  async checkRole(loginId: string, role: string[], mode: XltMode): Promise<boolean> {
-    if (!loginId || !role) return false;
+  async checkRole(loginId: string, role: string[], mode: XltMode): Promise<void> {
+    if (!loginId || !role) throw new NotRoleException(role, mode)   ;
     if (mode === XltMode.AND) {
       const hasRoles = await Promise.all(role.map(async (r) => await this.hasRole(loginId, r)));
       const result = hasRoles.every((r) => r);
-      return result;
+      if (!result){
+        throw new NotRoleException(role, mode);
+      }
     } else {
       const hasRoles = await Promise.all(role.map(async (r) => await this.hasRole(loginId, r)));
       const result = hasRoles.some((r) => r);
-      return result;
+      if (!result){
+        throw new NotRoleException(role, mode);
+      }
     }
   }
 }

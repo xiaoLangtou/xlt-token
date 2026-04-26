@@ -2,9 +2,9 @@
 
 import { CanActivate, ExecutionContext, Inject, Injectable, Optional } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { XLT_TOKEN_CONFIG, XltTokenConfig } from '../core/xlt-token-config';
+import { XLT_TOKEN_CONFIG, type XltTokenConfig } from '../core/xlt-token-config';
 import { StpLogic } from '../auth/stp-logic';
-import { XLT_CHECK_LOGIN_KEY, XLT_IGNORE_KEY, XLT_PERMISSION_KEY } from '../const';
+import { XLT_CHECK_LOGIN_KEY, XLT_IGNORE_KEY, XLT_PERMISSION_KEY, XLT_ROLE_KEY } from '../const';
 import { StpPermLogic } from '../perm/stp-perm-logic';
 
 @Injectable()
@@ -38,7 +38,7 @@ export class XltTokenGuard implements CanActivate {
         await this.stpPermLogic.checkPermission(result.loginId!, permMeta.permissions, permMeta.mode);
       }
 
-      const roleMeta = this.reflector.getAllAndOverride(XLT_PERMISSION_KEY, [handler, cls]);
+      const roleMeta = this.reflector.getAllAndOverride(XLT_ROLE_KEY, [handler, cls]);
       if (roleMeta) {
         await this.stpPermLogic.checkRole(result.loginId!, roleMeta.roles, roleMeta.mode);
       }
