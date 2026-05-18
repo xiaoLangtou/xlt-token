@@ -22,7 +22,7 @@ export default defineConfig({
       'link',
       {
         rel: 'stylesheet',
-        href: 'https://fonts.loli.net/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap',
+        href: 'https://fonts.loli.net/css2?family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500;600&display=swap',
       },
     ],
   ],
@@ -84,30 +84,24 @@ export default defineConfig({
             { text: '源码参考', link: '/reference/src-reference' },
           ],
         },
-        {
-          text: '归档',
-          collapsed: true,
-          items: [
-            { text: '历史路线图', link: '/reference/archive/roadmap' },
-            { text: '接入迁移（旧）', link: '/reference/archive/integration' },
-            { text: '实现现状快照', link: '/reference/archive/status' },
-            { text: 'npm 抽包记录', link: '/reference/archive/npm-package' },
-            { text: 'P1 原始规划（已实现）', link: '/reference/archive/roadmap-p1' },
-          ],
-        },
       ],
       '/roadmap/': [
         {
-          text: '路线图',
+          text: '1.1.0',
           items: [
-            { text: '1.1.0 规划', link: '/roadmap/1-1-0' },
+            { text: '功能规划', link: '/roadmap/1-1-0' },
+            { text: '实现设计', link: '/roadmap/1-1-0-implementation-design' },
+          ],
+        },
+        {
+          text: '2.0',
+          items: [
+            { text: '多框架适配架构', link: '/roadmap/multi-framework-architecture' },
           ],
         },
       ],
     },
 
-    // 将 docs 源文件重新编排为站点目录
-    // 参见根配置 rewrites
     search: {
       provider: 'local',
       options: {
@@ -159,7 +153,7 @@ export default defineConfig({
     externalLinkIcon: true,
   },
 
-  // 将扁平化的 docs/*.md 源文件映射到分组路径，避免大搬迁
+  // 将扁平化的 docs/*.md 源文件映射到分组路径
   rewrites: {
     '01-getting-started.md': 'guide/getting-started.md',
     '02-architecture.md': 'guide/architecture.md',
@@ -172,11 +166,8 @@ export default defineConfig({
     '09-recipes.md': 'core/recipes.md',
     '10-roadmap-1.1.0.md': 'roadmap/1-1-0.md',
     '11-permissions-and-session.md': 'core/permissions-and-session.md',
-    'archive/10-roadmap-p1.md': 'reference/archive/roadmap-p1.md',
+    '12-multi-framework-architecture.md': 'roadmap/multi-framework-architecture.md',
+    '13-1.1.0-implementation-design.md': 'roadmap/1-1-0-implementation-design.md',
     'SRC-REFERENCE.md': 'reference/src-reference.md',
-    'archive/00-roadmap.md': 'reference/archive/roadmap.md',
-    'archive/03-integration.md': 'reference/archive/integration.md',
-    'archive/04-status.md': 'reference/archive/status.md',
-    'archive/05-npm-package.md': 'reference/archive/npm-package.md',
   },
 })
