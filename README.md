@@ -521,6 +521,12 @@ XltTokenModule.forRootAsync({
 })
 ```
 
+## 社区交流群
+
+欢迎扫码加入 Xlt-token 交流群，与作者和其他用户交流使用心得、反馈问题。
+
+<img src="./img.png" alt="Xlt-token 交流群" width="300" />
+
 ## License
 
 MIT

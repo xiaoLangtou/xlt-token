@@ -79,3 +79,11 @@ yarn add xlt-token
 | ⚠️ 异常处理 | [core/exceptions](/core/exceptions) | `NotLoginException` / `NotPermissionException` / `NotRoleException` |
 | 🧪 场景手册 | [core/recipes](/core/recipes) | 顶号、踢人、活跃过期、多端并发、用户注入等 |
 | 📖 源码参考 | [reference/src-reference](/reference/src-reference) | 一站式深度参考（单文件速查） |
+
+## 社区交流群
+
+欢迎扫码加入 Xlt-token 交流群，与作者和其他用户交流使用心得、反馈问题。
+
+<div style="text-align: center; margin-top: 16px;">
+  <img src="/img.png" alt="Xlt-token 交流群" style="width: 300px; border-radius: 8px;" />
+</div>
