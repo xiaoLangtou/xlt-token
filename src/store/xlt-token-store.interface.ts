@@ -16,4 +16,7 @@ export interface XltTokenStore {
 
   // -1 = 永久，-2 = key 不存在
   getTimeout(key: string): Promise<number>;
+
+  //返回所有匹配 pattern 的 key 列表 pattern 语义：前缀匹配，以 '*' 结尾，如 'authorization:login:session-list:*'
+  keys(pattern: string): Promise<string[]>;
 }

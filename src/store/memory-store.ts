@@ -68,6 +68,25 @@ export class MemoryStore implements XltTokenStore {
     return remainMs <= 0 ? -2 : Math.floor(remainMs / 1000);
   }
 
+
+  async keys(pattern: string): Promise<string[]> {
+    const prefix = pattern.endsWith('*')
+      ? pattern.slice(0, -1)
+      : pattern;
+    const result: string[] = [];
+    for (const [key] of this.store) {
+      if (key.startsWith(prefix) && this.peek(key)) {
+        result.push(key);
+      }
+    }
+    return result;
+  }
+
+
+
+
+
+
   // 懒式过期检查：返回未过期的 entry，否则清理并返回 null
   private peek(key: string): MemoryEntry | null {
     const entry = this.store.get(key);

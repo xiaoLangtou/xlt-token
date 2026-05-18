@@ -13,6 +13,8 @@ export interface XltTokenConfig {
   permCacheTimeout?: number; // 权限缓存时间 0 = 不缓存，-1 = 永久，默认 0
   offlineRecordEnabled?: boolean;  // 是否记录下线原因，默认 false
   offlineRecordTimeout?: number;   // 下线记录保留秒数，默认 3600
+
+  deviceConcurrent?: boolean; // 是否允许同账号多端在线，默认 true
 }
 
 export const DEFAULT_XLT_TOKEN_CONFIG: XltTokenConfig = {
@@ -30,6 +32,7 @@ export const DEFAULT_XLT_TOKEN_CONFIG: XltTokenConfig = {
   permCacheTimeout: 0,
   offlineRecordEnabled: false,
   offlineRecordTimeout: 3600,
+  deviceConcurrent: true,
 };
 
 export const XLT_TOKEN_CONFIG = 'XLT_TOKEN_CONFIG';

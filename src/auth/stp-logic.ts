@@ -5,9 +5,10 @@ import { isNull, isUndefined } from 'es-toolkit';
 import { XLT_TOKEN_CONFIG, XLT_TOKEN_STORE, XLT_TOKEN_STRATEGY, type XltTokenConfig } from '../core/xlt-token-config';
 import type { XltTokenStore } from '../store/xlt-token-store.interface';
 import type { TokenStrategy } from '../token/token-strategy.interface';
-import { NotLoginType } from '../const';
+import { DeviceInfo, NotLoginType } from '../const';
 import { NotLoginException } from '../exceptions/not-login.exception';
 import { XltSession } from '../session/xlt-session';
+import { XLT_TOKEN_HOOKS, XltHooks } from '../hooks/xlt-hooks.interface';
 
 @Injectable()
 export class StpLogic {
@@ -15,6 +16,7 @@ export class StpLogic {
     @Inject(XLT_TOKEN_CONFIG) private config: XltTokenConfig,
     @Inject(XLT_TOKEN_STORE) private store: XltTokenStore,
     @Inject(XLT_TOKEN_STRATEGY) private strategy: TokenStrategy,
+    @Inject(XLT_TOKEN_HOOKS) private hooks: XltHooks,
   ) {
   }
 
@@ -35,31 +37,74 @@ export class StpLogic {
       throw new Error('invalid loginId');
     }
 
+
+    const device = options.device ?? 'default';
     const timeout = options.timeout ?? this.config.timeout;
 
-    const oldToken = await this.store.get(this.sessionKey(_loginId));
+    const sessionKey = this.sessionKey(_loginId, device);
+    const oldToken = await this.store.get(sessionKey);
+
+
 
     let token: string;
-
-    if (!this.config.isConcurrent) {
-      if (oldToken) await this.replaced(_loginId);
+    if (!this.config.deviceConcurrent) {
+      // 任意新登录踢掉所有设备（等价于 1.0 isConcurrent=false 的全局版）
+      await this._kickoutAllDevices(_loginId);
       token = options.token ?? this.strategy.createToken(_loginId, this.config);
-    } else if (this.config.isShare) {
-      token = oldToken ? oldToken : (options.token ?? this.strategy.createToken(_loginId, this.config));
+    } else if (!this.config.isConcurrent) {
+      // 同设备互踢
+      if (oldToken) await this._replacedToken(_loginId, oldToken);
+      token = options.token ?? this.strategy.createToken(_loginId, this.config);
+    } else if (this.config.isShare && oldToken) {
+      token = oldToken;
     } else {
       token = options.token ?? this.strategy.createToken(_loginId, this.config);
     }
 
     await this.store.set(this.tokenKey(token), _loginId, timeout);
-    await this.store.set(this.sessionKey(_loginId), token, timeout);
+    await this.store.set(sessionKey, token, timeout);
+
+    // 更新全设备索引
+    await this._addToSessionList(_loginId, { device, token, loginTime: Date.now() }, timeout);
 
     if (this.config.activeTimeout && this.config.activeTimeout > 0) {
       await this.store.set(this.lastActiveKey(token), String(Date.now()), timeout);
     }
 
+
+    // ── 触发钩子 ──
+    this.callHook('onLogin', _loginId, token, device);
     // 返回纯 token，客户端请求时自行拼接前缀（如 "Bearer "）
     return token;
   }
+
+  async _addToSessionList(loginId: string, info: DeviceInfo, timeout: number): Promise<void> {
+    const key = this.sessionListKey(loginId);
+    const raw = await this.store.get(key);
+    const list: DeviceInfo[] = raw ? JSON.parse(raw) : [];
+    // 同 device 去重
+    const idx = list.findIndex(d => d.device === info.device);
+    if (idx >= 0) list.splice(idx, 1);
+    list.push(info);
+    await this.store.set(key, JSON.stringify(list), timeout);
+  }
+
+  async _kickoutAllDevices(loginId: string): Promise<void> {
+    const key = this.sessionListKey(loginId);
+    const raw = await this.store.get(key);
+    if (!raw) return;
+    const list: DeviceInfo[] = JSON.parse(raw);
+    for (const device of list) {
+      await this.store.update(this.tokenKey(device.token), NotLoginType.KICK_OUT);
+    }
+  }
+
+  async _replacedToken(loginId: string, token: string): Promise<void> {
+    await this.store.update(this.tokenKey(token), NotLoginType.BE_REPLACED);
+    await this.store.delete(this.sessionKey(loginId));
+    this.writeOfflineRecord(token, NotLoginType.BE_REPLACED);
+  }
+
 
   /**
    * 获取 token 值
@@ -124,6 +169,9 @@ export class StpLogic {
     await this.store.delete(this.lastActiveKey(token));
     await this.store.delete(this.sessionKey(loginId));
     await this.store.delete(this.sessionDataKey(loginId));
+    const list = await this.getDeviceList(loginId);
+    const info = list.find(d => d.token === token);
+    if (info) await this._removeFromSessionList(loginId, info.device);
 
     return true;
   }
@@ -254,9 +302,15 @@ export class StpLogic {
    * @private
    */
 
-  private sessionKey(loginId: string): string {
-    return `${this.config.tokenName}:login:session:${loginId}`;
+  private sessionKey(loginId: string, device = 'default'): string {
+    return `${this.config.tokenName}:login:session:${loginId}:${device}`;
   }
+
+
+  private sessionListKey(loginId: string): string {
+    return `${this.config.tokenName}:login:session-list:${loginId}`;
+  }
+
 
   /**
    * 生成sessionData key
@@ -304,4 +358,83 @@ export class StpLogic {
   }
 
 
+  private async _removeFromSessionList(loginId: string, device: string): Promise<void> {
+    const key = this.sessionListKey(loginId);
+    const raw = await this.store.get(key);
+    if (!raw) return;
+    const list: DeviceInfo[] = JSON.parse(raw);
+    const filtered = list.filter(d => d.device !== device);
+    if (filtered.length === 0) {
+      await this.store.delete(key);
+    } else {
+      await this.store.set(key, JSON.stringify(filtered), -1); // 继承原 TTL 不变
+    }
+  }
+
+
+  /**
+   * 查询某账号所有在线设备
+   * @param loginId 
+   * @returns 
+   */
+  async getDeviceList(loginId: string): Promise<DeviceInfo[]> {
+
+    const sessionListKey = this.sessionListKey(loginId);
+    const raw = await this.store.get(sessionListKey);
+
+    return raw ? JSON.parse(raw) : [];
+
+  }
+
+
+
+  /**
+ * 踢掉指定设备
+ */
+  async kickoutByDevice(loginId: string, device: string): Promise<boolean | null> {
+    const token = await this.store.get(this.sessionKey(loginId, device));
+    if (!token) return null;
+
+    await this.store.update(this.tokenKey(token), NotLoginType.KICK_OUT);
+    await this.store.delete(this.sessionKey(loginId, device));
+    await this._removeFromSessionList(loginId, device);
+    this.writeOfflineRecord(token, NotLoginType.KICK_OUT);
+    this.callHook('onKickout', loginId, token);
+    return true;
+  }
+
+  /**
+   * 踢掉指定 token
+   */
+  async kickoutByToken(token: string): Promise<boolean | null> {
+    const loginId = await this.store.get(this.tokenKey(token));
+    if (!loginId || [NotLoginType.KICK_OUT, NotLoginType.BE_REPLACED].includes(loginId as any)) {
+      return null;
+    }
+
+    await this.store.update(this.tokenKey(token), NotLoginType.KICK_OUT);
+    // 从 session-list 中找到对应 device 并删除
+    const list = await this.getDeviceList(loginId);
+    const info = list.find(d => d.token === token);
+    if (info) {
+      await this.store.delete(this.sessionKey(loginId, info.device));
+      await this._removeFromSessionList(loginId, info.device);
+    }
+    this.writeOfflineRecord(token, NotLoginType.KICK_OUT);
+    this.callHook('onKickout', loginId, token);
+    return true;
+  }
+
+
+  private callHook<K extends keyof XltHooks>(event: K, ...args:Parameters<NonNullable<XltHooks[K]>>): void {
+    if (!this.hooks?.[event]) return;
+    try {
+      const result = (this.hooks[event] as any)(...args);
+      if (result instanceof Promise) {
+        result.catch(err => console.error(`[xlt-token] hook ${event} error:`, err));
+      }
+    } catch (err) {
+      console.error(`[xlt-token] hook ${event} error:`, err);
+    }
+  }
 }

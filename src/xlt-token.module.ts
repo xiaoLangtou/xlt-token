@@ -14,6 +14,7 @@ import { StpLogic } from './auth/stp-logic';
 import { setStpLogic, setStpPermLogic } from './auth/stp-util';
 import { StpInterface, XLT_STP_INTERFACE } from './perm/stp-interface';
 import { StpPermLogic } from './perm/stp-perm-logic';
+import { XLT_TOKEN_HOOKS, XltHooks } from './hooks/xlt-hooks.interface';
 
 export interface XltTokenModuleOptions {
   config?: Partial<XltTokenConfig>;
@@ -22,6 +23,7 @@ export interface XltTokenModuleOptions {
   isGlobal?: boolean;
   providers?: Provider[];
   stpInterface?: new (...args: any[]) => StpInterface;
+  hooks?: XltHooks;
 }
 
 export interface XltTokenModuleAsyncOptions extends Pick<ModuleMetadata, 'imports'> {
@@ -32,6 +34,7 @@ export interface XltTokenModuleAsyncOptions extends Pick<ModuleMetadata, 'import
   isGlobal?: boolean;
   providers?: Provider[];
   stpInterface?: new (...args: any[]) => StpInterface;
+  hooks?: XltHooks;
 }
 
 @Module({})
@@ -66,6 +69,13 @@ export class XltTokenModule {
     };
   }
 
+
+  private static createHooksProvider(
+    hooks?: XltTokenModuleOptions['hooks'],
+  ): Provider {
+    return { provide: XLT_TOKEN_HOOKS, useValue: hooks ?? {} };
+  }
+
   private static readonly initProvider: Provider = {
     provide: 'XLT_TOKEN_INIT',
     useFactory: (stpLogic: StpLogic, stpPermLogic: StpPermLogic) => {
@@ -88,6 +98,7 @@ export class XltTokenModule {
         XltTokenModule.createStoreProvider(store),
         XltTokenModule.createStrategyProvider(strategy),
         XltTokenModule.createStpInterfaceProvider(stpInterface),
+        XltTokenModule.createHooksProvider(options.hooks),
         StpLogic,
         XltTokenModule.initProvider,
         StpPermLogic,
@@ -116,6 +127,7 @@ export class XltTokenModule {
         XltTokenModule.createStoreProvider(store),
         XltTokenModule.createStrategyProvider(strategy),
         XltTokenModule.createStpInterfaceProvider(stpInterface),
+        XltTokenModule.createHooksProvider(options.hooks),
         StpLogic,
         XltTokenModule.initProvider,
         StpPermLogic,
