@@ -144,4 +144,31 @@ describe('MemoryStore', () => {
       await expect(store.getTimeout('k')).resolves.toBe(-2);
     });
   });
+
+  describe('keys', () => {
+    it('返回匹配前缀且未过期的 key', async () => {
+      await store.set('authorization:login:session-list:u1', '[]', 60);
+      await store.set('authorization:login:session-list:u2', '[]', 60);
+      await store.set('authorization:login:token:t1', 'u1', 60);
+      const result = await store.keys('authorization:login:session-list:*');
+      expect(result.sort()).toEqual([
+        'authorization:login:session-list:u1',
+        'authorization:login:session-list:u2',
+      ]);
+    });
+
+    it('不包含已过期的 key', async () => {
+      await store.set('authorization:login:session-list:u1', '[]', 1);
+      vi.advanceTimersByTime(1_000);
+      const result = await store.keys('authorization:login:session-list:*');
+      expect(result).toEqual([]);
+    });
+
+    it('pattern 无 * 时按完整前缀匹配', async () => {
+      await store.set('prefix:abc', 'v', 60);
+      await store.set('prefix:abcd', 'v', 60);
+      const result = await store.keys('prefix:abc');
+      expect(result.sort()).toEqual(['prefix:abc', 'prefix:abcd']);
+    });
+  });
 });

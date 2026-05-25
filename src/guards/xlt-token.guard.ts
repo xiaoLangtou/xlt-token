@@ -6,6 +6,7 @@ import { XLT_TOKEN_CONFIG, type XltTokenConfig } from '../core/xlt-token-config'
 import { StpLogic } from '../auth/stp-logic';
 import { XLT_CHECK_LOGIN_KEY, XLT_IGNORE_KEY, XLT_PERMISSION_KEY, XLT_ROLE_KEY } from '../const';
 import { StpPermLogic } from '../perm/stp-perm-logic';
+import { XLT_CHECK_SAFE_KEY } from '../decorators/xlt-check-safe.decorator';
 
 @Injectable()
 export class XltTokenGuard implements CanActivate {
@@ -23,13 +24,12 @@ export class XltTokenGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const result = await this.stpLogic.checkLogin(request);
 
+    const business = this.getBusiness(context)
     request.stpLoginId = result.loginId;
     request.stpToken = result.token;
 
 
     if (this.stpPermLogic) {
-
-
       const handler = context.getHandler();
       const cls = context.getClass();
 
@@ -42,6 +42,10 @@ export class XltTokenGuard implements CanActivate {
       if (roleMeta) {
         await this.stpPermLogic.checkRole(result.loginId!, roleMeta.roles, roleMeta.mode);
       }
+    }
+
+    if(business){
+      await this.stpLogic.checkSafe(result.token!, business);
     }
 
     return true;
@@ -65,4 +69,14 @@ export class XltTokenGuard implements CanActivate {
     ]);
     return shouldCheck ?? false;
   }
+
+
+  private getBusiness(context: ExecutionContext): string {
+    return this.reflector.getAllAndOverride<string>(XLT_CHECK_SAFE_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+  }
+
+
 }

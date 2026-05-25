@@ -68,6 +68,9 @@
     },
     "redis": {
       "optional": true
+    },
+    "jsonwebtoken": {
+      "optional": true
     }
   },
   "dependencies": {

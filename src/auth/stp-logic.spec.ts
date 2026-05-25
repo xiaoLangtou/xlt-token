@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { StpLogic } from './stp-logic';
 import { MemoryStore } from '../store/memory-store';
@@ -10,6 +10,8 @@ import {
   XLT_TOKEN_STRATEGY,
   XltTokenConfig,
 } from '../core/xlt-token-config';
+import { XLT_TOKEN_HOOKS, XltHooks } from '../hooks/xlt-hooks.interface';
+import { NotSafeException } from '../exceptions/not-safe.exception';
 
 const makeConfig = (overrides: Partial<XltTokenConfig> = {}): XltTokenConfig => ({
   ...DEFAULT_XLT_TOKEN_CONFIG,
@@ -17,8 +19,15 @@ const makeConfig = (overrides: Partial<XltTokenConfig> = {}): XltTokenConfig => 
 });
 
 const tokenKey = (cfg: XltTokenConfig, token: string) => `${cfg.tokenName}:login:token:${token}`;
-const sessionKey = (cfg: XltTokenConfig, loginId: string) => `${cfg.tokenName}:login:session:${loginId}`;
+const sessionKey = (cfg: XltTokenConfig, loginId: string, device = 'default') =>
+  `${cfg.tokenName}:login:session:${loginId}:${device}`;
+const sessionListKey = (cfg: XltTokenConfig, loginId: string) =>
+  `${cfg.tokenName}:login:session-list:${loginId}`;
 const lastActiveKey = (cfg: XltTokenConfig, token: string) => `${cfg.tokenName}:login:lastActive:${token}`;
+const safeKey = (cfg: XltTokenConfig, token: string, business: string) =>
+  `${cfg.tokenName}:safe:${token}:${business}`;
+const tempTokenKey = (cfg: XltTokenConfig, tempToken: string) =>
+  `${cfg.tokenName}:temp-token:${tempToken}`;
 
 /** 构造请求对象，header key 使用 config.tokenName */
 const makeReq = (cfg: XltTokenConfig, token?: string, prefix?: string) => {
@@ -33,13 +42,16 @@ describe('StpLogic', () => {
   let store: MemoryStore;
   let logic: StpLogic;
   let config: XltTokenConfig;
+  let hooks: XltHooks;
 
-  const buildModule = async (cfg: XltTokenConfig) => {
+  const buildModule = async (cfg: XltTokenConfig, hookOverrides: XltHooks = {}) => {
+    hooks = hookOverrides;
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         { provide: XLT_TOKEN_CONFIG, useValue: cfg },
         { provide: XLT_TOKEN_STORE, useClass: MemoryStore },
         { provide: XLT_TOKEN_STRATEGY, useClass: UuidStrategy },
+        { provide: XLT_TOKEN_HOOKS, useValue: hooks },
         StpLogic,
       ],
     }).compile();
@@ -70,10 +82,20 @@ describe('StpLogic', () => {
   });
 
   describe('login - 写入 Store', () => {
-    it('写入 tokenKey -> loginId 和 sessionKey -> token', async () => {
+    it('写入 tokenKey -> loginId 和 sessionKey -> token（含 device 后缀）', async () => {
       const token = await logic.login('u1');
       await expect(store.get(tokenKey(config, token))).resolves.toBe('u1');
-      await expect(store.get(sessionKey(config, 'u1'))).resolves.toBe(token);
+      await expect(store.get(sessionKey(config, 'u1', 'default'))).resolves.toBe(token);
+    });
+
+    it('登录后写入 session-list 索引', async () => {
+      const token = await logic.login('u1', { device: 'pc' });
+      const raw = await store.get(sessionListKey(config, 'u1'));
+      expect(raw).not.toBeNull();
+      const list = JSON.parse(raw!);
+      expect(list).toHaveLength(1);
+      expect(list[0]).toMatchObject({ device: 'pc', token });
+      expect(list[0].loginTime).toBeGreaterThan(0);
     });
 
     it('options.timeout 优先于 config.timeout', async () => {
@@ -125,7 +147,170 @@ describe('StpLogic', () => {
       expect(t2).not.toBe(t1);
       await expect(store.get(tokenKey(config, t1))).resolves.toBe('BE_REPLACED');
       await expect(store.get(tokenKey(config, t2))).resolves.toBe('u1');
-      await expect(store.get(sessionKey(config, 'u1'))).resolves.toBe(t2);
+      await expect(store.get(sessionKey(config, 'u1', 'default'))).resolves.toBe(t2);
+    });
+  });
+
+  describe('多端登录 (Milestone 1)', () => {
+    it('不同设备登录后 token 互不影响', async () => {
+      const pcToken = await logic.login('u1', { device: 'pc' });
+      const appToken = await logic.login('u1', { device: 'app' });
+      expect(pcToken).not.toBe(appToken);
+      await expect(logic.isLogin(makeReq(config, pcToken))).resolves.toBe(true);
+      await expect(logic.isLogin(makeReq(config, appToken))).resolves.toBe(true);
+    });
+
+    it('isConcurrent=false 时同设备二次登录顶替旧 token', async () => {
+      await buildModule(makeConfig({ isConcurrent: false, isShare: false }));
+      const t1 = await logic.login('u1', { device: 'pc' });
+      const t2 = await logic.login('u1', { device: 'pc' });
+      expect(t2).not.toBe(t1);
+      await expect(store.get(tokenKey(config, t1))).resolves.toBe('BE_REPLACED');
+      await expect(logic.isLogin(makeReq(config, t1))).resolves.toBe(false);
+      await expect(logic.isLogin(makeReq(config, t2))).resolves.toBe(true);
+    });
+
+    it('isConcurrent=false 时不同设备 token 不受影响', async () => {
+      await buildModule(makeConfig({ isConcurrent: false, isShare: false }));
+      const pcToken = await logic.login('u1', { device: 'pc' });
+      const appToken = await logic.login('u1', { device: 'app' });
+      await logic.login('u1', { device: 'pc' });
+      await expect(logic.isLogin(makeReq(config, appToken))).resolves.toBe(true);
+      await expect(logic.isLogin(makeReq(config, pcToken))).resolves.toBe(false);
+    });
+
+    it('deviceConcurrent=false 时新登录踢掉所有设备', async () => {
+      await buildModule(makeConfig({ deviceConcurrent: false, isShare: false }));
+      const pcToken = await logic.login('u1', { device: 'pc' });
+      const appToken = await logic.login('u1', { device: 'app' });
+      await expect(store.get(tokenKey(config, pcToken))).resolves.toBe('KICK_OUT');
+      await expect(logic.isLogin(makeReq(config, pcToken))).resolves.toBe(false);
+      await expect(logic.isLogin(makeReq(config, appToken))).resolves.toBe(true);
+    });
+
+    it('getDeviceList 返回所有在线设备', async () => {
+      await logic.login('u1', { device: 'pc' });
+      await logic.login('u1', { device: 'app' });
+      const list = await logic.getDeviceList('u1');
+      expect(list).toHaveLength(2);
+      expect(list.map(d => d.device).sort()).toEqual(['app', 'pc']);
+    });
+
+    it('kickoutByDevice 只踢指定设备', async () => {
+      const pcToken = await logic.login('u1', { device: 'pc' });
+      const appToken = await logic.login('u1', { device: 'app' });
+      await expect(logic.kickoutByDevice('u1', 'pc')).resolves.toBe(true);
+      await expect(store.get(tokenKey(config, pcToken))).resolves.toBe('KICK_OUT');
+      await expect(logic.isLogin(makeReq(config, pcToken))).resolves.toBe(false);
+      await expect(logic.isLogin(makeReq(config, appToken))).resolves.toBe(true);
+      const list = await logic.getDeviceList('u1');
+      expect(list).toHaveLength(1);
+      expect(list[0].device).toBe('app');
+    });
+
+    it('kickoutByDevice 设备不存在时返回 null', async () => {
+      await expect(logic.kickoutByDevice('u1', 'missing')).resolves.toBeNull();
+    });
+
+    it('kickoutByToken 按 token 踢下线', async () => {
+      const pcToken = await logic.login('u1', { device: 'pc' });
+      const appToken = await logic.login('u1', { device: 'app' });
+      await expect(logic.kickoutByToken(pcToken)).resolves.toBe(true);
+      await expect(logic.isLogin(makeReq(config, pcToken))).resolves.toBe(false);
+      await expect(logic.isLogin(makeReq(config, appToken))).resolves.toBe(true);
+    });
+
+    it('kickoutByToken 无效 token 返回 null', async () => {
+      await expect(logic.kickoutByToken('invalid')).resolves.toBeNull();
+    });
+
+    it('logout 后从 session-list 移除对应设备', async () => {
+      const pcToken = await logic.login('u1', { device: 'pc' });
+      await logic.login('u1', { device: 'app' });
+      await logic.logout(pcToken);
+      const list = await logic.getDeviceList('u1');
+      expect(list).toHaveLength(1);
+      expect(list[0].device).toBe('app');
+    });
+  });
+
+  describe('观测性 API (Milestone 1)', () => {
+    it('getOnlineCount 返回在线用户数', async () => {
+      await logic.login('u1');
+      await logic.login('u2');
+      await expect(logic.getOnlineCount()).resolves.toBe(2);
+    });
+
+    it('logout 后用户不在在线列表', async () => {
+      const token = await logic.login('u1');
+      await logic.logout(token);
+      await expect(logic.getOnlineCount()).resolves.toBe(0);
+      await expect(logic.getOnlineLoginIds()).resolves.toEqual([]);
+    });
+
+    it('getOnlineLoginIds 支持分页', async () => {
+      await logic.login('u1');
+      await logic.login('u2');
+      await logic.login('u3');
+      const page0 = await logic.getOnlineLoginIds({ page: 0, pageSize: 2 });
+      expect(page0).toHaveLength(2);
+      const page1 = await logic.getOnlineLoginIds({ page: 1, pageSize: 2 });
+      expect(page1).toHaveLength(1);
+    });
+
+    it('forceLogout 清空所有设备', async () => {
+      const pcToken = await logic.login('u1', { device: 'pc' });
+      const appToken = await logic.login('u1', { device: 'app' });
+      await logic.forceLogout('u1');
+      await expect(logic.isLogin(makeReq(config, pcToken))).resolves.toBe(false);
+      await expect(logic.isLogin(makeReq(config, appToken))).resolves.toBe(false);
+      await expect(logic.getDeviceList('u1')).resolves.toEqual([]);
+    });
+  });
+
+  describe('Hooks (Milestone 1)', () => {
+    it('onLogin 登录成功后触发', async () => {
+      const onLogin = vi.fn();
+      await buildModule(makeConfig(), { onLogin });
+      const token = await logic.login('u1', { device: 'pc' });
+      expect(onLogin).toHaveBeenCalledWith('u1', token, 'pc');
+    });
+
+    it('onKickout kickoutByDevice 时触发', async () => {
+      const onKickout = vi.fn();
+      await buildModule(makeConfig(), { onKickout });
+      const token = await logic.login('u1', { device: 'pc' });
+      await logic.kickoutByDevice('u1', 'pc');
+      expect(onKickout).toHaveBeenCalledWith('u1', token);
+    });
+
+    it('onKickout kickoutByToken 时触发', async () => {
+      const onKickout = vi.fn();
+      await buildModule(makeConfig(), { onKickout });
+      const token = await logic.login('u1', { device: 'pc' });
+      await logic.kickoutByToken(token);
+      expect(onKickout).toHaveBeenCalledWith('u1', token);
+    });
+
+    it('钩子同步抛异常不影响主流程', async () => {
+      const onLogin = vi.fn(() => { throw new Error('hook failed'); });
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      await buildModule(makeConfig(), { onLogin });
+      const token = await logic.login('u1');
+      expect(token).toBeTruthy();
+      expect(onLogin).toHaveBeenCalled();
+      consoleSpy.mockRestore();
+    });
+
+    it('钩子异步 reject 不影响主流程', async () => {
+      const onLogin = vi.fn().mockRejectedValue(new Error('async hook failed'));
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      await buildModule(makeConfig(), { onLogin });
+      const token = await logic.login('u1');
+      expect(token).toBeTruthy();
+      await new Promise((r) => setTimeout(r, 10));
+      expect(onLogin).toHaveBeenCalled();
+      consoleSpy.mockRestore();
     });
   });
 
@@ -325,6 +510,82 @@ describe('StpLogic', () => {
       await logic.kickout('u1');
       const record = await logic.getOfflineRecords(token);
       expect(record).toBeNull();
+    });
+  });
+
+  describe('二级认证 (Milestone 2)', () => {
+    it('openSafe 后 checkSafe 通过', async () => {
+      const token = await logic.login('u1');
+      await logic.openSafe(token, 'pay', 300);
+      await expect(logic.checkSafe(token, 'pay')).resolves.toBeUndefined();
+    });
+
+    it('未 openSafe 时 checkSafe 抛 NotSafeException', async () => {
+      const token = await logic.login('u1');
+      await expect(logic.checkSafe(token, 'pay')).rejects.toThrow(NotSafeException);
+      await expect(logic.checkSafe(token, 'pay')).rejects.toMatchObject({ business: 'pay' });
+    });
+
+    it('超时后 checkSafe 抛 NotSafeException', async () => {
+      const token = await logic.login('u1');
+      await logic.openSafe(token, 'pay', 1);
+      await new Promise((r) => setTimeout(r, 1100));
+      await expect(logic.checkSafe(token, 'pay')).rejects.toThrow(NotSafeException);
+    });
+
+    it('closeSafe 后 checkSafe 抛 NotSafeException', async () => {
+      const token = await logic.login('u1');
+      await logic.openSafe(token, 'pay', 300);
+      await logic.closeSafe(token, 'pay');
+      await expect(logic.checkSafe(token, 'pay')).rejects.toThrow(NotSafeException);
+    });
+
+    it('不同 business 互不影响', async () => {
+      const token = await logic.login('u1');
+      await logic.openSafe(token, 'pay', 300);
+      await expect(logic.checkSafe(token, 'pay')).resolves.toBeUndefined();
+      await expect(logic.checkSafe(token, 'deleteAccount')).rejects.toThrow(NotSafeException);
+    });
+
+    it('openSafe 写入 safeKey 并记录打开时间', async () => {
+      const token = await logic.login('u1');
+      const before = Date.now();
+      await logic.openSafe(token, 'pay', 300);
+      const raw = await store.get(safeKey(config, token, 'pay'));
+      expect(raw).not.toBeNull();
+      expect(Number(raw)).toBeGreaterThanOrEqual(before);
+    });
+  });
+
+  describe('临时 Token (Milestone 2)', () => {
+    it('createTempToken 返回 token 且 parseTempToken 读取正确', async () => {
+      const tempToken = await logic.createTempToken('resetPwd:1001', 600);
+      expect(tempToken).toBeTruthy();
+      await expect(logic.parseTempToken(tempToken)).resolves.toBe('resetPwd:1001');
+      await expect(store.get(tempTokenKey(config, tempToken))).resolves.toBe('resetPwd:1001');
+    });
+
+    it('超时后 parseTempToken 返回 null', async () => {
+      const tempToken = await logic.createTempToken('resetPwd:1001', 1);
+      await new Promise((r) => setTimeout(r, 1100));
+      await expect(logic.parseTempToken(tempToken)).resolves.toBeNull();
+    });
+
+    it('deleteTempToken 后不可再读', async () => {
+      const tempToken = await logic.createTempToken('resetPwd:1001', 600);
+      await logic.deleteTempToken(tempToken);
+      await expect(logic.parseTempToken(tempToken)).resolves.toBeNull();
+      await expect(store.has(tempTokenKey(config, tempToken))).resolves.toBe(false);
+    });
+
+    it('不同 tempToken 互不影响', async () => {
+      const t1 = await logic.createTempToken('action:a', 600);
+      const t2 = await logic.createTempToken('action:b', 600);
+      await expect(logic.parseTempToken(t1)).resolves.toBe('action:a');
+      await expect(logic.parseTempToken(t2)).resolves.toBe('action:b');
+      await logic.deleteTempToken(t1);
+      await expect(logic.parseTempToken(t1)).resolves.toBeNull();
+      await expect(logic.parseTempToken(t2)).resolves.toBe('action:b');
     });
   });
 });

@@ -9,6 +9,7 @@ import { DeviceInfo, NotLoginType } from '../const';
 import { NotLoginException } from '../exceptions/not-login.exception';
 import { XltSession } from '../session/xlt-session';
 import { XLT_TOKEN_HOOKS, XltHooks } from '../hooks/xlt-hooks.interface';
+import { NotSafeException } from '../exceptions/not-safe.exception';
 
 @Injectable()
 export class StpLogic {
@@ -22,7 +23,7 @@ export class StpLogic {
 
   /**
    * 登录
-   * @param loginId
+   * @param loginId 
    * @param options
    */
   async login(
@@ -78,6 +79,13 @@ export class StpLogic {
     return token;
   }
 
+
+  /**
+   * 添加到 session-list
+   * @param loginId 
+   * @param info 
+   * @param timeout 
+   */
   async _addToSessionList(loginId: string, info: DeviceInfo, timeout: number): Promise<void> {
     const key = this.sessionListKey(loginId);
     const raw = await this.store.get(key);
@@ -89,6 +97,11 @@ export class StpLogic {
     await this.store.set(key, JSON.stringify(list), timeout);
   }
 
+  /**
+   * 踢掉所有设备
+   * @param loginId 
+   * @returns 
+   */
   async _kickoutAllDevices(loginId: string): Promise<void> {
     const key = this.sessionListKey(loginId);
     const raw = await this.store.get(key);
@@ -99,12 +112,84 @@ export class StpLogic {
     }
   }
 
+  /**
+   * 被顶下线
+   * @param loginId 
+   * @param token 
+   */
   async _replacedToken(loginId: string, token: string): Promise<void> {
     await this.store.update(this.tokenKey(token), NotLoginType.BE_REPLACED);
     await this.store.delete(this.sessionKey(loginId));
     this.writeOfflineRecord(token, NotLoginType.BE_REPLACED);
   }
 
+
+  /**
+   * 打开二级认证窗口
+   * @param token  用户token
+   * @param business  业务标识
+   * @param timeout 有效期（秒）
+   */
+  async openSafe(token: string, business: string, timeout: number): Promise<void> {
+    const safeKey = this.safeKey(token, business);
+    await this.store.set(safeKey, String(Date.now()), timeout);
+  }
+
+  /**
+   * 检查二级认证是否有效
+   * @param token 用户token
+   * @param business 业务标识
+   * @returns 是否有效
+   */
+  async checkSafe(token: string, business: string): Promise<void> {
+
+    const exists = await this.store.has(this.safeKey(token, business));
+
+    if (!exists) throw new NotSafeException(business);
+  }
+
+
+  /**
+   * 主动关闭二级认证
+   * @param token 
+   * @param business 
+   */
+  async closeSafe(token: string, business: string): Promise<void> {
+    await this.store.delete(this.safeKey(token, business));
+  }
+
+
+
+
+  /**
+   * 创建临时token
+   * @param value  要关联的业务数据
+   * @param timeout 有效期（秒）
+   * @returns 临时token字符串
+   */
+  async createTempToken(value: string, timeout: number): Promise<string> {
+    const tempToken = this.strategy.createToken('__temp__', this.config);
+    const tempTokenKey = this.tempTokenKey(tempToken);
+    await this.store.set(tempTokenKey, value, timeout);
+    return tempToken;
+  }
+
+  /**
+   * 解析临时token
+   * @param tempToken  临时token字符串
+   * @returns 要关联的业务数据
+   */
+  async parseTempToken(tempToken: string): Promise<string | null> {
+    return this.store.get(this.tempTokenKey(tempToken));
+  }
+
+  /**
+   * 销毁临时token
+   * @param tempToken  临时token字符串
+   */
+  async deleteTempToken(tempToken: string): Promise<void> {
+    await this.store.delete(this.tempTokenKey(tempToken));
+  }
 
   /**
    * 获取 token 值
@@ -334,6 +419,27 @@ export class StpLogic {
     return `${this.config.tokenName}:login:lastActive:${token}`;
   }
 
+
+  /**
+   * 生成二级认证key
+   * @param token  用户token
+   * @param business 业务标识
+   * @returns 二级认证key
+   */
+  private safeKey(token: string, business: string): string {
+    return `${this.config.tokenName}:safe:${token}:${business}`;
+  }
+
+
+  /**
+   * 生成临时token key
+   * @param tempToken  临时token字符串
+   * @returns 临时token key
+   */
+  private tempTokenKey(tempToken: string): string {
+    return `${this.config.tokenName}:temp-token:${tempToken}`;
+  }
+
   /**
    * 处理被顶下线
    * @param loginId
@@ -426,7 +532,7 @@ export class StpLogic {
   }
 
 
-  private callHook<K extends keyof XltHooks>(event: K, ...args:Parameters<NonNullable<XltHooks[K]>>): void {
+  private callHook<K extends keyof XltHooks>(event: K, ...args: Parameters<NonNullable<XltHooks[K]>>): void {
     if (!this.hooks?.[event]) return;
     try {
       const result = (this.hooks[event] as any)(...args);
@@ -436,5 +542,41 @@ export class StpLogic {
     } catch (err) {
       console.error(`[xlt-token] hook ${event} error:`, err);
     }
+  }
+
+
+  /**
+   * 查询所有在线loginIds
+   */
+  async getOnlineLoginIds(opts: { page?: number, pageSize?: number } = {}): Promise<string[]> {
+    const { page = 0, pageSize = 100 } = opts;
+
+    const pattern = `${this.config.tokenName}:login:session-list:*`;
+    const keys = await this.store.keys(pattern);
+    const prefix = `${this.config.tokenName}:login:session-list:`;
+    const start = page * pageSize;
+    return keys.slice(start, start + pageSize).map(k => k.slice(prefix.length)) as string[];
+
+  }
+
+
+  /**
+   * 在线用户数
+   */
+  async getOnlineCount(): Promise<number> {
+    const pattern = `${this.config.tokenName}:login:session-list:*`;
+    const keys = await this.store.keys(pattern);
+    return keys.length;
+  }
+
+  /**
+   * 强制某账号所有设备下线
+   */
+  async forceLogout(loginId: string): Promise<boolean> {
+    const list = await this.getDeviceList(loginId);
+    for (const { device } of list) {
+      await this.kickoutByDevice(loginId, device);
+    }
+    return true;
   }
 }

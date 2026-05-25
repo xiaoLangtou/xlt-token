@@ -86,4 +86,5 @@ export class XltSession {
   private async save(): Promise<void> {
     await this.store.set(this.storeKey, JSON.stringify(this.data), this.timeout);
   }
+
 }

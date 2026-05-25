@@ -7,12 +7,14 @@ import {
   XltCheckLogin,
   XltCheckPermission,
   XltCheckRole,
+  XltCheckSafe,
   XltIgnore,
   XltMode,
   XltTokenGuard,
   XltTokenModule,
   type XltTokenConfig,
 } from '../../src';
+import type { XltHooks } from '../../src/hooks/xlt-hooks.interface';
 import { MockStpInterface } from './mock-stp-interface';
 
 @Controller('api')
@@ -63,6 +65,12 @@ export class DemoController {
   whitelisted(@LoginId() id: string) {
     return { id };
   }
+
+  @XltCheckSafe('pay')
+  @Get('safe/pay')
+  safePay() {
+    return { action: 'pay' };
+  }
 }
 
 export interface BuildOpts {
@@ -71,6 +79,7 @@ export interface BuildOpts {
   guardClass?: any;
   /** 额外的配置覆盖（如 isConcurrent / isShare / activeTimeout 等） */
   config?: Partial<XltTokenConfig>;
+  hooks?: XltHooks;
 }
 
 export async function buildTestApp(opts: BuildOpts = {}) {
@@ -87,6 +96,7 @@ export async function buildTestApp(opts: BuildOpts = {}) {
           ...opts.config,
         },
         stpInterface: MockStpInterface,
+        hooks: opts.hooks,
       }),
     ],
     controllers: [DemoController],

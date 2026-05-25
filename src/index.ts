@@ -31,6 +31,7 @@ export { LoginId } from './decorators/login-id.decorator';
 export { TokenValue } from './decorators/token-value.decorator';
 export { XltCheckPermission } from './decorators/xlt-check-permission.decorator';
 export { XltCheckRole } from './decorators/xlt-check-role.decorator';
+export { XltCheckSafe, XLT_CHECK_SAFE_KEY } from './decorators/xlt-check-safe.decorator';
 
 // 守卫
 export { XltTokenGuard } from './guards/xlt-token.guard';
@@ -40,6 +41,7 @@ export { XltAbstractLoginGuard } from './guards/xlt-abstract-login.guard';
 export { NotLoginException } from './exceptions/not-login.exception';
 export { NotPermissionException } from './exceptions/not-permission.exception';
 export { NotRoleException } from './exceptions/not-role.exception';
+export { NotSafeException } from './exceptions/not-safe.exception';
 
 // 常量
 export { NotLoginType, XltMode } from './const/index';
@@ -52,3 +54,5 @@ export { matchPermission } from './perm/perm-pattern-match';
 
 // 会话
 export { XltSession } from './session/xlt-session';
+
+
