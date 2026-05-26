@@ -10,16 +10,14 @@
 
 ## 一、设计目标与原则
 
-
-| 原则               | 说明                                                                                   |
-| ---------------- | ------------------------------------------------------------------------------------ |
-| **框架零依赖核心**      | `@xlt-token/core` 只依赖标准库与 `WHATWG` 抽象，不感知任何 Web 框架                                   |
-| **一致的语义层**       | `login` / `logout` / `kickout` / `checkLogin` / `XltSession` 等核心 API 在所有框架下行为一致      |
+| 原则 | 说明 |
+| --- | --- |
+| **框架零依赖核心** | `@xlt-token/core` 只依赖标准库与 `WHATWG` 抽象，不感知任何 Web 框架 |
+| **一致的语义层** | `login` / `logout` / `kickout` / `checkLogin` / `XltSession` 等核心 API 在所有框架下行为一致 |
 | **idiomatic 适配** | 每个框架按自己的最佳实践集成（NestJS 用 Guard、Express 用 middleware、Hono 用 middleware、Fastify 用 hook） |
-| **渐进迁移**         | 现有 NestJS 用户升级到新版本时，导入路径与 API 保持兼容（`xlt-token` 自动转发到 `@xlt-token/nestjs`）            |
-| **可插拔依赖**        | Store / Strategy / StpInterface 仍由用户通过手动 DI 注入，核心不绑死任何容器                             |
-| **最小化抽象**        | 不发明"统一中间件层"，只抽象 HTTP 读写最小必要面                                                         |
-
+| **渐进迁移** | 现有 NestJS 用户升级到新版本时，导入路径与 API 保持兼容（`xlt-token` 自动转发到 `@xlt-token/nestjs`） |
+| **可插拔依赖** | Store / Strategy / StpInterface 仍由用户通过手动 DI 注入，核心不绑死任何容器 |
+| **最小化抽象** | 不发明"统一中间件层"，只抽象 HTTP 读写最小必要面 |
 
 **非目标**
 
@@ -108,11 +106,21 @@ export interface HttpContext {
   readonly cookies: HttpCookies;
   readonly query: HttpQuery;
 
+  /**
+   * 请求级别的共享状态，由核心层写入，由各框架集成层映射到框架习惯位置。
+   * 生命周期：与单次请求绑定，每次 createXxxContext() 调用持有同一引用。
+   * 命名空间约定：核心写入的字段以 `stp` 为前缀，适配器扩展字段以 `_xlt` 为前缀。
+   */
   state: Record<string, unknown>;
 
   setHeader(name: string, value: string): void;
   setCookie(name: string, value: string, options?: CookieOptions): void;
 
+  /**
+   * 逃生口：访问框架原始对象。
+   * 适配器可在 state 中扩展框架特有字段（如 Fastify 的 reply.sent）；
+   * 若需要直接操作原始对象，通过 raw() 获取。
+   */
   raw<T = unknown>(): T;
 }
 
@@ -127,13 +135,15 @@ export interface HttpQuery {
 }
 ```
 
+> **⚠️ 待决策（Phase 3 前必须确定）**：Hono / Elysia 的 cookie 读取为异步 API。若需支持，`HttpCookies.get` 需改为 `Promise<string | null>`，这是一个接口级 breaking change，将影响所有适配器和 `StpLogic.checkLogin` 的签名。建议在 Phase 1 结束后立即做出决策，而不是推迟到 Phase 3。
+
 **为什么不用 WHATWG Request？**
 
 - 现代框架（Hono / Elysia / Next.js）原生用 `Request`，但 Express / Koa / NestJS（Express 模式）/ Fastify 不是
 - 把所有框架强行转 `Request` 会损失原生能力（如 Fastify 的 schema、Express 的 `req.cookies`）
 - 自定义最小接口最灵活，每个适配器复用框架原生解析逻辑
 
-`**state` 字段的设计**
+**`state` 字段的设计**
 
 替代当前直接挂到 `request.stpLoginId / stpToken` 的做法：
 
@@ -143,18 +153,18 @@ ctx.state.stpToken   = 'xxx';
 ctx.state.stpSession = session;
 ```
 
-然后由各框架的集成层把它映射到框架习惯的位置：
+`state` 与单次 HTTP 请求绑定，各适配器在 `createXxxContext()` 时负责维护其引用一致性（见第六节各适配器实现）。核心层不持久化、不跨请求共享 `state`。
 
+各框架集成层再把 `state` 映射到框架习惯的位置：
 
-| 框架      | 映射后                                       |
-| ------- | ----------------------------------------- |
-| Express | `req.stpLoginId` / `req.stpToken`         |
-| Koa     | `ctx.state.stpLoginId`                    |
+| 框架 | 映射后 |
+| --- | --- |
+| Express | `req.stpLoginId` / `req.stpToken` |
+| Koa | `ctx.state.stpLoginId`（使用 `ctx.state._xlt` 命名空间避免与 Koa 内置 state 冲突，见第七节） |
 | Fastify | `request.stpLoginId`（用 `decorateRequest`） |
-| Hono    | `c.set('stpLoginId', ...)`                |
-| Elysia  | `derive(() => ({ stpLoginId }))`          |
-| NestJS  | `request.stpLoginId`（兼容 1.0）              |
-
+| Hono | `c.set('stpLoginId', ...)` |
+| Elysia | `derive(() => ({ stpLoginId }))` |
+| NestJS | `request.stpLoginId`（兼容 1.0） |
 
 ---
 
@@ -248,9 +258,9 @@ export class NotRoleException extends XltError { /* ... */ }
 
 ## 六、适配器层（L2）
 
-每个适配器只需要 ~100 行代码，做三件事：
+每个适配器只需要约 100 行代码，做三件事：
 
-1. 把框架的 `(req, res)` 包装成 `HttpContext`
+1. 把框架的 `(req, res)` 包装成 `HttpContext`，并保证 `state` 引用在同一请求内唯一
 2. 提供 `runAuth(ctx, opts)` 助手（封装 `checkLogin + 元数据判定 + 异常抛出`）
 3. 把核心异常映射到框架响应
 
@@ -259,12 +269,13 @@ export class NotRoleException extends XltError { /* ... */ }
 import type { Request, Response } from 'express';
 import { HttpContext } from '@xlt-token/core';
 
+// state 挂在 req 上，保证同一请求内多次调用 createExpressContext 返回同一 state 对象
 export function createExpressContext(req: Request, res: Response): HttpContext {
   return {
     headers: { get: (n) => (req.headers[n.toLowerCase()] as string) ?? null },
     cookies: { get: (n) => req.cookies?.[n] ?? null },
     query:   { get: (n) => (req.query?.[n] as string) ?? null },
-    state: (req as any).state ??= {},
+    state: (req as any)._xltState ??= {},
     setHeader: (n, v) => res.setHeader(n, v),
     setCookie: (n, v, o) => res.cookie(n, v, o ?? {}),
     raw: () => req as any,
@@ -281,7 +292,7 @@ export function createFastifyContext(req: FastifyRequest, reply: FastifyReply): 
     headers: { get: (n) => (req.headers[n.toLowerCase()] as string) ?? null },
     cookies: { get: (n) => (req as any).cookies?.[n] ?? null },
     query:   { get: (n) => (req.query as any)?.[n] ?? null },
-    state: (req as any).state ??= {},
+    state: (req as any)._xltState ??= {},
     setHeader: (n, v) => reply.header(n, v),
     setCookie: (n, v, o) => reply.setCookie(n, v, o ?? {}),
     raw: () => req as any,
@@ -302,6 +313,26 @@ export function createHonoContext(c: Context): HttpContext {
     setHeader: (n, v) => c.header(n, v),
     setCookie: (n, v, o) => c.cookie(n, v, o as any),
     raw: () => c,
+  };
+}
+```
+
+```ts twoslash
+// @xlt-token/adapter-koa
+import type { Context as KoaContext } from 'koa';
+
+// 注意：Koa 内置 ctx.state 为框架共享对象，不直接复用。
+// 使用 ctx.state._xlt 命名空间隔离，避免字段污染。
+export function createKoaContext(ctx: KoaContext): HttpContext {
+  ctx.state._xlt ??= {};
+  return {
+    headers: { get: (n) => (ctx.headers[n.toLowerCase()] as string) ?? null },
+    cookies: { get: (n) => ctx.cookies.get(n) ?? null },
+    query:   { get: (n) => (ctx.query[n] as string) ?? null },
+    state: ctx.state._xlt,
+    setHeader: (n, v) => ctx.set(n, v),
+    setCookie: (n, v, o) => ctx.cookies.set(n, v, o),
+    raw: () => ctx,
   };
 }
 ```
@@ -338,7 +369,7 @@ class AuthController {
 ```ts twoslash
 import express from 'express';
 import { createXltToken } from '@xlt-token/core';
-import { xltMiddleware } from '@xlt-token/express';
+import { xltMiddleware } from '@xlt-token/adapter-express'; // 注意：包名与 monorepo 保持一致
 
 const xlt = createXltToken({ config: { tokenName: 'authorization' } });
 
@@ -351,39 +382,42 @@ app.post('/auth/login', async (req, res) => {
 });
 
 app.get('/me', (req, res) => {
-  res.json({ loginId: req.stpLoginId });
+  res.json({ loginId: (req as any)._xltState?.stpLoginId });
 });
 ```
 
-`xltMiddleware` 返回一个 Express 中间件，内部读取路由上的元数据（通过 `req.xltIgnore` 之类的扩展机制，或者用户手动指定路径白名单）。
+路由白名单通过 `options.ignore` 传入路径匹配规则，或在单路由上调用 `ignoreAuth()` helper 设置标记，`xltMiddleware` 在 `checkLogin` 前读取并跳过。
 
 ### 7.3 Koa
 
 ```ts twoslash
 import Koa from 'koa';
-import { xltMiddleware } from '@xlt-token/koa';
+import { xltMiddleware } from '@xlt-token/adapter-koa';
 
 const app = new Koa();
 app.use(xltMiddleware(xlt));
 
 app.use(async (ctx) => {
   if (ctx.path === '/me') {
+    // stpLoginId 挂在 _xlt 命名空间下，集成层再透传到顶层 state
     ctx.body = { loginId: ctx.state.stpLoginId };
   }
 });
 ```
 
+集成层在中间件末尾自动将 `ctx.state._xlt.stpLoginId` 等字段提升到 `ctx.state` 顶层，保持 Koa 惯用写法。
+
 ### 7.4 Fastify
 
 ```ts twoslash
 import Fastify from 'fastify';
-import { xltPlugin } from '@xlt-token/fastify';
+import { xltPlugin } from '@xlt-token/adapter-fastify';
 
 const app = Fastify();
 await app.register(xltPlugin, { xlt, defaultCheck: true });
 
 app.get('/me', { config: { xltAuth: true } }, async (req) => ({
-  loginId: req.stpLoginId,
+  loginId: (req as any).stpLoginId,
 }));
 ```
 
@@ -393,7 +427,7 @@ Fastify 用 `decorateRequest` + `addHook('preHandler')` 实现，配合 route-le
 
 ```ts twoslash
 import { Hono } from 'hono';
-import { xltMiddleware, requireLogin } from '@xlt-token/hono';
+import { xltMiddleware, requireLogin } from '@xlt-token/adapter-hono';
 
 const app = new Hono();
 app.use('*', xltMiddleware(xlt));
@@ -407,7 +441,7 @@ app.get('/me', requireLogin(), (c) => c.json({
 
 ```ts twoslash
 import { Elysia } from 'elysia';
-import { xltPlugin } from '@xlt-token/elysia';
+import { xltPlugin } from '@xlt-token/adapter-elysia';
 
 new Elysia()
   .use(xltPlugin(xlt))
@@ -419,7 +453,7 @@ new Elysia()
 
 ```ts twoslash
 import { defineEventHandler } from 'h3';
-import { xltMiddleware, useStpLoginId } from '@xlt-token/h3';
+import { xltMiddleware, useStpLoginId } from '@xlt-token/adapter-h3';
 
 export default defineEventHandler(async (event) => {
   await xltMiddleware(xlt)(event);
@@ -512,17 +546,15 @@ xlt-token/                                    # 仓库根（pnpm workspace + tur
 
 为了保证"一次学会，所有框架都能用"，所有适配器**必须**遵守以下契约（写入 spec 测试中）：
 
-
-| 契约              | 描述                                                            |
-| --------------- | ------------------------------------------------------------- |
-| **token 读取顺序**  | `header → cookie → query`，剥离 `tokenPrefix`                    |
-| **state 字段名**   | `stpLoginId` / `stpToken` / `stpSession`                      |
-| **黑/白名单语义**     | `defaultCheck` 配置项，配合 `requireAuth()` / `ignoreAuth()` helper |
-| **异常映射**        | `NotLoginException` → 401 + JSON body（含 `type` 字段）            |
-| **权限校验**        | 同一份 `StpPermLogic`，仅装饰器/元数据机制不同                               |
-| **Session API** | `XltSession` 完全一致                                             |
-| **Hook 触发时机**   | `onLogin/onLogout/onKickout/onReplaced` 在 `StpLogic` 内统一触发    |
-
+| 契约 | 描述 |
+| --- | --- |
+| **token 读取顺序** | `header → cookie → query`，剥离 `tokenPrefix` |
+| **state 字段名** | `stpLoginId` / `stpToken` / `stpSession` |
+| **黑/白名单语义** | `defaultCheck` 配置项，配合 `requireAuth()` / `ignoreAuth()` helper |
+| **异常映射** | `NotLoginException` → 401 + JSON body（含 `type` 字段） |
+| **权限校验** | 同一份 `StpPermLogic`，仅装饰器/元数据机制不同 |
+| **Session API** | `XltSession` 完全一致 |
+| **Hook 触发时机** | `onLogin/onLogout/onKickout/onReplaced` 在 `StpLogic` 内统一触发 |
 
 所有跨框架 E2E 共享同一组测试场景（顶号、踢人、活跃过期、权限校验等），只换 setup。
 
@@ -613,6 +645,7 @@ export class XltTokenGuard implements CanActivate {
 - 引入 `HttpContext` 接口与 `createExpressContext` 内部 helper
 - 当前 `src/` 仍然存在，只是内部转调 `@xlt-token/core`
 - **对外 API 完全不变**
+- **Phase 1 结束后**：决策 `HttpContext.cookies.get` 是否需要 async 化（见第四节警告）
 
 ### Phase 2 · NestJS 包独立
 
@@ -661,48 +694,43 @@ export class XltTokenGuard implements CanActivate {
 
 ## 十三、与 1.0 的兼容性矩阵
 
-
-| 1.0 用法                                       | 2.0 行为                       |
-| -------------------------------------------- | ---------------------------- |
+| 1.0 用法 | 2.0 行为 |
+| --- | --- |
 | `import { XltTokenModule } from 'xlt-token'` | 仍然可用，转发到 `@xlt-token/nestjs` |
-| `StpUtil.login(...)`                         | 完全兼容                         |
-| `@XltIgnore()` / `@LoginId()`                | 完全兼容                         |
-| `request.stpLoginId` / `request.stpToken`    | 完全兼容（NestJS 适配器仍会挂到 req）     |
-| 自定义 Store / Strategy                         | 完全兼容（接口不变）                   |
-| `XltAbstractLoginGuard`                      | 完全兼容                         |
-
+| `StpUtil.login(...)` | 完全兼容 |
+| `@XltIgnore()` / `@LoginId()` | 完全兼容 |
+| `request.stpLoginId` / `request.stpToken` | 完全兼容（NestJS 适配器仍会挂到 req） |
+| 自定义 Store / Strategy | 完全兼容（接口不变） |
+| `XltAbstractLoginGuard` | 完全兼容 |
 
 ---
 
 ## 十四、风险与权衡
 
-
-| 风险                           | 缓解                                                                   |
-| ---------------------------- | -------------------------------------------------------------------- |
-| 包数量膨胀（10+ 包）                 | Turborepo 缓存 + Changesets 联动发布，单次开发只动 2~3 个包                         |
-| `HttpContext` 抽象漏掉框架特性       | 提供 `ctx.raw()` 逃生口；适配器可在 `ctx.state` 上扩展自有字段                         |
-| 用户混用多适配器（如 NestJS + Express） | 文档明确：同一进程只用一套适配器；多套时各自 `createXltToken` 实例                           |
-| 文档分散难维护                      | 共享 "Core API" / "Recipes" 章节，每个框架只写差异部分                              |
-| 1.0 用户升级阻力                   | Phase 1/2 完全 API 兼容，2.0 升级仅需 `pnpm add @xlt-token/nestjs` 再改导入路径（可选） |
-
+| 风险 | 缓解 |
+| --- | --- |
+| 包数量膨胀（10+ 包） | Turborepo 缓存 + Changesets 联动发布，单次开发只动 2~3 个包 |
+| `HttpContext` 抽象漏掉框架特性 | 提供 `ctx.raw()` 逃生口；适配器可在 `ctx.state` 上扩展自有字段 |
+| 用户混用多适配器（如 NestJS + Express） | 文档明确：同一进程只用一套适配器；多套时各自 `createXltToken` 实例 |
+| 文档分散难维护 | 共享 "Core API" / "Recipes" 章节，每个框架只写差异部分 |
+| 1.0 用户升级阻力 | Phase 1/2 完全 API 兼容，2.0 升级仅需 `pnpm add @xlt-token/nestjs` 再改导入路径（可选） |
+| `HttpCookies.get` 异步化导致破坏性变更 | Phase 1 结束后立即决策；若需 async 化，统一在 Phase 2 前完成接口调整，不留到 Phase 3 |
 
 ---
 
 ## 十五、后续 TODO
 
-- 调研 `HttpContext` 是否需要 async 化（Hono / Elysia 部分 API 是异步获取 cookie）
-- 评估 `@xlt-token/core` 是否需要拆 `core-runtime` 与 `core-types` 两包，降低 zero-dep 检查难度
-- 输出"从 1.x 升级到 2.0 的迁移指南"草稿
-- 在 `apps/playground/` 起一个最小框架矩阵跑通登录/踢人/顶号三场景，验证抽象是否漏接口
-- 与社区讨论命名：是否需要更通用的 brand（如 `auth-anywhere`）以吸引 NestJS 以外用户
+- **[P0 · Phase 1 后]** 决策 `HttpContext.cookies.get` 是否 async 化，确定后更新接口定义与所有适配器示例
+- **[P0 · Phase 1 后]** 评估 `@xlt-token/core` 是否需要拆 `core-runtime` 与 `core-types` 两包，降低 zero-dep 检查难度
+- **[P1 · Phase 2 后]** 输出"从 1.x 升级到 2.0 的迁移指南"草稿
+- **[P1 · Phase 3 前]** 在 `apps/playground/` 起一个最小框架矩阵跑通登录/踢人/顶号三场景，验证抽象是否漏接口
+- **[P2 · 可选]** 与社区讨论命名：是否需要更通用的 brand（如 `auth-anywhere`）以吸引 NestJS 以外用户
 
 ---
 
 **修订记录**
 
-
-| 日期         | 内容                                |
-| ---------- | --------------------------------- |
+| 日期 | 内容 |
+| --- | --- |
 | 2026-05-18 | 初稿：分层、HttpContext、各框架集成示例、迁移 4 阶段 |
-
-
+| 2026-05-26 | v2：补全 Koa 适配器实现；统一 state 字段命名（`_xltState`）及生命周期说明；修正包名一致性（`@xlt-token/adapter-*`）；将异步 cookie 决策提前至 Phase 1 结束节点；TODO 增加优先级标注 |
