@@ -11,6 +11,7 @@
   ],
   "author": "xltorg",
   "license": "MIT",
+  "packageManager": "pnpm@10.15.1",
   "repository": {
     "type": "git",
     "url": "https://github.com/xiaoLangtou/xlt-token.git"
@@ -36,21 +37,25 @@
     "README.md"
   ],
   "scripts": {
+    "prebuild": "pnpm --filter @xlt-token/core build && pnpm --filter @xlt-token/nestjs build",
     "build": "tsdown",
+    "build:workspace": "turbo run build",
     "build:watch": "tsdown --watch",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:ui": "vitest --ui",
-    "test:cov": "vitest run --coverage",
-    "test:e2e": "vitest run --config test/vitest.e2e.config.ts",
-    "test:e2e:cov": "vitest run --config test/vitest.e2e.config.ts --coverage",
-    "test:all": "pnpm test:cov && pnpm test:e2e",
+    "test": "pnpm --filter @xlt-token/nestjs test",
+    "test:watch": "pnpm --filter @xlt-token/nestjs test -- --watch",
+    "test:ui": "pnpm --filter @xlt-token/nestjs test -- --ui",
+    "test:cov": "pnpm --filter @xlt-token/nestjs test:cov",
+    "test:e2e": "pnpm --filter @xlt-token/nestjs test:e2e",
+    "test:e2e:cov": "pnpm --filter @xlt-token/nestjs test:e2e:cov",
+    "test:all": "pnpm --filter @xlt-token/core test:cov && pnpm --filter @xlt-token/nestjs test:cov && pnpm --filter @xlt-token/nestjs test:e2e",
+    "test:workspace": "turbo run test test:cov test:e2e",
     "test:junit": "vitest run --reporter=junit --outputFile=reports/junit.xml",
-    "test:e2e:junit": "vitest run --config test/vitest.e2e.config.ts --reporter=junit --outputFile=reports/junit-e2e.xml",
-    "prepublishOnly": "pnpm run build",
+    "test:e2e:junit": "pnpm --filter @xlt-token/nestjs test:e2e:junit",
+    "prepublishOnly": "pnpm run build:workspace",
     "docs:dev": "vitepress dev docs",
-    "docs:build": "vitepress build docs",
-    "docs:preview": "vitepress preview docs"
+    "docs:preview": "vitepress preview docs",
+    "docs:build": "pnpm build && vitepress build docs",
+    "docs:build:workspace": "turbo run docs:build"
   },
   "peerDependencies": {
     "@nestjs/common": "^10.0.0 || ^11.0.0",
@@ -74,8 +79,8 @@
     }
   },
   "dependencies": {
-    "es-toolkit": "^1.0.0",
-    "uuid": "^10.0.0"
+    "@xlt-token/core": "workspace:*",
+    "@xlt-token/nestjs": "workspace:*"
   },
   "devDependencies": {
     "@nestjs/common": "^10.0.0",
@@ -96,6 +101,7 @@
     "rxjs": "^7.8.0",
     "supertest": "^7.2.2",
     "tsdown": "^0.20.0",
+    "turbo": "^2.5.4",
     "typescript": "^5.1.0",
     "unplugin-swc": "^1.5.9",
     "vitepress": "^1.6.4",

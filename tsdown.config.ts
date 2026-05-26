@@ -10,6 +10,8 @@ export default defineConfig({
   external: [
     '@nestjs/common',
     '@nestjs/core',
+    '@xlt-token/core',
+    '@xlt-token/nestjs',
     'reflect-metadata',
     'rxjs',
     'express',

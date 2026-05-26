@@ -24,6 +24,8 @@ lerna-debug.log*
 /reports
 /.nyc_output
 /.vitest-cache
+.turbo
+packages/*/coverage
 
 # IDEs and editors
 /.idea

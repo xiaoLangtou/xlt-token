@@ -17,3 +17,5 @@
 | `p1-progress-checklist.md` | P1 进度勾选清单 | 全部勾选完成 |
 | `e2e-testing-plan.md` | E2E 测试计划 | 计划已落地为 195 个测试用例 |
 | `multi-framework-architecture.md` | 2.0 多框架适配架构方案 | 规划草案，待立项后转入活跃文档 |
+| `core-extraction-implementation.md` | `@xlt-token/core` 抽离实施文档 | 2.0 Phase 1 任务分解与步骤 |
+| `nestjs-adapter-implementation.md` | `@xlt-token/nestjs` 适配实施文档 | 2.0 Phase 2 任务分解与步骤 |
