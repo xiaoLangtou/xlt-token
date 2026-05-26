@@ -17,7 +17,7 @@
 
 **签发 token 并写入存储**。
 
-```ts
+```ts twoslash
 login(
   loginId: string | number,
   options?: {
@@ -37,7 +37,7 @@ login(
 
 **示例**：
 
-```ts
+```ts twoslash
 const token = await this.stp.login(user.id);
 // 指定本次登录 1 小时超时（不影响全局配置）
 const tempToken = await this.stp.login(user.id, { timeout: 3600 });
@@ -47,7 +47,7 @@ const tempToken = await this.stp.login(user.id, { timeout: 3600 });
 
 **从请求中提取 token**，顺序：`header → cookie → query`，自动剥离 `tokenPrefix`。
 
-```ts
+```ts twoslash
 getTokenValue(req: Request): Promise<string | null>
 ```
 
@@ -57,7 +57,7 @@ getTokenValue(req: Request): Promise<string | null>
 
 **静默判断**请求是否登录，**不抛异常**。
 
-```ts
+```ts twoslash
 isLogin(req: Request): Promise<boolean>
 ```
 
@@ -67,7 +67,7 @@ isLogin(req: Request): Promise<boolean>
 
 **严格校验**，失败抛 `NotLoginException`（HTTP 401）。
 
-```ts
+```ts twoslash
 checkLogin(req: Request): Promise<{
   ok: boolean;
   loginId?: string;
@@ -82,7 +82,7 @@ Guard 内部调用的就是它。业务层一般不直接调。
 
 **按 token 登出**。清理 `tokenKey` / `lastActiveKey` / `sessionKey` 三类键。
 
-```ts
+```ts twoslash
 logout(token: string): Promise<boolean | null>
 ```
 
@@ -94,7 +94,7 @@ logout(token: string): Promise<boolean | null>
 
 **按 loginId 登出**。常用于"管理员强制退出某用户"或 logout API 只有 userId 的场景。
 
-```ts
+```ts twoslash
 logoutByLoginId(loginId: string): Promise<boolean | null>
 ```
 
@@ -108,7 +108,7 @@ logoutByLoginId(loginId: string): Promise<boolean | null>
 | 用户下次请求 | `NotLoginType.INVALID_TOKEN` | `NotLoginType.KICK_OUT`（可区分被踢场景给出提示） |
 | 场景 | 用户主动登出、账号注销 | 管理员强制下线、风控触发 |
 
-```ts
+```ts twoslash
 kickout(loginId: string): Promise<boolean | null>
 ```
 
@@ -116,7 +116,7 @@ kickout(loginId: string): Promise<boolean | null>
 
 **续签 token / session / lastActive 的 TTL**。不改值，只改过期。
 
-```ts
+```ts twoslash
 renewTimeout(token: string, timeout: number): Promise<boolean | null>
 ```
 
@@ -126,7 +126,7 @@ renewTimeout(token: string, timeout: number): Promise<boolean | null>
 
 ### `StpUtil.getLoginId(req)`（仅 StpUtil 提供）
 
-```ts
+```ts twoslash
 StpUtil.getLoginId(req): Promise<string | null>
 ```
 
@@ -207,5 +207,9 @@ StpLogic.logout(token)
 ## 下一步
 
 - 想看 Guard 如何调 `checkLogin`？→ [05-guards-and-decorators](./05-guards-and-decorators.md)
+- 多端登录与 device API → [14-multi-device](./14-multi-device.md)
+- 二级认证与临时 Token → [15-secondary-auth](./15-secondary-auth.md)
+- JWT 模式 → [16-jwt-strategy](./16-jwt-strategy.md)
+- Hooks 与在线列表 → [17-hooks-and-observability](./17-hooks-and-observability.md)
 - 想了解存储实现差异？→ [06-storage](./06-storage.md)
 - 各种异常怎么处理？→ [08-exceptions](./08-exceptions.md)

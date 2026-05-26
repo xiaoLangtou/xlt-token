@@ -15,6 +15,7 @@ import {
   type XltTokenConfig,
 } from '../../src';
 import type { XltHooks } from '../../src/hooks/xlt-hooks.interface';
+import type { TokenStrategy } from '../../src/token/token-strategy.interface';
 import { MockStpInterface } from './mock-stp-interface';
 
 @Controller('api')
@@ -80,6 +81,8 @@ export interface BuildOpts {
   /** 额外的配置覆盖（如 isConcurrent / isShare / activeTimeout 等） */
   config?: Partial<XltTokenConfig>;
   hooks?: XltHooks;
+  /** Token 策略，如 JwtStrategy */
+  strategy?: { useClass: new (...args: any[]) => TokenStrategy };
 }
 
 export async function buildTestApp(opts: BuildOpts = {}) {
@@ -89,6 +92,7 @@ export async function buildTestApp(opts: BuildOpts = {}) {
     imports: [
       XltTokenModule.forRoot({
         isGlobal: true,
+        strategy: opts.strategy,
         config: {
           tokenName: 'authorization',
           tokenPrefix: '',

@@ -26,7 +26,7 @@
 
 ### 新增 API（规划）
 
-```ts
+```ts twoslash
 // 二级认证：业务触发（如验证码、短信、谷歌验证器通过后）
 await StpUtil.openSafe(token, 'pay', 300);    // pay 业务打开安全认证 300 秒
 
@@ -41,7 +41,7 @@ await StpUtil.deleteTempToken(tempToken);
 
 ### 新增装饰器
 
-```ts
+```ts twoslash
 @XltCheckSafe('pay')       // 失败抛 NotSafeException（HTTP 403 + type=NOT_SAFE）
 @Post('transfer')
 transfer() {}
@@ -69,7 +69,7 @@ transfer() {}
 
 ### 新增 API（规划）
 
-```ts
+```ts twoslash
 // 登录时指定设备类型
 const token = await StpUtil.login('1001', { device: 'web' });
 
@@ -86,7 +86,7 @@ await StpUtil.kickoutByToken(token);
 
 ### 配置扩展
 
-```ts
+```ts twoslash
 {
   deviceConcurrent: true,   // 默认 true：不同设备可共存
   // false 时，登录任何设备都会挤掉其他所有设备（等于 1.0 行为）
@@ -114,7 +114,7 @@ sessionKey 从 `login:session:<loginId>` 升级为 `login:session:<loginId>:<dev
 
 ### 新增 Strategy
 
-```ts
+```ts twoslash
 import { JwtStrategy } from 'xlt-token';
 
 XltTokenModule.forRoot({
@@ -165,7 +165,7 @@ store 仍用于：
 
 ### 新增 API（规划）
 
-```ts
+```ts twoslash
 // 查所有在线 loginId
 const list = await StpUtil.getOnlineLoginIds();         // string[]
 const list = await StpUtil.getOnlineLoginIds({ pageSize: 100, page: 0 });
@@ -179,7 +179,7 @@ const count = await StpUtil.getOnlineCount();
 
 ### 新增钩子（`XltTokenModule` 配置）
 
-```ts
+```ts twoslash
 XltTokenModule.forRoot({
   hooks: {
     onLogin: (loginId, token, device) => audit.log(...),

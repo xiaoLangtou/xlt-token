@@ -6,7 +6,7 @@ Token 字符串如何生成、内置的三种样式、如何自定义（例如�
 
 源码：`src/token/token-strategy.interface.ts`
 
-```ts
+```ts twoslash
 interface TokenStrategy {
   generateToken(payload: any): string;            // 通用生成（自由扩展，如 JWT sign）
   verifyToken(token: string): any;                // 通用校验（自由扩展）
@@ -43,6 +43,8 @@ interface TokenStrategy {
 
 ## 自定义策略（典型：接入 JWT）
 
+> **1.1.0 起**库内已内置 `JwtStrategy`，配置、黑名单机制、与 UUID 模式对比见 **[16 · JWT 策略](./16-jwt-strategy.md)**。下面仍保留自定义策略的通用步骤。
+
 ### 步骤
 
 1. 实现 `TokenStrategy` 接口
@@ -50,7 +52,7 @@ interface TokenStrategy {
 
 ### 示例：JWT 策略
 
-```ts
+```ts twoslash
 import { Injectable, Inject } from '@nestjs/common';
 import { TokenStrategy, XltTokenConfig } from 'xlt-token';
 import * as jwt from 'jsonwebtoken';
@@ -79,7 +81,7 @@ export class JwtStrategy implements TokenStrategy {
 
 注册：
 
-```ts
+```ts twoslash
 import { JwtStrategy } from './jwt.strategy';
 
 @Module({
@@ -96,9 +98,10 @@ export class AppModule {}
 
 ### 注意事项
 
-- **`createToken` 只负责生成**。token 是否仍有效仍由 store 决定（xlt-token 不会解签 JWT 做校验，只会读 Redis）。
-- 这意味着：**JWT 模式下依然需要 store**（用于顶号、踢人、logout 等状态语义）。如果你只想要"纯无状态 JWT，服务端不保存状态"，xlt-token 并不是合适的方案。
-- 可以把 JWT payload 作为 token 值写入 store，但会比较冗长。一般建议保留"JWT 用于生成 + Redis 用于状态"的组合。
+- 推荐使用内置 **`JwtStrategy`**（`import { JwtStrategy } from 'xlt-token'`），无需自行实现黑名单与 `_resolveLoginId` 分支。
+- 若自定义 JWT 策略，需实现 `verifyToken`，并在 `config.jwt.secret` 中配置密钥，`StpLogic` 才会进入 JWT 鉴权分支。
+- **`createToken` 只负责生成**。UUID 模式下 token 是否仍有效由 store 决定；JWT 模式下正常鉴权以验签为主，踢人/顶号走 **jti 黑名单**（详见 [16-jwt-strategy](./16-jwt-strategy.md)）。
+- 若只想要「纯无状态 JWT，服务端不保存状态」，xlt-token 并不是合适的方案。
 
 ## 策略 vs 存储：该改哪个？
 

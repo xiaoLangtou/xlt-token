@@ -1,8 +1,9 @@
-import { Inject } from "@nestjs/common";
+import { Inject, Injectable } from "@nestjs/common";
 import { XLT_TOKEN_CONFIG, XltTokenConfig } from "../core/xlt-token-config";
 import type { TokenStrategy } from "./token-strategy.interface";
 import { sign, verify, JwtPayload } from "jsonwebtoken";
 
+@Injectable()
 export class JwtStrategy implements TokenStrategy {
   constructor(
     @Inject(XLT_TOKEN_CONFIG) private readonly config: XltTokenConfig

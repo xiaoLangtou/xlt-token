@@ -86,7 +86,7 @@ pnpm add redis
 
 ### 2.2 最简集成（内存存储 + 默认 UUID 策略）
 
-```ts
+```ts twoslash
 // app.module.ts
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
@@ -112,7 +112,7 @@ export class AppModule {}
 
 ### 2.3 登录 / 登出 / 接口使用
 
-```ts
+```ts twoslash
 // auth.controller.ts
 import { Body, Controller, Post, Req } from '@nestjs/common';
 import { Request } from 'express';
@@ -143,7 +143,7 @@ export class AuthController {
 
 ### 2.4 使用 Redis 存储
 
-```ts
+```ts twoslash
 import { createClient } from 'redis';
 import { XltTokenModule, RedisStore, XLT_REDIS_CLIENT } from 'xlt-token';
 
@@ -197,7 +197,7 @@ export class AppModule {}
 
 ### 3.3 `XltTokenModule.forRootAsync(options)`
 
-```ts
+```ts twoslash
 export interface XltTokenModuleAsyncOptions extends Pick<ModuleMetadata, 'imports'> {
   useFactory: (...args: any[]) => Promise<XltTokenModuleOptions> | XltTokenModuleOptions;
   inject?: any[];
@@ -210,7 +210,7 @@ export interface XltTokenModuleAsyncOptions extends Pick<ModuleMetadata, 'import
 
 典型用法（从 `ConfigService` 读配置）：
 
-```ts
+```ts twoslash
 XltTokenModule.forRootAsync({
   imports: [ConfigModule],
   inject: [ConfigService],
@@ -231,7 +231,7 @@ XltTokenModule.forRootAsync({
 
 来源：`@/Volumes/weipengcheng/个人项目/tva/xlt-token/src/core/xlt-token-config.ts`
 
-```ts
+```ts twoslash
 export interface XltTokenConfig {
   tokenName: string;        // 读取 token 的 header/cookie/query key，也是存储 key 前缀
   timeout: number;          // 会话有效期（秒），-1 永不过期
@@ -249,7 +249,7 @@ export interface XltTokenConfig {
 
 **默认值**：
 
-```ts
+```ts twoslash
 {
   tokenName: 'authorization',
   timeout: 2592000,         // 30 天
@@ -281,7 +281,7 @@ export interface XltTokenConfig {
 
 通过 DI 获取：
 
-```ts
+```ts twoslash
 constructor(private readonly stp: StpLogic) {}
 ```
 
@@ -329,7 +329,7 @@ constructor(private readonly stp: StpLogic) {}
 
 来源：`@/Volumes/weipengcheng/个人项目/tva/xlt-token/src/store/xlt-token-store.interface.ts`
 
-```ts
+```ts twoslash
 interface XltTokenStore {
   get(key: string): Promise<string | null>;
   set(key: string, value: string, timeoutSec: number): Promise<void>;  // timeoutSec = -1 永不过期
@@ -374,7 +374,7 @@ interface XltTokenStore {
 - `@/Volumes/weipengcheng/个人项目/tva/xlt-token/src/token/token-strategy.interface.ts`
 - `@/Volumes/weipengcheng/个人项目/tva/xlt-token/src/token/uuid-strategy.ts`
 
-```ts
+```ts twoslash
 interface TokenStrategy {
   generateToken(payload: any): string;   // 自由扩展（如 JWT）
   verifyToken(token: string): any;       // 自由扩展
@@ -409,7 +409,7 @@ interface TokenStrategy {
 
 注册方式（任选其一）：
 
-```ts
+```ts twoslash
 // 1. 全局（推荐）
 providers: [{ provide: APP_GUARD, useClass: XltTokenGuard }]
 
@@ -425,7 +425,7 @@ providers: [{ provide: APP_GUARD, useClass: XltTokenGuard }]
 
 #### 构造函数（子类需 super 调用）
 
-```ts
+```ts twoslash
 protected constructor(
   protected readonly reflector: Reflector,
   @Inject(XLT_TOKEN_CONFIG) protected readonly config: XltTokenConfig,
@@ -461,7 +461,7 @@ canActivate
 
 #### 推荐的子类骨架
 
-```ts
+```ts twoslash
 @Injectable()
 export class LoginGuard extends XltAbstractLoginGuard {
   constructor(
@@ -523,7 +523,7 @@ export class LoginGuard extends XltAbstractLoginGuard {
 
 示例：
 
-```ts
+```ts twoslash
 @Controller('user')
 export class UserController {
   @XltIgnore()

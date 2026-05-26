@@ -66,7 +66,7 @@ activeTimeout > 0:
 
 公开字段：
 
-```ts
+```ts twoslash
 class NotPermissionException extends ForbiddenException {
   readonly permission: string | string[];   // 校验时声明的权限
   readonly mode: XltMode;                    // AND / OR
@@ -92,7 +92,7 @@ class NotPermissionException extends ForbiddenException {
 
 公开字段：
 
-```ts
+```ts twoslash
 class NotRoleException extends ForbiddenException {
   readonly role: string | string[];
   readonly mode: XltMode;
@@ -103,7 +103,7 @@ class NotRoleException extends ForbiddenException {
 
 项目通常有统一响应格式，建议在 `main.ts` 注册一个 `ExceptionFilter` 将 `NotLoginException` 转成你的业务响应：
 
-```ts
+```ts twoslash
 import { Catch, ArgumentsHost, ExceptionFilter } from '@nestjs/common';
 import { NotLoginException } from 'xlt-token';
 import { Response } from 'express';
@@ -137,7 +137,7 @@ export class NotLoginExceptionFilter implements ExceptionFilter {
 
 注册：
 
-```ts
+```ts twoslash
 // main.ts
 app.useGlobalFilters(new NotLoginExceptionFilter());
 ```
@@ -146,7 +146,7 @@ app.useGlobalFilters(new NotLoginExceptionFilter());
 
 axios 拦截器里识别 `type` 做差异化提示：
 
-```ts
+```ts twoslash
 axios.interceptors.response.use(
   (res) => res,
   (err) => {

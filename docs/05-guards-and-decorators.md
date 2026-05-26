@@ -1,6 +1,6 @@
 # 05 · 守卫与装饰器
 
-两种内置守卫（`XltTokenGuard` / `XltAbstractLoginGuard`）+ 四个装饰器的完整说明。
+两种内置守卫（`XltTokenGuard` / `XltAbstractLoginGuard`）+ 七个装饰器的完整说明。
 
 ## 守卫：怎么选？
 
@@ -23,7 +23,7 @@
 
 **注册（全局）**：
 
-```ts
+```ts twoslash
 import { APP_GUARD } from '@nestjs/core';
 import { XltTokenGuard } from 'xlt-token';
 
@@ -35,7 +35,7 @@ export class AppModule {}
 
 **局部使用**：
 
-```ts
+```ts twoslash
 @UseGuards(XltTokenGuard)
 @Controller('admin')
 export class AdminController {}
@@ -49,7 +49,7 @@ export class AdminController {}
 
 ### 构造函数
 
-```ts
+```ts twoslash
 protected constructor(
   protected readonly reflector: Reflector,
   @Inject(XLT_TOKEN_CONFIG) protected readonly config: XltTokenConfig,
@@ -85,7 +85,7 @@ canActivate(ctx)
 
 ### 完整示例（白名单 + Redis 加载用户）
 
-```ts
+```ts twoslash
 import { CanActivate, ExecutionContext, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { XltAbstractLoginGuard, XLT_TOKEN_CONFIG, XltTokenConfig, StpLogic } from 'xlt-token';
@@ -136,7 +136,7 @@ export class LoginGuard extends XltAbstractLoginGuard {
 
 注册为全局守卫（与 `XltTokenGuard` 二选一）：
 
-```ts
+```ts twoslash
 @Module({
   providers: [{ provide: APP_GUARD, useClass: LoginGuard }],
 })
@@ -149,7 +149,7 @@ export class AppModule {}
 
 **配合 `defaultCheck: true`（黑名单模式）放行某个路由**。
 
-```ts
+```ts twoslash
 @XltIgnore()
 @Post('login')
 login() { /* ... */ }
@@ -161,7 +161,7 @@ login() { /* ... */ }
 
 **配合 `defaultCheck: false`（白名单模式）开启校验**。
 
-```ts
+```ts twoslash
 @XltCheckLogin()
 @Get('me')
 me() { /* ... */ }
@@ -171,7 +171,7 @@ me() { /* ... */ }
 
 注入 `request.stpLoginId`（字符串）。未登录时为 `undefined`。
 
-```ts
+```ts twoslash
 @Get('me')
 me(@LoginId() loginId: string) {
   return { loginId };
@@ -182,7 +182,7 @@ me(@LoginId() loginId: string) {
 
 注入 `request.stpToken`（字符串，已剥离 `Bearer ` 前缀）。
 
-```ts
+```ts twoslash
 @Post('logout')
 logout(@TokenValue() token: string) {
   return StpUtil.logout(token);
@@ -193,7 +193,7 @@ logout(@TokenValue() token: string) {
 
 声明式权限校验。校验失败抛 `NotPermissionException`（HTTP **403**）。
 
-```ts
+```ts twoslash
 @XltCheckPermission('user:read')
 @Get('users')
 list() {}
@@ -214,7 +214,7 @@ create() {}
 
 声明式角色校验。校验失败抛 `NotRoleException`（HTTP **403**）。API 与 `@XltCheckPermission` 完全一致。
 
-```ts
+```ts twoslash
 @XltCheckRole('admin')
 @Delete(':id')
 remove() {}
@@ -224,7 +224,19 @@ remove() {}
 sensitive() {}
 ```
 
-### 六个装饰器总览
+### `@XltCheckSafe(business)`
+
+声明式**二级认证**校验。需先调用 `openSafe(token, business, timeout)` 打开安全窗口，否则抛 `NotSafeException`（HTTP **403**）。由 `XltTokenGuard` 在 `checkLogin` 成功后自动调用 `checkSafe`。
+
+```ts twoslash
+@XltCheckSafe('pay')
+@Post('transfer')
+transfer() {}
+```
+
+完整流程（验证码 → openSafe → 敏感操作）见 **[15 · 二级认证](./15-secondary-auth.md)**。
+
+### 装饰器总览
 
 | 装饰器 | 用在哪 | 作用 | 依赖什么 |
 | --- | --- | --- | --- |
@@ -234,6 +246,7 @@ sensitive() {}
 | `@TokenValue()` | 参数 | 注入 `request.stpToken` | 守卫已校验通过 |
 | `@XltCheckPermission()` | 方法 / 类 | 校验权限，失败抛 403 | `stpInterface` 已注册 |
 | `@XltCheckRole()` | 方法 / 类 | 校验角色，失败抛 403 | `stpInterface` 已注册 |
+| `@XltCheckSafe()` | 方法 / 类 | 校验二级认证，失败抛 403 | 已 `openSafe` |
 
 ⚠️ `@LoginId` / `@TokenValue` 依赖守卫挂到 `request` 上的字段。**如果你没注册全局守卫，或该路由没经过 Guard**（如标注了 `@XltIgnore()`），它们会是 `undefined`。
 

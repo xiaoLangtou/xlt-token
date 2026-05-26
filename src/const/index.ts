@@ -31,8 +31,3 @@ export const XLT_PERMISSION_KEY = 'XltCheckPermission';
 export const XLT_ROLE_KEY = 'xltCheckRole';
 
 
-export interface DeviceInfo {
-  device: string;
-  token: string;
-  loginTime: number;
-}

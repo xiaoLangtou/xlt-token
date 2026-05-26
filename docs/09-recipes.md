@@ -21,7 +21,7 @@
 
 **配置**：
 
-```ts
+```ts twoslash
 XltTokenModule.forRoot({
   config: { isConcurrent: false },
 });
@@ -37,7 +37,7 @@ XltTokenModule.forRoot({
 
 **场景**：移动端 App 和 PC 浏览器使用同一份 token。
 
-```ts
+```ts twoslash
 XltTokenModule.forRoot({
   config: { isConcurrent: true, isShare: true },
 });
@@ -51,13 +51,13 @@ XltTokenModule.forRoot({
 
 **场景**：不同端各有独立 token，互不影响。
 
-```ts
+```ts twoslash
 XltTokenModule.forRoot({
   config: { isConcurrent: true, isShare: false },
 });
 ```
 
-**⚠️ 注意**：当前实现中 `sessionKey` 只保存**最后一个 token**，所以 `logoutByLoginId` 只能登出最新那一个。如果业务需要"一键登出所有设备"，需要自行扩展（例如存 `sessionKey → Set<token>`）。
+**⚠️ 注意**：1.1.0 起 `sessionKey` 已支持 `device` 后缀，多端场景请用 `forceLogout` 全端登出，详见 [14-multi-device](./14-multi-device.md)。
 
 ---
 
@@ -65,7 +65,7 @@ XltTokenModule.forRoot({
 
 **场景**：用户 2 小时无操作自动踢出；但 token 本身 24 小时绝对过期。
 
-```ts
+```ts twoslash
 XltTokenModule.forRoot({
   config: {
     timeout: 24 * 60 * 60,        // 绝对过期 24h
@@ -85,7 +85,7 @@ XltTokenModule.forRoot({
 
 在你的 refresh 接口里调 `renewTimeout`：
 
-```ts
+```ts twoslash
 @XltIgnore()
 @Get('refresh-token')
 async refresh(@Query('refreshToken') token: string) {
@@ -103,7 +103,7 @@ async refresh(@Query('refreshToken') token: string) {
 
 ## 6. 管理员踢人下线
 
-```ts
+```ts twoslash
 @Post('admin/kickout/:userId')
 @RequireLogin()
 async kickout(@Param('userId') userId: string) {
@@ -131,7 +131,7 @@ async kickout(@Param('userId') userId: string) {
 
 关键思路：
 
-```ts
+```ts twoslash
 protected async onAuthSuccess(result, request) {
   const user = await this.redis.get(`user_info:${result.loginId}`);
   if (!user) throw new UnauthorizedException('用户会话已失效');
@@ -141,7 +141,7 @@ protected async onAuthSuccess(result, request) {
 
 在登录服务里同步写入该缓存：
 
-```ts
+```ts twoslash
 // login 成功后
 const token = await this.stpLogic.login(user.id);
 await this.redis.set(`user_info:${user.id}`, JSON.stringify({
@@ -155,7 +155,7 @@ await this.redis.set(`user_info:${user.id}`, JSON.stringify({
 
 **场景**：商品详情页，登录用户显示"我的评分"，匿名用户只显示公开内容。
 
-```ts
+```ts twoslash
 @XltIgnore()
 @Get('product/:id')
 async detail(@Param('id') id: string, @Req() req: Request) {
@@ -181,7 +181,7 @@ async detail(@Param('id') id: string, @Req() req: Request) {
 
 示例（封装在你的 AuthService 里）：
 
-```ts
+```ts twoslash
 async login(loginId: string) {
   const token = await this.stpLogic.login(loginId);
   await this.redis.sadd('online_users', loginId);
@@ -229,7 +229,7 @@ redis-cli DEL authorization:login:session:1001
 
 在 `XltAbstractLoginGuard` 子类的 `onAuthFail` 里打结构化日志：
 
-```ts
+```ts twoslash
 protected async onAuthFail(result, request) {
   this.logger.warn('auth.denied', {
     reason: result.reason,

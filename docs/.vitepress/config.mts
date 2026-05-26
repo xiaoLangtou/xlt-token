@@ -1,5 +1,14 @@
-import { defineConfig } from 'vitepress'
+import { fileURLToPath } from 'node:url';
+import { dirname, resolve } from 'node:path';
+import { defineConfig } from 'vitepress';
+import { transformerTwoslash } from '@shikijs/vitepress-twoslash';
+import { createFileSystemTypesCache } from '@shikijs/vitepress-twoslash/cache-fs';
+import { FILE_IMPORTS } from './twoslash';
 
+const dir = dirname(fileURLToPath(import.meta.url))
+const root = resolve(dir, '../..')
+
+// @ts-ignore
 export default defineConfig({
   title: 'xlt-token',
   description: 'NestJS Token 鉴权库，灵感来源于 Sa-Token。轻量、可插拔、零业务侵入。',
@@ -8,14 +17,58 @@ export default defineConfig({
   cleanUrls: true,
   lastUpdated: true,
   ignoreDeadLinks: true,
+  appearance: true,
+
+  vite: {
+    server: {
+      fs: {
+        allow: [root],
+      },
+    },
+  },
+
+  markdown: {
+    theme: {
+      // 浅色：柔和白底
+      light: 'vitesse-light',
+      // 深色：高对比暗色
+      dark: 'vitesse-dark',
+    },
+    lineNumbers: true,
+    codeTransformers: [
+      transformerTwoslash({
+        twoslashOptions: {
+          compilerOptions: {
+            ignoreDeprecations: '5.0',
+            experimentalDecorators: true,
+            emitDecoratorMetadata: true,
+            baseUrl: root,
+            paths: {
+              'xlt-token': ['src/index.ts'],
+            },
+          },
+          handbookOptions: {
+            noErrors: true,
+          },
+        },
+        // @ts-ignore
+        includesMap: new Map([['imports', `// ---cut-start---\n${FILE_IMPORTS}\n// ---cut-end---`]]),
+        typesCache: createFileSystemTypesCache({
+          dir: resolve(dir, 'cache/twoslash'),
+        }),
+      }),
+    ],
+    // @ts-ignore
+    languages: ['js', 'jsx', 'ts', 'tsx'],
+  },
 
   head: [
     ['link', { rel: 'icon', href: '/xlt-token/favicon.ico' }],
-    ['meta', { name: 'theme-color', content: '#16a34a' }],
+    ['meta', { name: 'theme-color', content: '#4f46e5' }],
     ['meta', { name: 'og:type', content: 'website' }],
     ['meta', { name: 'og:title', content: 'xlt-token' }],
     ['meta', { name: 'og:description', content: 'NestJS Token 鉴权库' }],
-    // Geist 字体（fonts.loli.net 国内镜像，替代 Google Fonts）
+    // Geist 字体（fonts.loli.net 国内镜像）
     ['link', { rel: 'preconnect', href: 'https://fonts.loli.net' }],
     ['link', { rel: 'preconnect', href: 'https://gstatic.loli.net', crossorigin: '' }],
     [
@@ -27,11 +80,12 @@ export default defineConfig({
     ],
   ],
 
-  // docs 目录下的 README.md 交给 GitHub 浏览；站点首页用 index.md
   srcExclude: ['README.md', 'archive/README.md'],
 
   themeConfig: {
     siteTitle: 'xlt-token',
+    logo: { src: '/favicon.ico', width: 20, height: 20 },
+
     outline: {
       level: [2, 3],
       label: '本页导航',
@@ -66,12 +120,29 @@ export default defineConfig({
       '/core/': [
         {
           text: '核心能力',
+          collapsed: false,
           items: [
             { text: '核心 API', link: '/core/core-api' },
             { text: '守卫与装饰器', link: '/core/guards-and-decorators' },
             { text: '权限与会话', link: '/core/permissions-and-session' },
             { text: '存储层', link: '/core/storage' },
             { text: 'Token 策略', link: '/core/token-strategy' },
+          ],
+        },
+        {
+          text: '1.1.0 新特性',
+          collapsed: false,
+          items: [
+            { text: '多端登录', link: '/core/multi-device' },
+            { text: '二级认证', link: '/core/secondary-auth' },
+            { text: 'JWT 策略', link: '/core/jwt-strategy' },
+            { text: 'Hooks 与观测性', link: '/core/hooks-and-observability' },
+          ],
+        },
+        {
+          text: '进阶',
+          collapsed: false,
+          items: [
             { text: '异常处理', link: '/core/exceptions' },
             { text: '场景手册', link: '/core/recipes' },
           ],
@@ -153,7 +224,6 @@ export default defineConfig({
     externalLinkIcon: true,
   },
 
-  // 将扁平化的 docs/*.md 源文件映射到分组路径
   rewrites: {
     '01-getting-started.md': 'guide/getting-started.md',
     '02-architecture.md': 'guide/architecture.md',
@@ -168,6 +238,10 @@ export default defineConfig({
     '11-permissions-and-session.md': 'core/permissions-and-session.md',
     '12-multi-framework-architecture.md': 'roadmap/multi-framework-architecture.md',
     '13-1.1.0-implementation-design.md': 'roadmap/1-1-0-implementation-design.md',
+    '14-multi-device.md': 'core/multi-device.md',
+    '15-secondary-auth.md': 'core/secondary-auth.md',
+    '16-jwt-strategy.md': 'core/jwt-strategy.md',
+    '17-hooks-and-observability.md': 'core/hooks-and-observability.md',
     'SRC-REFERENCE.md': 'reference/src-reference.md',
   },
 })

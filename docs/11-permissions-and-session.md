@@ -23,7 +23,7 @@ XltTokenGuard
 
 业务侧实现一个类，从数据库 / 缓存读取用户的权限和角色：
 
-```ts
+```ts twoslash
 // stp.service.ts
 import { Injectable } from '@nestjs/common';
 import { StpInterface } from 'xlt-token';
@@ -47,7 +47,7 @@ export class StpService implements StpInterface {
 
 ### 1.3 注册到 Module
 
-```ts
+```ts twoslash
 @Module({
   imports: [
     XltTokenModule.forRoot({
@@ -63,7 +63,7 @@ export class AppModule {}
 
 ### 1.4 `@XltCheckPermission`
 
-```ts
+```ts twoslash
 @XltCheckPermission(permissions: string | string[], options?: { mode: XltMode })
 ```
 
@@ -72,7 +72,7 @@ export class AppModule {}
 | `permissions` | 单一权限字符串或数组 |
 | `options.mode` | `XltMode.AND`（默认）/ `XltMode.OR` |
 
-```ts
+```ts twoslash
 // 单一权限
 @XltCheckPermission('user:read')
 @Get('users')
@@ -93,7 +93,7 @@ export() {}
 
 API 与 `@XltCheckPermission` 完全一致，只是底层校验角色而非权限：
 
-```ts
+```ts twoslash
 @XltCheckRole('admin')
 @Delete(':id')
 remove() {}
@@ -115,7 +115,7 @@ sensitive() {}
 | `user:*:export` | `user:order:export` | ✅ |
 | `user:read` | `user:write` | ❌ |
 
-```ts
+```ts twoslash
 @XltCheckPermission('order:create')   // 用户拥有 'order:*' 即可放行
 @Post('order')
 create() {}
@@ -130,7 +130,7 @@ create() {}
 
 异常对象暴露公开字段，便于过滤器使用：
 
-```ts
+```ts twoslash
 class NotPermissionException extends ForbiddenException {
   permission: string | string[];
   mode: XltMode;
@@ -141,7 +141,7 @@ class NotPermissionException extends ForbiddenException {
 
 不使用装饰器时也可以直接调用：
 
-```ts
+```ts twoslash
 import { StpUtil, XltMode } from 'xlt-token';
 
 // 是否拥有
@@ -157,7 +157,7 @@ await StpUtil.checkRole('1001', ['admin'], XltMode.OR);
 
 也可注入 `StpPermLogic` 走 DI：
 
-```ts
+```ts twoslash
 constructor(private readonly permLogic: StpPermLogic) {}
 
 async someMethod() {
@@ -181,7 +181,7 @@ async someMethod() {
 
 ### 2.2 获取 Session
 
-```ts
+```ts twoslash
 import { StpUtil } from 'xlt-token';
 
 const session = StpUtil.getSession(loginId);  // 同步返回 XltSession 实例
@@ -189,7 +189,7 @@ const session = StpUtil.getSession(loginId);  // 同步返回 XltSession 实例
 
 也可注入 `StpLogic`：
 
-```ts
+```ts twoslash
 constructor(private readonly stp: StpLogic) {}
 
 doSomething() {
@@ -210,7 +210,7 @@ doSomething() {
 
 ### 2.4 使用范例
 
-```ts
+```ts twoslash
 const session = StpUtil.getSession(loginId);
 
 // 写入
@@ -241,7 +241,7 @@ await session.clear();
 
 结合 `XltAbstractLoginGuard` 的 `onAuthSuccess` 钩子，校验通过时把 session 数据加载到 `request.user`：
 
-```ts
+```ts twoslash
 @Injectable()
 export class LoginGuard extends XltAbstractLoginGuard {
   protected async onAuthSuccess(result, request) {
@@ -261,7 +261,7 @@ export class LoginGuard extends XltAbstractLoginGuard {
 
 被踢 / 被顶后旧 token 失效。库会自动写入下线记录，可查询：
 
-```ts
+```ts twoslash
 const record = await StpUtil.getOfflineReason(token);
 // { reason: 'KICK_OUT', time: 1714112400000 }
 // 或 { reason: 'BE_REPLACED', time: 1714112400000 }
@@ -285,7 +285,7 @@ const record = await StpUtil.getOfflineReason(token);
 | `offlineRecordEnabled` | `true` | 是否记录下线原因 |
 | `offlineRecordTimeout` | `2592000`（30 天） | 下线记录保留时长（秒） |
 
-```ts
+```ts twoslash
 XltTokenModule.forRoot({
   config: {
     permCacheTimeout: 60,         // 缓存权限 60 秒

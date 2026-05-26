@@ -14,12 +14,27 @@ pnpm add redis
 
 **适合**：单进程开发环境、小项目、Demo。生产环境请走 [Redis 存储](./06-storage.md#redisstore)。
 
-```ts
+在代码块语言后添加 `twoslash`，悬停带**虚线下划线**的标识符可查看类型；`// ^?` 会在下方展示类型查询结果。复杂示例可用 `// @include: imports` 注入常用 import（见 [VueUse twoslash 配置](https://github.com/vueuse/vueuse/blob/main/packages/.vitepress/twoslash.ts)）。
+
+```ts twoslash
+import type { XltTokenModuleOptions } from 'xlt-token'
+// ---cut---
+const options = {
+  isGlobal: true,
+  config: {
+    tokenName: 'authorization',
+    timeout: 7 * 24 * 60 * 60,
+  },
+} satisfies XltTokenModuleOptions
+
+```
+
+```ts twoslash
 // src/app.module.ts
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { XltTokenModule, XltTokenGuard } from 'xlt-token';
-
+// ---cut---
 @Module({
   imports: [
     XltTokenModule.forRoot({
@@ -41,7 +56,7 @@ export class AppModule {}
 
 ## 写一个登录/登出控制器
 
-```ts
+```ts twoslash
 import { Body, Controller, Post } from '@nestjs/common';
 import { StpUtil, XltIgnore, LoginId, TokenValue } from 'xlt-token';
 
@@ -92,7 +107,7 @@ curl -X POST http://localhost:3000/auth/logout \
 
 多实例部署 / 需要持久化 → 必须换 Redis。
 
-```ts
+```ts twoslash
 import { createClient } from 'redis';
 import { XltTokenModule, RedisStore, XLT_REDIS_CLIENT, XltTokenGuard } from 'xlt-token';
 import { APP_GUARD } from '@nestjs/core';

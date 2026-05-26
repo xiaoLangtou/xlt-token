@@ -5,6 +5,14 @@ export interface JwtConfig {
   audience?: string;
 }
 
+
+export interface DeviceInfo {
+  device: string;
+  token: string;
+  loginTime: number;
+}
+
+
 export interface XltTokenConfig {
   tokenName: string;
   timeout: number;

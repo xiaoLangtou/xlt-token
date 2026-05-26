@@ -101,7 +101,7 @@
 
 这是整套架构的关键。所有框架差异都收敛在这一个接口上。
 
-```ts
+```ts twoslash
 // @xlt-token/core
 export interface HttpContext {
   readonly headers: HttpHeaders;
@@ -137,7 +137,7 @@ export interface HttpQuery {
 
 替代当前直接挂到 `request.stpLoginId / stpToken` 的做法：
 
-```ts
+```ts twoslash
 ctx.state.stpLoginId = '1001';
 ctx.state.stpToken   = 'xxx';
 ctx.state.stpSession = session;
@@ -162,7 +162,7 @@ ctx.state.stpSession = session;
 
 `StpLogic` 重构后只接受 `HttpContext`，不再依赖任何框架类型：
 
-```ts
+```ts twoslash
 // @xlt-token/core
 export class StpLogic {
   constructor(
@@ -197,7 +197,7 @@ export interface AuthResult {
 
 **工厂函数（替代 NestJS 的 `forRoot`）**
 
-```ts
+```ts twoslash
 // @xlt-token/core
 export function createXltToken(options: CreateOptions): XltTokenContext {
   return {
@@ -223,7 +223,7 @@ export interface CreateOptions {
 
 **异常重构（去 NestJS 化）**
 
-```ts
+```ts twoslash
 // @xlt-token/core
 export class XltError extends Error {
   readonly code: string;
@@ -254,7 +254,7 @@ export class NotRoleException extends XltError { /* ... */ }
 2. 提供 `runAuth(ctx, opts)` 助手（封装 `checkLogin + 元数据判定 + 异常抛出`）
 3. 把核心异常映射到框架响应
 
-```ts
+```ts twoslash
 // @xlt-token/adapter-express
 import type { Request, Response } from 'express';
 import { HttpContext } from '@xlt-token/core';
@@ -272,7 +272,7 @@ export function createExpressContext(req: Request, res: Response): HttpContext {
 }
 ```
 
-```ts
+```ts twoslash
 // @xlt-token/adapter-fastify
 import type { FastifyRequest, FastifyReply } from 'fastify';
 
@@ -289,7 +289,7 @@ export function createFastifyContext(req: FastifyRequest, reply: FastifyReply): 
 }
 ```
 
-```ts
+```ts twoslash
 // @xlt-token/adapter-hono
 import type { Context } from 'hono';
 
@@ -316,7 +316,7 @@ export function createHonoContext(c: Context): HttpContext {
 
 保持 1.0 完全兼容（Guard + Decorator + Module）：
 
-```ts
+```ts twoslash
 import { XltTokenModule, XltTokenGuard, LoginId } from '@xlt-token/nestjs';
 
 @Module({
@@ -335,7 +335,7 @@ class AuthController {
 
 ### 7.2 Express
 
-```ts
+```ts twoslash
 import express from 'express';
 import { createXltToken } from '@xlt-token/core';
 import { xltMiddleware } from '@xlt-token/express';
@@ -359,7 +359,7 @@ app.get('/me', (req, res) => {
 
 ### 7.3 Koa
 
-```ts
+```ts twoslash
 import Koa from 'koa';
 import { xltMiddleware } from '@xlt-token/koa';
 
@@ -375,7 +375,7 @@ app.use(async (ctx) => {
 
 ### 7.4 Fastify
 
-```ts
+```ts twoslash
 import Fastify from 'fastify';
 import { xltPlugin } from '@xlt-token/fastify';
 
@@ -391,7 +391,7 @@ Fastify 用 `decorateRequest` + `addHook('preHandler')` 实现，配合 route-le
 
 ### 7.5 Hono
 
-```ts
+```ts twoslash
 import { Hono } from 'hono';
 import { xltMiddleware, requireLogin } from '@xlt-token/hono';
 
@@ -405,7 +405,7 @@ app.get('/me', requireLogin(), (c) => c.json({
 
 ### 7.6 Elysia / Bun
 
-```ts
+```ts twoslash
 import { Elysia } from 'elysia';
 import { xltPlugin } from '@xlt-token/elysia';
 
@@ -417,7 +417,7 @@ new Elysia()
 
 ### 7.7 H3 / Nitro / Nuxt
 
-```ts
+```ts twoslash
 import { defineEventHandler } from 'h3';
 import { xltMiddleware, useStpLoginId } from '@xlt-token/h3';
 
@@ -532,7 +532,7 @@ xlt-token/                                    # 仓库根（pnpm workspace + tur
 
 ### 10.1 核心 `StpLogic.checkLogin`（去 NestJS 化）
 
-```ts
+```ts twoslash
 async checkLogin(ctx: HttpContext): Promise<AuthResult> {
   const token = await this.getTokenValue(ctx);
   if (!token) return { ok: false, reason: NotLoginType.NOT_TOKEN };
@@ -558,7 +558,7 @@ async checkLogin(ctx: HttpContext): Promise<AuthResult> {
 
 ### 10.2 Express 中间件
 
-```ts
+```ts twoslash
 export function xltMiddleware(xlt: XltTokenContext, options: ExpressOptions = {}) {
   return async (req: Request, res: Response, next: NextFunction) => {
     const ctx = createExpressContext(req, res);
@@ -577,7 +577,7 @@ export function xltMiddleware(xlt: XltTokenContext, options: ExpressOptions = {}
 
 ### 10.3 NestJS Guard（基于核心 + adapter-express）
 
-```ts
+```ts twoslash
 @Injectable()
 export class XltTokenGuard implements CanActivate {
   constructor(

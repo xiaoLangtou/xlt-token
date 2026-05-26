@@ -19,12 +19,16 @@
 | `isReadQuery` | `boolean` | `false` | 是否从 URL Query 读取 |
 | `tokenPrefix` | `string` | `'Bearer '` | header 中 token 的前缀（读取时自动剥离） |
 | `defaultCheck` | `boolean` | `true` | 全局守卫默认行为。`true`=默认全部校验（黑名单），`false`=默认全部放行（白名单） |
+| `deviceConcurrent` | `boolean` | `true` | 是否允许同账号不同 device 共存。`false` 时任意新登录踢掉所有端，详见 [14-multi-device](./14-multi-device.md) |
+| `offlineRecordEnabled` | `boolean` | `false` | 是否记录被踢/被顶的下线原因 |
+| `offlineRecordTimeout` | `number` | `3600` | 下线记录保留秒数 |
+| `jwt` | `JwtConfig` | — | JWT 策略配置（`secret` 等），见 [16-jwt-strategy](./16-jwt-strategy.md) |
 
 > **取 token 顺序**：`header → cookie → query`。三者同时开启时，前者优先。
 
 ### 默认值常量
 
-```ts
+```ts twoslash
 import { DEFAULT_XLT_TOKEN_CONFIG } from 'xlt-token';
 ```
 
@@ -34,7 +38,7 @@ import { DEFAULT_XLT_TOKEN_CONFIG } from 'xlt-token';
 
 ### 生产环境（Redis，30 天会话，无活跃过期）
 
-```ts
+```ts twoslash
 {
   tokenName: 'authorization',
   timeout: 30 * 24 * 60 * 60,
@@ -47,7 +51,7 @@ import { DEFAULT_XLT_TOKEN_CONFIG } from 'xlt-token';
 
 ### 金融/后台（单设备强制，2 小时闲置超时）
 
-```ts
+```ts twoslash
 {
   timeout: 24 * 60 * 60,         // 1 天绝对过期
   activeTimeout: 2 * 60 * 60,    // 2 小时无操作冻结
@@ -59,7 +63,7 @@ import { DEFAULT_XLT_TOKEN_CONFIG } from 'xlt-token';
 
 ### 多端独立登录（移动/桌面互不影响）
 
-```ts
+```ts twoslash
 {
   isConcurrent: true,
   isShare: false,                // 各端独立 token
@@ -69,7 +73,7 @@ import { DEFAULT_XLT_TOKEN_CONFIG } from 'xlt-token';
 
 ### 开发联调（短超时便于测试）
 
-```ts
+```ts twoslash
 {
   timeout: 60,                   // 1 分钟
   activeTimeout: 30,             // 30 秒闲置冻结
@@ -85,11 +89,13 @@ import { DEFAULT_XLT_TOKEN_CONFIG } from 'xlt-token';
 | `store` | `{ useClass }` \| `{ useValue }` | `MemoryStore` | 存储实现 |
 | `strategy` | `{ useClass }` | `UuidStrategy` | token 策略 |
 | `isGlobal` | `boolean` | `false` | 是否全局模块（通常 `true`） |
+| `stpInterface` | `class` | 内置 stub | 权限/角色数据源，见 [11-permissions-and-session](./11-permissions-and-session.md) |
+| `hooks` | `XltHooks` | — | 登录/踢人等生命周期钩子，见 [17-hooks-and-observability](./17-hooks-and-observability.md) |
 | `providers` | `Provider[]` | `[]` | 追加 Provider，典型用法是提供 `XLT_REDIS_CLIENT` |
 
 同步写法：
 
-```ts
+```ts twoslash
 XltTokenModule.forRoot({
   isGlobal: true,
   config: { timeout: 3600 },
@@ -111,7 +117,7 @@ XltTokenModule.forRoot({
 
 在 `config` 依赖其他模块（典型：`ConfigModule`）时使用。
 
-```ts
+```ts twoslash
 export interface XltTokenModuleAsyncOptions {
   imports?: ModuleMetadata['imports'];
   useFactory: (...args: any[]) => Promise<XltTokenModuleOptions> | XltTokenModuleOptions;
@@ -125,7 +131,7 @@ export interface XltTokenModuleAsyncOptions {
 
 典型示例：从 `@nestjs/config` 读取配置
 
-```ts
+```ts twoslash
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
 XltTokenModule.forRootAsync({
@@ -158,7 +164,7 @@ XltTokenModule.forRootAsync({
 
 在 `AppModule` 中可通过以下 DI Token 手动注入：
 
-```ts
+```ts twoslash
 import {
   XLT_TOKEN_CONFIG,
   XLT_TOKEN_STORE,

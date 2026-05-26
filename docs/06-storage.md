@@ -6,7 +6,7 @@
 
 源码：`src/store/xlt-token-store.interface.ts`
 
-```ts
+```ts twoslash
 interface XltTokenStore {
   get(key: string): Promise<string | null>;
   set(key: string, value: string, timeoutSec: number): Promise<void>;  // timeoutSec = -1 永不过期
@@ -42,13 +42,13 @@ interface XltTokenStore {
 
 什么都不配就是它（默认值）：
 
-```ts
+```ts twoslash
 XltTokenModule.forRoot({ config: { tokenName: 'authorization' } });
 ```
 
 显式指定：
 
-```ts
+```ts twoslash
 import { MemoryStore } from 'xlt-token';
 
 XltTokenModule.forRoot({
@@ -82,7 +82,7 @@ XltTokenModule.forRoot({
 
 ### 基本用法
 
-```ts
+```ts twoslash
 import { createClient } from 'redis';
 import { XltTokenModule, RedisStore, XLT_REDIS_CLIENT } from 'xlt-token';
 
@@ -109,7 +109,7 @@ export class AppModule {}
 
 ### 从 `ConfigService` 读取连接信息（推荐）
 
-```ts
+```ts twoslash
 XltTokenModule.forRootAsync({
   isGlobal: true,
   imports: [ConfigModule],
@@ -137,7 +137,7 @@ XltTokenModule.forRootAsync({
 
 如果项目已有 `RedisModule` 并导出了一个 client token，把它 re-provide 到 `XLT_REDIS_CLIENT` 即可：
 
-```ts
+```ts twoslash
 @Module({
   imports: [
     RedisModule,
@@ -183,7 +183,7 @@ redis-cli GET authorization:login:session:1001
 1. 实现 `XltTokenStore` 接口
 2. 通过 `store: { useClass: YourStore }` 注入
 
-```ts
+```ts twoslash
 import { Injectable } from '@nestjs/common';
 import { XltTokenStore } from 'xlt-token';
 

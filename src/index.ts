@@ -56,3 +56,7 @@ export { matchPermission } from './perm/perm-pattern-match';
 export { XltSession } from './session/xlt-session';
 
 
+export { JwtStrategy } from './token/jwt-strategy';
+export type { XltHooks } from './hooks/xlt-hooks.interface';
+export { XLT_TOKEN_HOOKS } from './hooks/xlt-hooks.interface';
+import type { DeviceInfo } from './core/xlt-token-config';
