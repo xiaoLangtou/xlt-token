@@ -2,9 +2,11 @@ import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 import { defineConfig } from 'vitepress';
 import { transformerTwoslash } from '@shikijs/vitepress-twoslash';
+// @ts-ignore
 import { createFileSystemTypesCache } from '@shikijs/vitepress-twoslash/cache-fs';
-import { FILE_IMPORTS } from './twoslash';
+import { FILE_IMPORTS } from './twoslash.ts'
 
+// @ts-ignore
 const dir = dirname(fileURLToPath(import.meta.url))
 const root = resolve(dir, '../..')
 

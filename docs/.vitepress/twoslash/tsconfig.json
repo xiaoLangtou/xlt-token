@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "ignoreDeprecations": "5.0",
+    "lib": ["ES2022"],
+    "baseUrl": "../../..",
+    "paths": {
+      "xlt-token": ["src/index.ts"]
+    }
+  },
+  "include": ["../../../src/**/*.ts"]
+}

@@ -44,4 +44,3 @@ lerna-debug.log*
 /data/mysql
 /data/redis
 .env
-.vitepress
