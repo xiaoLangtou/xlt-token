@@ -47,4 +47,4 @@ packages/*/coverage
 /data/redis
 .env
 
-/examples/**/node_modules
+/examples/nestjs/node_modules
