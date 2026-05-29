@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { withBase } from 'vitepress'
+import { ref } from 'vue';
+import { withBase } from 'vitepress';
 
 const copied = ref(false)
 
@@ -110,7 +110,7 @@ const stats = [
           </dl>
         </div>
 
-        <div class="xlt-preview xlt-anim xlt-anim--4 xlt-preview--float">
+        <div class="xlt-preview  xlt-anim--4 xlt-preview--float">
           <div class="xlt-preview__glow" aria-hidden="true" />
           <div class="xlt-preview__bar">
             <span /><span /><span />

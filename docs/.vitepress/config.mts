@@ -86,7 +86,7 @@ export default defineConfig({
 
   themeConfig: {
     siteTitle: 'xlt-token',
-    logo: { src: '/favicon.ico', width: 20, height: 20 },
+    logo: { src: '/logo.png', width: 24, height: 24 },
 
     outline: {
       level: [2, 3],
