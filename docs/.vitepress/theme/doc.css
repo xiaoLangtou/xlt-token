@@ -418,3 +418,8 @@
     width: 220px;
   }
 }
+
+.VPImage.logo{
+  width:60px;
+  height: auto;
+}
