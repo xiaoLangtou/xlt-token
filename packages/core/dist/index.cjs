@@ -113,6 +113,12 @@ var XltTokenKeys = class {
 	tempTokenKey(tempToken) {
 		return `${this.tokenName}:temp-token:${tempToken}`;
 	}
+	permCacheKey(loginId) {
+		return `${this.tokenName}:perm-cache:perm:${loginId}`;
+	}
+	roleCacheKey(loginId) {
+		return `${this.tokenName}:perm-cache:role:${loginId}`;
+	}
 };
 
 //#endregion
@@ -454,12 +460,16 @@ var StpLogic = class {
 		const timeout = options.timeout ?? this.config.timeout;
 		const sessionKey = this.keys.sessionKey(_loginId, device);
 		const oldToken = await this.store.get(sessionKey);
+		let replacedOldFullToken;
 		let token;
 		if (!this.config.deviceConcurrent) {
 			await this._kickoutAllDevices(_loginId);
 			token = options.token ?? this.strategy.createToken(_loginId, this.config);
 		} else if (!this.config.isConcurrent) {
-			if (oldToken) await this._replacedToken(_loginId, oldToken, device);
+			if (oldToken) {
+				replacedOldFullToken = await this._resolveHookToken(_loginId, device, oldToken);
+				await this._replacedToken(_loginId, oldToken, device);
+			}
 			token = options.token ?? this.strategy.createToken(_loginId, this.config);
 		} else if (this.config.isShare && oldToken) if (this._isJwtMode()) token = (await this.getDeviceList(_loginId)).find((d) => d.device === device)?.token ?? options.token ?? this.strategy.createToken(_loginId, this.config);
 		else token = oldToken;
@@ -479,6 +489,7 @@ var StpLogic = class {
 			loginTime: Date.now()
 		}, timeout);
 		this.callHook("onLogin", _loginId, token, device);
+		if (replacedOldFullToken) this.callHook("onReplaced", _loginId, replacedOldFullToken, token);
 		return token;
 	}
 	/**
@@ -630,6 +641,7 @@ var StpLogic = class {
 		await this.store.delete(this.keys.sessionDataKey(loginId));
 		const info = (await this.getDeviceList(loginId)).find((d) => d.token === token);
 		if (info) await this._removeFromSessionList(loginId, info.device);
+		this.callHook("onLogout", loginId, token, "LOGOUT");
 		return true;
 	}
 	/**
@@ -644,6 +656,7 @@ var StpLogic = class {
 		await this.store.delete(this.keys.tokenKey(token));
 		await this.store.delete(this.keys.lastActiveKey(token));
 		await this.store.delete(this.keys.sessionDataKey(loginId));
+		this.callHook("onLogout", loginId, token, "LOGOUT_BY_LOGIN_ID");
 		return true;
 	}
 	/**
@@ -661,6 +674,7 @@ var StpLogic = class {
 		await this.store.delete(sessionKey);
 		await this.store.delete(this.keys.sessionDataKey(loginId));
 		this.writeOfflineRecord(fullToken, NotLoginType.KICK_OUT);
+		this.callHook("onKickout", loginId, fullToken);
 		return true;
 	}
 	/**
@@ -924,6 +938,11 @@ var StpLogic = class {
 	_isJwtMode() {
 		return !!(this.config.jwt?.secret && typeof this.strategy.verifyToken === "function");
 	}
+	/** 钩子回调用完整 token（JWT 模式下 session 存的是 jti） */
+	async _resolveHookToken(loginId, device, sessionValue) {
+		if (!this._isJwtMode()) return sessionValue;
+		return (await this.getDeviceList(loginId)).find((d) => d.device === device)?.token ?? sessionValue;
+	}
 	callHook(event, ...args) {
 		if (!this.hooks?.[event]) return;
 		try {
@@ -942,10 +961,34 @@ var StpPermLogic = class {
 		this.stpInterface = stpInterface;
 		this.tokenStore = tokenStore;
 		this.tokenConfig = tokenConfig;
+		this.keys = new XltTokenKeys(this.tokenConfig.tokenName);
+	}
+	permCacheTimeoutSec() {
+		return this.tokenConfig.permCacheTimeout ?? 0;
+	}
+	async getPermissionList(loginId) {
+		const timeout = this.permCacheTimeoutSec();
+		if (timeout === 0) return this.stpInterface.getPermissionList(loginId);
+		const key = this.keys.permCacheKey(loginId);
+		const cached = await this.tokenStore.get(key);
+		if (cached !== null) return JSON.parse(cached);
+		const list = await this.stpInterface.getPermissionList(loginId);
+		await this.tokenStore.set(key, JSON.stringify(list), timeout);
+		return list;
+	}
+	async getRoleList(loginId) {
+		const timeout = this.permCacheTimeoutSec();
+		if (timeout === 0) return this.stpInterface.getRoleList(loginId);
+		const key = this.keys.roleCacheKey(loginId);
+		const cached = await this.tokenStore.get(key);
+		if (cached !== null) return JSON.parse(cached);
+		const list = await this.stpInterface.getRoleList(loginId);
+		await this.tokenStore.set(key, JSON.stringify(list), timeout);
+		return list;
 	}
 	async hasPermission(loginId, permission) {
 		if (!loginId || !permission) return false;
-		const permissionList = await this.stpInterface.getPermissionList(loginId);
+		const permissionList = await this.getPermissionList(loginId);
 		if (!permissionList || permissionList.length <= 0) return false;
 		return permissionList.some((p) => matchPermission(p, permission));
 	}
@@ -957,7 +1000,7 @@ var StpPermLogic = class {
 	}
 	async hasRole(loginId, role) {
 		if (!loginId || !role) return false;
-		const roles = await this.stpInterface.getRoleList(loginId);
+		const roles = await this.getRoleList(loginId);
 		if (!roles || roles.length <= 0) return false;
 		return roles.includes(role);
 	}
@@ -1005,8 +1048,14 @@ var StpUtil = class {
 	static async logoutByLoginId(loginId) {
 		return getStpLogic().logoutByLoginId(loginId);
 	}
-	static async kickout(loginId) {
-		return getStpLogic().kickout(loginId);
+	static async kickout(loginId, device) {
+		return getStpLogic().kickout(loginId, device);
+	}
+	static async kickoutByDevice(loginId, device) {
+		return getStpLogic().kickoutByDevice(loginId, device);
+	}
+	static async kickoutByToken(token) {
+		return getStpLogic().kickoutByToken(token);
 	}
 	static async renewTimeout(token, timeout) {
 		return getStpLogic().renewTimeout(token, timeout);
@@ -1022,6 +1071,36 @@ var StpUtil = class {
 	}
 	static async getTokenValue(req) {
 		return getStpLogic().getTokenValue(toHttpContext(req));
+	}
+	static async openSafe(token, business, timeout) {
+		return getStpLogic().openSafe(token, business, timeout);
+	}
+	static async checkSafe(token, business) {
+		return getStpLogic().checkSafe(token, business);
+	}
+	static async closeSafe(token, business) {
+		return getStpLogic().closeSafe(token, business);
+	}
+	static async createTempToken(value, timeout) {
+		return getStpLogic().createTempToken(value, timeout);
+	}
+	static async parseTempToken(tempToken) {
+		return getStpLogic().parseTempToken(tempToken);
+	}
+	static async deleteTempToken(tempToken) {
+		return getStpLogic().deleteTempToken(tempToken);
+	}
+	static async getDeviceList(loginId) {
+		return getStpLogic().getDeviceList(loginId);
+	}
+	static async forceLogout(loginId) {
+		return getStpLogic().forceLogout(loginId);
+	}
+	static async getOnlineLoginIds(opts) {
+		return getStpLogic().getOnlineLoginIds(opts);
+	}
+	static async getOnlineCount() {
+		return getStpLogic().getOnlineCount();
 	}
 	static async hasPermission(loginId, permission) {
 		return getStpPermLogic().hasPermission(loginId, permission);

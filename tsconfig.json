@@ -13,10 +13,10 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "outDir": "./dist",
-    "rootDir": "./src"
+    "rootDir": "."
   },
   "include": [
-    "src/**/*.ts"
+    "packages/nestjs/src/**/*.ts"
   ],
   "exclude": [
     "node_modules",

@@ -1,7 +1,9 @@
 import type { StpInterface } from './perm/stp-interface.js';
 import type { TokenStrategy } from './token/token-strategy.interface.js';
-import type { XltHooks, XltTokenConfig, XltTokenStore } from './config/xlt-token-config.js';
+import type { XltTokenConfig } from './config/xlt-token-config.js';
 import { DEFAULT_XLT_TOKEN_CONFIG } from './config/xlt-token-config.js';
+import type { XltTokenStore } from './store/xlt-token-store.interface.js';
+import type { XltHooks } from './hooks/xlt-hooks.interface.js';
 import { StpLogic } from './auth/stp-logic.js';
 import { StpPermLogic } from './auth/stp-perm-logic.js';
 import { setStpLogic, setStpPermLogic, StpUtil } from './auth/stp-util.js';

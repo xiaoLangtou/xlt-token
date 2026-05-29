@@ -13,10 +13,22 @@ function createMockStpLogic() {
     logout: vi.fn().mockResolvedValue(true),
     logoutByLoginId: vi.fn().mockResolvedValue(true),
     kickout: vi.fn().mockResolvedValue(true),
+    kickoutByDevice: vi.fn().mockResolvedValue(true),
+    kickoutByToken: vi.fn().mockResolvedValue(true),
     renewTimeout: vi.fn().mockResolvedValue(true),
     isLogin: vi.fn().mockResolvedValue(true),
     checkLogin: vi.fn().mockResolvedValue({ ok: true, loginId: '1001', token: 't' }),
     getTokenValue: vi.fn().mockResolvedValue('t'),
+    openSafe: vi.fn().mockResolvedValue(undefined),
+    checkSafe: vi.fn().mockResolvedValue(undefined),
+    closeSafe: vi.fn().mockResolvedValue(undefined),
+    createTempToken: vi.fn().mockResolvedValue('temp-xxx'),
+    parseTempToken: vi.fn().mockResolvedValue('data'),
+    deleteTempToken: vi.fn().mockResolvedValue(undefined),
+    getDeviceList: vi.fn().mockResolvedValue([]),
+    forceLogout: vi.fn().mockResolvedValue(true),
+    getOnlineLoginIds: vi.fn().mockResolvedValue(['1001']),
+    getOnlineCount: vi.fn().mockResolvedValue(1),
     getSession: vi.fn().mockReturnValue({ id: 'session' }),
     getOfflineRecords: vi.fn().mockResolvedValue({ reason: 'KICK_OUT', time: 123 }),
   };
@@ -66,7 +78,7 @@ describe('StpUtil 静态门面', () => {
 
     it('kickout 踢人下线', async () => {
       await StpUtil.kickout('1001');
-      expect(mockLogic.kickout).toHaveBeenCalledWith('1001');
+      expect(mockLogic.kickout).toHaveBeenCalledWith('1001', undefined);
     });
 
     it('renewTimeout 续签', async () => {
@@ -126,6 +138,69 @@ describe('StpUtil 静态门面', () => {
     it('checkRole', async () => {
       await StpUtil.checkRole('1001', ['admin'], XltMode.OR);
       expect(mockPerm.checkRole).toHaveBeenCalledWith('1001', ['admin'], XltMode.OR);
+    });
+  });
+
+  describe('二级认证 / 临时 token / 多端 / 观测', () => {
+    it('openSafe', async () => {
+      await StpUtil.openSafe('t', 'pay', 300);
+      expect(mockLogic.openSafe).toHaveBeenCalledWith('t', 'pay', 300);
+    });
+
+    it('checkSafe', async () => {
+      await StpUtil.checkSafe('t', 'pay');
+      expect(mockLogic.checkSafe).toHaveBeenCalledWith('t', 'pay');
+    });
+
+    it('closeSafe', async () => {
+      await StpUtil.closeSafe('t', 'pay');
+      expect(mockLogic.closeSafe).toHaveBeenCalledWith('t', 'pay');
+    });
+
+    it('createTempToken', async () => {
+      const t = await StpUtil.createTempToken('payload', 600);
+      expect(t).toBe('temp-xxx');
+      expect(mockLogic.createTempToken).toHaveBeenCalledWith('payload', 600);
+    });
+
+    it('parseTempToken', async () => {
+      await StpUtil.parseTempToken('temp-xxx');
+      expect(mockLogic.parseTempToken).toHaveBeenCalledWith('temp-xxx');
+    });
+
+    it('deleteTempToken', async () => {
+      await StpUtil.deleteTempToken('temp-xxx');
+      expect(mockLogic.deleteTempToken).toHaveBeenCalledWith('temp-xxx');
+    });
+
+    it('getDeviceList', async () => {
+      await StpUtil.getDeviceList('1001');
+      expect(mockLogic.getDeviceList).toHaveBeenCalledWith('1001');
+    });
+
+    it('kickoutByDevice', async () => {
+      await StpUtil.kickoutByDevice('1001', 'pc');
+      expect(mockLogic.kickoutByDevice).toHaveBeenCalledWith('1001', 'pc');
+    });
+
+    it('kickoutByToken', async () => {
+      await StpUtil.kickoutByToken('t');
+      expect(mockLogic.kickoutByToken).toHaveBeenCalledWith('t');
+    });
+
+    it('forceLogout', async () => {
+      await StpUtil.forceLogout('1001');
+      expect(mockLogic.forceLogout).toHaveBeenCalledWith('1001');
+    });
+
+    it('getOnlineLoginIds', async () => {
+      const ids = await StpUtil.getOnlineLoginIds({ page: 0 });
+      expect(ids).toEqual(['1001']);
+      expect(mockLogic.getOnlineLoginIds).toHaveBeenCalledWith({ page: 0 });
+    });
+
+    it('getOnlineCount', async () => {
+      expect(await StpUtil.getOnlineCount()).toBe(1);
     });
   });
 

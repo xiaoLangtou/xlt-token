@@ -1,6 +1,6 @@
 // 模块
-export { XltTokenModule } from './xlt-token.module';
-export type { XltTokenModuleOptions, XltTokenModuleAsyncOptions } from './xlt-token.module';
+export { XltTokenModule } from './xlt-token.module.js';
+export type { XltTokenModuleOptions, XltTokenModuleAsyncOptions } from './xlt-token.module.js';
 
 // 核心逻辑（来自 @xlt-token/core）
 export {
@@ -43,24 +43,24 @@ export {
 } from '@xlt-token/core';
 
 // Redis / JWT 实现（暂留根包）
-export { RedisStore, XLT_REDIS_CLIENT } from './store/redis-store';
-export { JwtStrategy } from './token/jwt-strategy';
+export { RedisStore, XLT_REDIS_CLIENT } from './store/redis-store.js';
+export { JwtStrategy } from './token/jwt-strategy.js';
 
 // 装饰器
-export { XltCheckLogin } from './decorators/xlt-check-login.decorator';
-export { XltIgnore } from './decorators/xlt-ignore.decorator';
-export { LoginId } from './decorators/login-id.decorator';
-export { TokenValue } from './decorators/token-value.decorator';
-export { XltCheckPermission } from './decorators/xlt-check-permission.decorator';
-export { XltCheckRole } from './decorators/xlt-check-role.decorator';
-export { XltCheckSafe, XLT_CHECK_SAFE_KEY } from './decorators/xlt-check-safe.decorator';
+export { XltCheckLogin } from './decorators/xlt-check-login.decorator.js';
+export { XltIgnore } from './decorators/xlt-ignore.decorator.js';
+export { LoginId } from './decorators/login-id.decorator.js';
+export { TokenValue } from './decorators/token-value.decorator.js';
+export { XltCheckPermission } from './decorators/xlt-check-permission.decorator.js';
+export { XltCheckRole } from './decorators/xlt-check-role.decorator.js';
+export { XltCheckSafe, XLT_CHECK_SAFE_KEY } from './decorators/xlt-check-safe.decorator.js';
 
 // 守卫
-export { XltTokenGuard } from './guards/xlt-token.guard';
-export { XltAbstractLoginGuard } from './guards/xlt-abstract-login.guard';
+export { XltTokenGuard } from './guards/xlt-token.guard.js';
+export { XltAbstractLoginGuard } from './guards/xlt-abstract-login.guard.js';
 
 // NestJS 异常包装（对外 API 保持不变）
-export { NotLoginException } from './exceptions/not-login.exception';
-export { NotPermissionException } from './exceptions/not-permission.exception';
-export { NotRoleException } from './exceptions/not-role.exception';
-export { NotSafeException } from './exceptions/not-safe.exception';
+export { NotLoginException } from './exceptions/not-login.exception.js';
+export { NotPermissionException } from './exceptions/not-permission.exception.js';
+export { NotRoleException } from './exceptions/not-role.exception.js';
+export { NotSafeException } from './exceptions/not-safe.exception.js';

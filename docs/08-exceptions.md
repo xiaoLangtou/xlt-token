@@ -1,6 +1,8 @@
 # 08 · 异常与错误处理
 
-库提供三种业务异常 + 配套的前后端最佳实践。
+> 核心异常定义于 `@xlt-token/core`；NestJS 项目抛出的是 `@xlt-token/nestjs` 包装版（继承 `UnauthorizedException` / `ForbiddenException`）。
+
+库提供四类业务异常 + 配套的前后端最佳实践。
 
 ## 异常一览
 
@@ -9,12 +11,12 @@
 | `NotLoginException` | **401** | 未登录 / token 无效 / 被顶 / 被踢 / 冻结 / 超时 | [↓](#notloginexception) |
 | `NotPermissionException` | **403** | `@XltCheckPermission` 校验失败 | [↓](#notpermissionexception) |
 | `NotRoleException` | **403** | `@XltCheckRole` 校验失败 | [↓](#notroleexception) |
+| `NotSafeException` | **403** | `@XltCheckSafe` 二级认证未通过 | [二级认证](/core/secondary-auth) |
 
 ## `NotLoginException`
 
-源码：`src/exceptions/not-login.exception.ts`
-
-- 继承 `UnauthorizedException`，HTTP 状态码 **401**
+- **NestJS**（`@xlt-token/nestjs`）：`packages/nestjs/src/exceptions/not-login.exception.ts`，继承 `UnauthorizedException`，HTTP **401**
+- **Core**（框架无关）：`packages/core/src/exceptions/not-login.exception.ts`，继承 `XltError`，`status = 401`
 - 响应体结构：
   ```json
   {
@@ -27,7 +29,7 @@
 
 ## `NotLoginType`
 
-源码：`src/const/index.ts`
+源码：`packages/core/src/const/index.ts`
 
 | 常量 | 值 | 触发场景 | 默认中文提示 | 建议前端行为 |
 | --- | --- | --- | --- | --- |
@@ -45,7 +47,7 @@
 
 ## 判定入口
 
-在 `StpLogic._resolveLoginId`（`src/auth/stp-logic.ts:146-169`）中按顺序判定，优先级从高到低：
+在 `StpLogic._resolveLoginId`（`packages/core/src/auth/stp-logic.ts:146-169`）中按顺序判定，优先级从高到低：
 
 ```
 getTokenValue → NOT_TOKEN
@@ -59,9 +61,8 @@ activeTimeout > 0:
 
 ## `NotPermissionException`
 
-源码：`src/exceptions/not-permission.exception.ts`
-
-- 继承 `ForbiddenException`，HTTP 状态码 **403**
+- **NestJS**：`packages/nestjs/src/exceptions/not-permission.exception.ts`，继承 `ForbiddenException`，HTTP **403**
+- **Core**：`packages/core/src/exceptions/not-permission.exception.ts`，继承 `XltError`，`status = 403`
 - 由 `StpPermLogic.checkPermission` 在校验失败时抛出（`@XltCheckPermission` 自动触发）
 
 公开字段：
@@ -85,9 +86,8 @@ class NotPermissionException extends ForbiddenException {
 
 ## `NotRoleException`
 
-源码：`src/exceptions/not-role.exception.ts`
-
-- 继承 `ForbiddenException`，HTTP 状态码 **403**
+- **NestJS**：`packages/nestjs/src/exceptions/not-role.exception.ts`，继承 `ForbiddenException`，HTTP **403**
+- **Core**：`packages/core/src/exceptions/not-role.exception.ts`，继承 `XltError`，`status = 403`
 - 由 `StpPermLogic.checkRole` 在校验失败时抛出（`@XltCheckRole` 自动触发）
 
 公开字段：
@@ -105,7 +105,7 @@ class NotRoleException extends ForbiddenException {
 
 ```ts twoslash
 import { Catch, ArgumentsHost, ExceptionFilter } from '@nestjs/common';
-import { NotLoginException } from 'xlt-token';
+import { NotLoginException } from '@xlt-token/nestjs';
 import { Response } from 'express';
 
 @Catch(NotLoginException)
@@ -166,7 +166,7 @@ axios.interceptors.response.use(
 
 ## 自定义异常消息（进阶）
 
-若你想修改 `NotLoginException` 自带的中文 message（默认读取 `src/exceptions/not-login.exception.ts` 的 message 映射），有两种做法：
+若你想修改 `NotLoginException` 自带的中文 message（NestJS 包装版见 `packages/nestjs/src/exceptions/not-login.exception.ts`），有两种做法：
 
 1. **推荐**：在 `ExceptionFilter` 里重新映射（如上例），不改库代码
 2. 在业务 Guard（继承 `XltAbstractLoginGuard`）的 `onAuthFail` 钩子内读取 `result.reason`，抛自定义异常
@@ -184,5 +184,5 @@ A：顶号只是把 `tokenKey` 的值 `update` 成 `'BE_REPLACED'`，**保留 TT
 
 ## 下一步
 
-- 搭配 Guard 使用 → [05-guards-and-decorators](./05-guards-and-decorators.md)
-- 主动踢人 / 查所有在线用户 → [09-recipes](./09-recipes.md)
+- 搭配 Guard 使用 → [05-guards-and-decorators](/core/guards-and-decorators)
+- 主动踢人 / 查所有在线用户 → [09-recipes](/core/recipes)

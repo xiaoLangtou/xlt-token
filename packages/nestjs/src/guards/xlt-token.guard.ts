@@ -3,6 +3,7 @@
 import { CanActivate, ExecutionContext, Inject, Injectable, Optional } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import {
+  type AuthResult,
   StpLogic,
   StpPermLogic,
   XLT_CHECK_LOGIN_KEY,
@@ -12,8 +13,8 @@ import {
   XLT_TOKEN_CONFIG,
   type XltTokenConfig,
 } from '@xlt-token/core';
-import { XLT_CHECK_SAFE_KEY } from '../decorators/xlt-check-safe.decorator';
-import { createNestHttpContext, rethrowCoreAuthException } from '../http/nest-bridge';
+import { XLT_CHECK_SAFE_KEY } from '../decorators/xlt-check-safe.decorator.js';
+import { createNestHttpContext, rethrowCoreAuthException } from '../http/nest-bridge.js';
 
 @Injectable()
 export class XltTokenGuard implements CanActivate {
@@ -31,7 +32,7 @@ export class XltTokenGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const response = context.switchToHttp().getResponse();
 
-    let result;
+    let result: AuthResult;
     try {
       result = await this.stpLogic.checkLogin(createNestHttpContext(request, response));
     } catch (error) {

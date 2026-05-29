@@ -105,6 +105,8 @@ declare class XltTokenKeys {
    * @returns 临时token key
    */
   tempTokenKey(tempToken: string): string;
+  permCacheKey(loginId: string): string;
+  roleCacheKey(loginId: string): string;
 }
 //#endregion
 //#region src/store/xlt-token-store.interface.d.ts
@@ -534,6 +536,8 @@ declare class StpLogic {
    * @returns 是否为JWT模式
    */
   private _isJwtMode;
+  /** 钩子回调用完整 token（JWT 模式下 session 存的是 jti） */
+  private _resolveHookToken;
   private callHook;
 }
 //#endregion
@@ -542,7 +546,11 @@ declare class StpPermLogic {
   private readonly stpInterface;
   private readonly tokenStore;
   private readonly tokenConfig;
+  private readonly keys;
   constructor(stpInterface: StpInterface, tokenStore: XltTokenStore, tokenConfig: XltTokenConfig);
+  private permCacheTimeoutSec;
+  private getPermissionList;
+  private getRoleList;
   hasPermission(loginId: string, permission: string): Promise<boolean>;
   checkPermission(loginId: string, permissions: string[], mode: XltMode): Promise<void>;
   hasRole(loginId: string, role: string): Promise<boolean>;
@@ -560,12 +568,27 @@ declare class StpUtil {
   }): Promise<string>;
   static logout(token: string): Promise<boolean | null>;
   static logoutByLoginId(loginId: string): Promise<boolean | null>;
-  static kickout(loginId: string): Promise<boolean | null>;
+  static kickout(loginId: string, device?: string): Promise<boolean | null>;
+  static kickoutByDevice(loginId: string, device: string): Promise<boolean | null>;
+  static kickoutByToken(token: string): Promise<boolean | null>;
   static renewTimeout(token: string, timeout: number): Promise<boolean | null>;
   static isLogin(req: HttpContext | ExpressLikeRequest): Promise<boolean>;
   static checkLogin(req: HttpContext | ExpressLikeRequest): Promise<AuthResult>;
   static getLoginId(req: HttpContext | ExpressLikeRequest): Promise<string | null>;
   static getTokenValue(req: HttpContext | ExpressLikeRequest): Promise<string | null>;
+  static openSafe(token: string, business: string, timeout: number): Promise<void>;
+  static checkSafe(token: string, business: string): Promise<void>;
+  static closeSafe(token: string, business: string): Promise<void>;
+  static createTempToken(value: string, timeout: number): Promise<string>;
+  static parseTempToken(tempToken: string): Promise<string | null>;
+  static deleteTempToken(tempToken: string): Promise<void>;
+  static getDeviceList(loginId: string): Promise<DeviceInfo[]>;
+  static forceLogout(loginId: string): Promise<boolean>;
+  static getOnlineLoginIds(opts?: {
+    page?: number;
+    pageSize?: number;
+  }): Promise<string[]>;
+  static getOnlineCount(): Promise<number>;
   static hasPermission(loginId: string, permission: string): Promise<boolean>;
   static checkPermission(loginId: string, permissions: string[], mode: XltMode): Promise<void>;
   static hasRole(loginId: string, role: string): Promise<boolean>;
@@ -580,14 +603,14 @@ declare class StpUtil {
 //#region src/factory.d.ts
 interface CreateOptions {
   config?: Partial<XltTokenConfig>;
-  store?: XltTokenStore$2;
+  store?: XltTokenStore;
   strategy?: TokenStrategy;
   stpInterface?: StpInterface;
-  hooks?: XltHooks$1;
+  hooks?: XltHooks;
 }
 interface XltTokenContext {
   config: XltTokenConfig;
-  store: XltTokenStore$2;
+  store: XltTokenStore;
   strategy: TokenStrategy;
   stpLogic: StpLogic;
   stpPermLogic: StpPermLogic;

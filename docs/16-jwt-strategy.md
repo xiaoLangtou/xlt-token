@@ -1,5 +1,7 @@
 # 16 · JWT 策略
 
+> 包：内置 `JwtStrategy` 在 `@xlt-token/nestjs`；鉴权逻辑在 `@xlt-token/core`。
+
 1.1.0 内置 `JwtStrategy`，在保留 xlt-token **踢人、顶号、活跃过期**等状态语义的前提下，用 JWT 承载 `loginId`，并通过 **jti 黑名单** 实现服务端可控的会话失效。
 
 ## UUID 模式 vs JWT 模式
@@ -29,7 +31,7 @@ pnpm add -D @types/jsonwebtoken   # TypeScript 项目
 
 ```ts twoslash
 import { Module } from '@nestjs/common';
-import { XltTokenModule, JwtStrategy } from 'xlt-token';
+import { XltTokenModule, JwtStrategy } from '@xlt-token/nestjs';
 
 @Module({
   imports: [
@@ -161,7 +163,7 @@ class JwtStrategy implements TokenStrategy {
 }
 ```
 
-也可参考 [07-token-strategy](./07-token-strategy.md) 自定义 JWT 策略，只要实现 `verifyToken` 且配置 `jwt.secret`，`StpLogic` 会自动进入 JWT 分支。
+也可参考 [07-token-strategy](/core/token-strategy) 自定义 JWT 策略，只要实现 `verifyToken` 且配置 `jwt.secret`，`StpLogic` 会自动进入 JWT 分支。
 
 ## 限制与已知差异
 
@@ -175,6 +177,9 @@ class JwtStrategy implements TokenStrategy {
 ## 完整示例
 
 ```ts twoslash
+import { Body, Controller, Get, Post } from '@nestjs/common';
+import { StpLogic, LoginId } from '@xlt-token/nestjs';
+
 @Controller('auth')
 export class AuthController {
   constructor(private readonly stp: StpLogic) {}
@@ -186,8 +191,7 @@ export class AuthController {
   }
 
   @Get('me')
-  async me(@Req() req: Request) {
-    const { loginId } = await this.stp.checkLogin(req);
+  me(@LoginId() loginId: string) {
     return { loginId };
   }
 }
@@ -202,6 +206,6 @@ Authorization: eyJhbGciOiJIUzI1NiIs...
 
 ## 下一步
 
-- Token 策略接口说明 → [07-token-strategy](./07-token-strategy.md)
-- 多端 + JWT 踢设备 → [14-multi-device](./14-multi-device.md)
-- NotLoginType 与前端处理 → [08-exceptions](./08-exceptions.md)
+- Token 策略接口说明 → [07-token-strategy](/core/token-strategy)
+- 多端 + JWT 踢设备 → [14-multi-device](/core/multi-device)
+- NotLoginType 与前端处理 → [08-exceptions](/core/exceptions)

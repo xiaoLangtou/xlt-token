@@ -9,8 +9,8 @@ import {
   XLT_TOKEN_CONFIG,
   type XltTokenConfig,
 } from '@xlt-token/core';
-import { NotLoginException } from '../exceptions/not-login.exception';
-import { createNestHttpContext } from '../http/nest-bridge';
+import { NotLoginException } from '../exceptions/not-login.exception.js';
+import { createNestHttpContext } from '../http/nest-bridge.js';
 
 @Injectable()
 export abstract class XltAbstractLoginGuard implements CanActivate {

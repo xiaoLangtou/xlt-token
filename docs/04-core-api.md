@@ -1,5 +1,7 @@
 # 04 · 核心 API（StpLogic / StpUtil）
 
+> 包：`@xlt-token/core`（NestJS 用户通过 `@xlt-token/nestjs` re-export 使用）
+
 所有对外能力最终都由 `StpLogic` 实现，`StpUtil` 是无需注入的静态门面（内部转发到同一 `StpLogic` 实例）。
 
 ## 两种形态
@@ -9,7 +11,7 @@
 | Service / Controller（可 DI） | `StpLogic` | `constructor(private stp: StpLogic) {}` |
 | 拦截器 / 过滤器 / 脚本 / 工具类（DI 不便） | `StpUtil` | `StpUtil.login(userId)` |
 
-两者方法签名基本一致，`StpUtil` 额外提供了 `getLoginId(req)` 这一便捷方法。
+两者方法签名基本一致。NestJS 场景下 `StpUtil.getLoginId(req)` 仍接受 Express `Request`（内部转为 `HttpContext`）；直接使用 core 时请传 `HttpContext`。
 
 ## 方法参考
 
@@ -22,7 +24,7 @@ login(
   loginId: string | number,
   options?: {
     timeout?: number;   // 本次登录专属有效期（秒），覆盖全局 timeout
-    device?: string;    // 预留字段（当前未参与逻辑）
+    device?: string;    // 设备标识，见多端登录文档
     token?: string;     // 手动指定 token（极少使用，通常留空由策略生成）
   },
 ): Promise<string>       // 返回纯 token（不含前缀）
@@ -32,7 +34,7 @@ login(
 
 1. 校验 `loginId` 非空、不含 `:`
 2. 读 `sessionKey(loginId)` → `oldToken`
-3. 根据 `isConcurrent` / `isShare` 决定是复用旧 token、顶号还是生成新 token（见 [02-architecture · 并发语义](./02-architecture.md#并发--共享语义)）
+3. 根据 `isConcurrent` / `isShare` 决定是复用旧 token、顶号还是生成新 token（见 [架构 · 并发语义](/guide/architecture#并发--共享语义)）
 4. 写入 `tokenKey` / `sessionKey`；若 `activeTimeout > 0` 同步写入 `lastActiveKey`
 
 **示例**：
@@ -43,40 +45,36 @@ const token = await this.stp.login(user.id);
 const tempToken = await this.stp.login(user.id, { timeout: 3600 });
 ```
 
-### `getTokenValue(req)`
+### `getTokenValue(ctx)`
 
 **从请求中提取 token**，顺序：`header → cookie → query`，自动剥离 `tokenPrefix`。
 
 ```ts twoslash
-getTokenValue(req: Request): Promise<string | null>
+getTokenValue(ctx: HttpContext): Promise<string | null>
 ```
 
-通常业务代码不直接用，装饰器 `@TokenValue()` 是它的包装。
+NestJS 中 Guard 内部通过 `createExpressContext(req, res)` 构造 `HttpContext`。业务代码通常不直接调用，装饰器 `@TokenValue()` 是它的包装。
 
-### `isLogin(req)`
+### `isLogin(ctx)`
 
 **静默判断**请求是否登录，**不抛异常**。
 
 ```ts twoslash
-isLogin(req: Request): Promise<boolean>
+isLogin(ctx: HttpContext): Promise<boolean>
 ```
 
 适用场景：同时支持登录/未登录访问的接口，需要分支处理。
 
-### `checkLogin(req)`
+### `checkLogin(ctx)`
 
-**严格校验**，失败抛 `NotLoginException`（HTTP 401）。
+**严格校验**，失败抛 `NotLoginException`（401）。
 
 ```ts twoslash
-checkLogin(req: Request): Promise<{
-  ok: boolean;
-  loginId?: string;
-  token?: string;
-  reason?: NotLoginType;
-}>
+checkLogin(ctx: HttpContext): Promise<AuthResult>
+// AuthResult = { ok: boolean; loginId?; token?; reason?: NotLoginType }
 ```
 
-Guard 内部调用的就是它。业务层一般不直接调。
+成功后写入 `ctx.state.stpLoginId` / `ctx.state.stpToken`。Guard 内部调用此方法，业务层一般不直接调。
 
 ### `logout(token)`
 
@@ -134,10 +132,10 @@ StpUtil.getLoginId(req): Promise<string | null>
 
 ## `checkLogin` 的内部判定顺序
 
-对应 `_resolveLoginId`（`src/auth/stp-logic.ts:146-169`）：
+对应 `_resolveLoginId`（`packages/core/src/auth/stp-logic.ts`）：
 
 ```
-1. getTokenValue(req) 为空 → NOT_TOKEN
+1. getTokenValue(ctx) 为空 → NOT_TOKEN
 2. store.get(tokenKey) 不存在 → INVALID_TOKEN
 3. 值为 BE_REPLACED → BE_REPLACED（顶号）
 4. 值为 KICK_OUT → KICK_OUT（被踢）
@@ -195,21 +193,23 @@ StpLogic.logout(token)
 | 方法 | `StpLogic` | `StpUtil` | 返回 |
 | --- | :---: | :---: | --- |
 | `login(loginId, options?)` | ✅ | ✅ | `Promise<string>` |
-| `getTokenValue(req)` | ✅ | ✅ | `Promise<string \| null>` |
-| `isLogin(req)` | ✅ | ✅ | `Promise<boolean>` |
-| `checkLogin(req)` | ✅ | ✅ | `Promise<{ ok, loginId?, token?, reason? }>` |
+| `getTokenValue(ctx)` | ✅ | ✅¹ | `Promise<string \| null>` |
+| `isLogin(ctx)` | ✅ | ✅¹ | `Promise<boolean>` |
+| `checkLogin(ctx)` | ✅ | ✅¹ | `Promise<AuthResult>` |
 | `logout(token)` | ✅ | ✅ | `Promise<boolean \| null>` |
 | `logoutByLoginId(loginId)` | ✅ | ✅ | `Promise<boolean \| null>` |
 | `kickout(loginId)` | ✅ | ✅ | `Promise<boolean \| null>` |
 | `renewTimeout(token, timeout)` | ✅ | ✅ | `Promise<boolean \| null>` |
 | `getLoginId(req)` | ❌ | ✅ | `Promise<string \| null>` |
 
+¹ `StpUtil` 的 `getTokenValue` / `isLogin` / `checkLogin` 在 NestJS 中仍接受 Express `Request`，内部自动包装为 `HttpContext`。
+
 ## 下一步
 
-- 想看 Guard 如何调 `checkLogin`？→ [05-guards-and-decorators](./05-guards-and-decorators.md)
-- 多端登录与 device API → [14-multi-device](./14-multi-device.md)
-- 二级认证与临时 Token → [15-secondary-auth](./15-secondary-auth.md)
-- JWT 模式 → [16-jwt-strategy](./16-jwt-strategy.md)
-- Hooks 与在线列表 → [17-hooks-and-observability](./17-hooks-and-observability.md)
-- 想了解存储实现差异？→ [06-storage](./06-storage.md)
-- 各种异常怎么处理？→ [08-exceptions](./08-exceptions.md)
+- 想看 Guard 如何调 `checkLogin`？→ [守卫与装饰器](/core/guards-and-decorators)
+- 多端登录与 device API → [多端登录](/core/multi-device)
+- 二级认证与临时 Token → [二级认证](/core/secondary-auth)
+- JWT 模式 → [JWT 策略](/core/jwt-strategy)
+- Hooks 与在线列表 → [Hooks 与观测性](/core/hooks-and-observability)
+- 想了解存储实现差异？→ [存储层](/core/storage)
+- 各种异常怎么处理？→ [异常处理](/core/exceptions)

@@ -1,5 +1,6 @@
 import type { HttpContext } from '../http/context.js';
 import { createExpressContext, type ExpressLikeRequest, type ExpressLikeResponse } from '../http/express.js';
+import type { DeviceInfo } from '../config/xlt-token-config.js';
 import type { XltMode } from '../const/index.js';
 import type { XltSession } from '../session/xlt-session.js';
 import type { StpLogic } from './stp-logic.js';
@@ -58,8 +59,16 @@ export class StpUtil {
     return getStpLogic().logoutByLoginId(loginId);
   }
 
-  static async kickout(loginId: string): Promise<boolean | null> {
-    return getStpLogic().kickout(loginId);
+  static async kickout(loginId: string, device?: string): Promise<boolean | null> {
+    return getStpLogic().kickout(loginId, device);
+  }
+
+  static async kickoutByDevice(loginId: string, device: string): Promise<boolean | null> {
+    return getStpLogic().kickoutByDevice(loginId, device);
+  }
+
+  static async kickoutByToken(token: string): Promise<boolean | null> {
+    return getStpLogic().kickoutByToken(token);
   }
 
   static async renewTimeout(token: string, timeout: number): Promise<boolean | null> {
@@ -81,6 +90,46 @@ export class StpUtil {
 
   static async getTokenValue(req: HttpContext | ExpressLikeRequest): Promise<string | null> {
     return getStpLogic().getTokenValue(toHttpContext(req));
+  }
+
+  static async openSafe(token: string, business: string, timeout: number): Promise<void> {
+    return getStpLogic().openSafe(token, business, timeout);
+  }
+
+  static async checkSafe(token: string, business: string): Promise<void> {
+    return getStpLogic().checkSafe(token, business);
+  }
+
+  static async closeSafe(token: string, business: string): Promise<void> {
+    return getStpLogic().closeSafe(token, business);
+  }
+
+  static async createTempToken(value: string, timeout: number): Promise<string> {
+    return getStpLogic().createTempToken(value, timeout);
+  }
+
+  static async parseTempToken(tempToken: string): Promise<string | null> {
+    return getStpLogic().parseTempToken(tempToken);
+  }
+
+  static async deleteTempToken(tempToken: string): Promise<void> {
+    return getStpLogic().deleteTempToken(tempToken);
+  }
+
+  static async getDeviceList(loginId: string): Promise<DeviceInfo[]> {
+    return getStpLogic().getDeviceList(loginId);
+  }
+
+  static async forceLogout(loginId: string): Promise<boolean> {
+    return getStpLogic().forceLogout(loginId);
+  }
+
+  static async getOnlineLoginIds(opts?: { page?: number; pageSize?: number }): Promise<string[]> {
+    return getStpLogic().getOnlineLoginIds(opts);
+  }
+
+  static async getOnlineCount(): Promise<number> {
+    return getStpLogic().getOnlineCount();
   }
 
   static async hasPermission(loginId: string, permission: string): Promise<boolean> {

@@ -1,5 +1,7 @@
 # 17 · Hooks 与观测性
 
+> 包：`@xlt-token/core`（Hooks 与观测性 API 均在核心层实现）
+
 1.1.0 新增**生命周期钩子（Hooks）**与**在线观测 API**，用于审计日志、消息推送、管理后台在线用户列表等场景。
 
 ## Hooks 系统
@@ -17,7 +19,7 @@ interface XltHooks {
 
 ### 注册方式
 
-通过 `XltTokenModule.forRoot({ hooks })` 传入：
+**NestJS** — 通过 `XltTokenModule.forRoot({ hooks })` 传入：
 
 ```ts twoslash
 XltTokenModule.forRoot({
@@ -33,6 +35,21 @@ XltTokenModule.forRoot({
 });
 ```
 
+**框架无关** — 通过 `createXltToken({ hooks })` 传入：
+
+```ts twoslash
+import { createXltToken, MemoryStore } from '@xlt-token/core';
+
+const xlt = createXltToken({
+  store: new MemoryStore(),
+  hooks: {
+    onLogin: (loginId, token, device) => {
+      console.log(`[login] ${loginId} @ ${device}`);
+    },
+  },
+});
+```
+
 异步钩子若 reject，**不会影响主流程**（内部 `catch` 后 `console.error`），钩子应只做观测性 side-effect。
 
 ### 触发时机
@@ -40,11 +57,11 @@ XltTokenModule.forRoot({
 | 钩子 | 触发位置 | 当前状态 |
 | --- | --- | --- |
 | `onLogin` | `login()` 写入成功后 | ✅ 已实现 |
-| `onKickout` | `kickoutByDevice()` / `kickoutByToken()` | ✅ 已实现 |
-| `onLogout` | `logout()` 成功后 | ⏳ 接口已定义，待接入 |
-| `onReplaced` | 同 device 顶号成功后 | ⏳ 接口已定义，待接入 |
+| `onKickout` | `kickout()` / `kickoutByDevice()` / `kickoutByToken()` | ✅ 已实现 |
+| `onLogout` | `logout()` / `logoutByLoginId()` 成功后 | ✅ 已实现 |
+| `onReplaced` | `isConcurrent: false` 同设备顶号，`login()` 成功后 | ✅ 已实现 |
 
-> `kickout(loginId)` **当前不触发** `onKickout`，若需要统一审计，请使用 `kickoutByDevice` / `kickoutByToken`，或自行在业务层补调。
+> `onLogout` 的 `reason` 参数：`logout` 为 `'LOGOUT'`，`logoutByLoginId` 为 `'LOGOUT_BY_LOGIN_ID'`。
 
 ### 示例：登录审计
 
@@ -99,7 +116,7 @@ console.log(`当前在线用户: ${count}`);
 
 ### `getDeviceList(loginId)`
 
-某账号下所有在线 device（详见 [14-multi-device](./14-multi-device.md)）。
+某账号下所有在线 device（详见 [多端登录](/core/multi-device)）。
 
 ```ts twoslash
 getDeviceList(loginId: string): Promise<DeviceInfo[]>
@@ -171,14 +188,14 @@ kickoutByDevice()    →  onKickout 钩子 → 审计日志
 ## 类型导出
 
 ```ts twoslash
-import type { XltHooks, DeviceInfo } from 'xlt-token';
-import { XLT_TOKEN_HOOKS } from 'xlt-token';
+import type { XltHooks, DeviceInfo } from '@xlt-token/core';
+import { XLT_TOKEN_HOOKS } from '@xlt-token/core';
 ```
 
-`DeviceInfo` 定义于 `src/core/xlt-token-config.ts`。
+`DeviceInfo` 定义于 `packages/core/src/config/xlt-token-config.ts`。
 
 ## 下一步
 
-- 多端 API 详解 → [14-multi-device](./14-multi-device.md)
-- Store `keys()` 实现 → [06-storage](./06-storage.md)
-- 模块注册选项 → [03-configuration](./03-configuration.md)
+- 多端 API 详解 → [多端登录](/core/multi-device)
+- Store `keys()` 实现 → [存储层](/core/storage)
+- 模块注册选项 → [配置参考](/guide/configuration)

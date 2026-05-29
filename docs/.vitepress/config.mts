@@ -13,7 +13,7 @@ const root = resolve(dir, '../..')
 // @ts-ignore
 export default defineConfig({
   title: 'xlt-token',
-  description: 'NestJS Token 鉴权库，灵感来源于 Sa-Token。轻量、可插拔、零业务侵入。',
+  description: '框架无关 Token 鉴权库，灵感来源于 Sa-Token。核心 @xlt-token/core + NestJS 适配 @xlt-token/nestjs，轻量、可插拔。',
   lang: 'zh-CN',
   base: '/xlt-token/',
   cleanUrls: true,
@@ -46,7 +46,8 @@ export default defineConfig({
             emitDecoratorMetadata: true,
             baseUrl: root,
             paths: {
-              'xlt-token': ['src/index.ts'],
+              '@xlt-token/nestjs': ['packages/nestjs/src/index.ts'],
+              '@xlt-token/core': ['packages/core/src/index.ts'],
             },
           },
           handbookOptions: {
@@ -69,7 +70,7 @@ export default defineConfig({
     ['meta', { name: 'theme-color', content: '#4f46e5' }],
     ['meta', { name: 'og:type', content: 'website' }],
     ['meta', { name: 'og:title', content: 'xlt-token' }],
-    ['meta', { name: 'og:description', content: 'NestJS Token 鉴权库' }],
+    ['meta', { name: 'og:description', content: '框架无关 Token 鉴权库，NestJS 一行接入' }],
     // Geist 字体（fonts.loli.net 国内镜像）
     ['link', { rel: 'preconnect', href: 'https://fonts.loli.net' }],
     ['link', { rel: 'preconnect', href: 'https://gstatic.loli.net', crossorigin: '' }],
@@ -82,7 +83,7 @@ export default defineConfig({
     ],
   ],
 
-  srcExclude: ['README.md', 'archive/README.md'],
+  srcExclude: ['README.md', 'archive/**'],
 
   themeConfig: {
     siteTitle: 'xlt-token',
@@ -97,9 +98,8 @@ export default defineConfig({
       { text: '指南', link: '/guide/getting-started', activeMatch: '/guide/' },
       { text: '核心', link: '/core/core-api', activeMatch: '/core/' },
       { text: '参考', link: '/reference/src-reference', activeMatch: '/reference/' },
-      { text: '路线图', link: '/roadmap/1-1-0', activeMatch: '/roadmap/' },
       {
-        text: 'v1.0.0-rc.1',
+        text: 'v1.0.0-rc.2',
         items: [
           { text: '更新日志', link: 'https://github.com/xiaoLangtou/xlt-token/blob/master/CHANGELOG.md' },
           { text: 'GitHub Releases', link: 'https://github.com/xiaoLangtou/xlt-token/releases' },
@@ -116,19 +116,26 @@ export default defineConfig({
             { text: '快速开始', link: '/guide/getting-started' },
             { text: '架构设计', link: '/guide/architecture' },
             { text: '配置参考', link: '/guide/configuration' },
+            { text: '2.0 迁移指南', link: '/guide/migration-2-0' },
           ],
         },
       ],
       '/core/': [
         {
-          text: '核心能力',
+          text: '核心（@xlt-token/core）',
           collapsed: false,
           items: [
             { text: '核心 API', link: '/core/core-api' },
-            { text: '守卫与装饰器', link: '/core/guards-and-decorators' },
             { text: '权限与会话', link: '/core/permissions-and-session' },
             { text: '存储层', link: '/core/storage' },
             { text: 'Token 策略', link: '/core/token-strategy' },
+          ],
+        },
+        {
+          text: 'NestJS 集成（@xlt-token/nestjs）',
+          collapsed: false,
+          items: [
+            { text: '守卫与装饰器', link: '/core/guards-and-decorators' },
           ],
         },
         {
@@ -155,21 +162,6 @@ export default defineConfig({
           text: '参考',
           items: [
             { text: '源码参考', link: '/reference/src-reference' },
-          ],
-        },
-      ],
-      '/roadmap/': [
-        {
-          text: '1.1.0',
-          items: [
-            { text: '功能规划', link: '/roadmap/1-1-0' },
-            { text: '实现设计', link: '/roadmap/1-1-0-implementation-design' },
-          ],
-        },
-        {
-          text: '2.0',
-          items: [
-            { text: '多框架适配架构', link: '/roadmap/multi-framework-architecture' },
           ],
         },
       ],
@@ -227,6 +219,7 @@ export default defineConfig({
   },
 
   rewrites: {
+    'migration-2.0.md': 'guide/migration-2-0.md',
     '01-getting-started.md': 'guide/getting-started.md',
     '02-architecture.md': 'guide/architecture.md',
     '03-configuration.md': 'guide/configuration.md',
@@ -236,10 +229,7 @@ export default defineConfig({
     '07-token-strategy.md': 'core/token-strategy.md',
     '08-exceptions.md': 'core/exceptions.md',
     '09-recipes.md': 'core/recipes.md',
-    '10-roadmap-1.1.0.md': 'roadmap/1-1-0.md',
     '11-permissions-and-session.md': 'core/permissions-and-session.md',
-    '12-multi-framework-architecture.md': 'roadmap/multi-framework-architecture.md',
-    '13-1.1.0-implementation-design.md': 'roadmap/1-1-0-implementation-design.md',
     '14-multi-device.md': 'core/multi-device.md',
     '15-secondary-auth.md': 'core/secondary-auth.md',
     '16-jwt-strategy.md': 'core/jwt-strategy.md',

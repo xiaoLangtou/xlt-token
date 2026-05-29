@@ -1,8 +1,10 @@
 # 14 · 多端登录
 
-1.1.0 起，同一账号可在多个**设备类型**（`device`）上独立持有登录态。本章说明配置组合、`device` 参数，以及 `getDeviceList` / `kickoutByDevice` 等 API 的用法。
+> 包：`@xlt-token/core`（API 实现）；NestJS 示例通过 `StpLogic` / `StpUtil` 调用。
 
-> 若你只需「单设备顶号」或「多端共享 token」，仍可使用 1.0 的 `isConcurrent` / `isShare`，见 [02-architecture · 并发语义](./02-architecture.md#并发--共享语义)。
+1.1.0 起，同一账号可在多个**设备类型**（`device`）上独立持有登录态。
+
+> 若你只需「单设备顶号」或「多端共享 token」，仍可使用 1.0 的 `isConcurrent` / `isShare`，见 [架构设计 · 并发语义](/guide/architecture#并发--共享语义)。
 
 ## 核心概念
 
@@ -83,7 +85,7 @@ const appToken = await stp.login(userId, { device: 'app' });
 
 ## API 参考
 
-以下方法在 **`StpLogic`** 上提供（当前 `StpUtil` 尚未转发，需注入 `StpLogic` 或自行封装）。
+以下方法在 **`StpLogic`** 与 **`StpUtil`** 上均可用（`StpUtil` 为静态转发）。
 
 ### `getDeviceList(loginId)`
 
@@ -201,16 +203,16 @@ kickoutByDevice('1001', 'pc')
 ## 与 1.0 的兼容
 
 - 不传 `device` 时等价于 `device: 'default'`
-- 新键格式：`session:${loginId}:default`（旧版无 device 后缀的键在 1.1 设计中支持迁移，见 [实现设计 · Step 1.2](./13-1.1.0-implementation-design.md)）
+- 新键格式：`session:${loginId}:default`（旧版无 device 后缀的键在首次登录时按 `default` device 迁移）
 
 ## 注意事项
 
 - `logout(token)` 会从 `session-list` 移除对应 device，但当前实现仍可能误删共享的 `sessionData`（多 device 场景下需注意 session 数据生命周期）
 - `logoutByLoginId(loginId)` 目前仅处理 `default` device，**多 device 全端登出请用 `forceLogout`**
-- JWT 模式下踢人走黑名单机制，详见 [16-jwt-strategy](./16-jwt-strategy.md)
+- JWT 模式下踢人走黑名单机制，详见 [16-jwt-strategy](/core/jwt-strategy)
 
 ## 下一步
 
-- 在线人数 / 在线列表 API → [17-hooks-and-observability](./17-hooks-and-observability.md)
-- 管理员踢人场景代码 → [09-recipes · 管理员踢人](./09-recipes.md#6-管理员踢人下线)
-- 配置字段完整列表 → [03-configuration](./03-configuration.md)
+- 在线人数 / 在线列表 API → [17-hooks-and-observability](/core/hooks-and-observability)
+- 管理员踢人场景代码 → [09-recipes · 管理员踢人](/core/recipes#6-管理员踢人下线)
+- 配置字段完整列表 → [03-configuration](/guide/configuration)

@@ -1,10 +1,12 @@
 # 06 · 存储层
 
+> 接口与 `MemoryStore`：`@xlt-token/core`；`RedisStore`：`@xlt-token/nestjs`。
+
 `XltTokenStore` 接口 + 两种内置实现（`MemoryStore` / `RedisStore`）+ 自定义存储。
 
 ## `XltTokenStore` 接口
 
-源码：`src/store/xlt-token-store.interface.ts`
+源码：`packages/core/src/store/xlt-token-store.interface.ts`
 
 ```ts twoslash
 interface XltTokenStore {
@@ -15,6 +17,7 @@ interface XltTokenStore {
   update(key: string, value: string): Promise<void>;                    // 只改值，保持 TTL；key 不存在抛错
   updateTimeout(key: string, timeoutSec: number): Promise<void>;        // 只改 TTL
   getTimeout(key: string): Promise<number>;                             // -1=永久, -2=不存在, >0=剩余秒数
+  keys(pattern: string): Promise<string[]>;                            // 前缀匹配，如 'authorization:login:session-list:*'
 }
 ```
 
@@ -22,7 +25,7 @@ interface XltTokenStore {
 
 ## `MemoryStore`（默认，内存实现）
 
-源码：`src/store/memory-store.ts`
+源码：`packages/core/src/store/memory-store.ts`
 
 ### 特性
 
@@ -49,7 +52,7 @@ XltTokenModule.forRoot({ config: { tokenName: 'authorization' } });
 显式指定：
 
 ```ts twoslash
-import { MemoryStore } from 'xlt-token';
+import { MemoryStore } from '@xlt-token/core';
 
 XltTokenModule.forRoot({
   store: { useClass: MemoryStore },
@@ -58,7 +61,7 @@ XltTokenModule.forRoot({
 
 ## `RedisStore`（生产推荐）
 
-源码：`src/store/redis-store.ts`
+源码：`packages/nestjs/src/store/redis-store.ts`
 
 ### 特性
 
@@ -84,7 +87,7 @@ XltTokenModule.forRoot({
 
 ```ts twoslash
 import { createClient } from 'redis';
-import { XltTokenModule, RedisStore, XLT_REDIS_CLIENT } from 'xlt-token';
+import { XltTokenModule, RedisStore, XLT_REDIS_CLIENT } from '@xlt-token/nestjs';
 
 @Module({
   imports: [
@@ -185,7 +188,7 @@ redis-cli GET authorization:login:session:1001
 
 ```ts twoslash
 import { Injectable } from '@nestjs/common';
-import { XltTokenStore } from 'xlt-token';
+import type { XltTokenStore } from '@xlt-token/core';
 
 @Injectable()
 export class MyCustomStore implements XltTokenStore {
@@ -224,5 +227,5 @@ export class MyCustomStore implements XltTokenStore {
 
 ## 下一步
 
-- 想换 token 生成方式？→ [07-token-strategy](./07-token-strategy.md)
-- 接入 Redis 后如何观察/调试？→ [09-recipes · 运维调试](./09-recipes.md)
+- 想换 token 生成方式？→ [07-token-strategy](/core/token-strategy)
+- 接入 Redis 后如何观察/调试？→ [09-recipes · 运维调试](/core/recipes)

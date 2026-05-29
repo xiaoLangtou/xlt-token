@@ -1,5 +1,7 @@
 # 05 · 守卫与装饰器
 
+> 包：`@xlt-token/nestjs`。本章内容 **仅适用于 NestJS**。
+
 两种内置守卫（`XltTokenGuard` / `XltAbstractLoginGuard`）+ 七个装饰器的完整说明。
 
 ## 守卫：怎么选？
@@ -15,7 +17,7 @@
 **职责**：
 
 1. 按 `defaultCheck` + `@XltIgnore` / `@XltCheckLogin` 决定是否需校验
-2. 调 `StpLogic.checkLogin(request)`
+2. `createExpressContext(req, res)` → `StpLogic.checkLogin(httpCtx)`
 3. 失败抛 `NotLoginException`（HTTP 401）
 4. 成功后挂到 `request`：
    - `request.stpLoginId`
@@ -25,7 +27,7 @@
 
 ```ts twoslash
 import { APP_GUARD } from '@nestjs/core';
-import { XltTokenGuard } from 'xlt-token';
+import { XltTokenGuard } from '@xlt-token/nestjs';
 
 @Module({
   providers: [{ provide: APP_GUARD, useClass: XltTokenGuard }],
@@ -65,13 +67,14 @@ protected constructor(
 canActivate(ctx)
   ├─ requiresLogin(ctx)                    // 可重写
   │    └─ false → 放行
-  ├─ stpLogic.checkLogin(request)
+  ├─ createExpressContext(req, res)
+  ├─ stpLogic.checkLogin(httpCtx)
   ├─ !ok:
   │    ├─ onAuthFail?.(result, request)    // 可重写（钩子）
   │    └─ throw NotLoginException
   └─ ok:
-       ├─ request.stpLoginId = result.loginId
-       ├─ request.stpToken   = result.token
+       ├─ request.stpLoginId = httpCtx.state.stpLoginId ?? result.loginId
+       ├─ request.stpToken   = httpCtx.state.stpToken ?? result.token
        └─ onAuthSuccess?.(result, request)  // 可重写（钩子）
 ```
 
@@ -88,7 +91,8 @@ canActivate(ctx)
 ```ts twoslash
 import { CanActivate, ExecutionContext, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { XltAbstractLoginGuard, XLT_TOKEN_CONFIG, XltTokenConfig, StpLogic } from 'xlt-token';
+import { XltAbstractLoginGuard, XLT_TOKEN_CONFIG, StpLogic } from '@xlt-token/nestjs';
+import type { XltTokenConfig } from '@xlt-token/core';
 import { RedisService } from '@/config/modules/redis.service';
 import { AppLogger } from '@/common/logger/app.logger.service';
 
@@ -208,7 +212,7 @@ create() {}
 | `perms` | `string \| string[]` | 单个权限或权限数组 |
 | `options.mode` | `XltMode.AND`（默认）/ `XltMode.OR` | 多个权限的组合策略 |
 
-支持通配符匹配（`user:*` 命中 `user:read` 等）。需要在 Module 里注册 `stpInterface`，详见 [11 · 权限与会话](./11-permissions-and-session.md)。
+支持通配符匹配（`user:*` 命中 `user:read` 等）。需要在 Module 里注册 `stpInterface`，详见 [11 · 权限与会话](/core/permissions-and-session)。
 
 ### `@XltCheckRole(roles, options?)`
 
@@ -234,7 +238,7 @@ sensitive() {}
 transfer() {}
 ```
 
-完整流程（验证码 → openSafe → 敏感操作）见 **[15 · 二级认证](./15-secondary-auth.md)**。
+完整流程（验证码 → openSafe → 敏感操作）见 **[15 · 二级认证](/core/secondary-auth)**。
 
 ### 装饰器总览
 
@@ -258,5 +262,5 @@ transfer() {}
 
 ## 下一步
 
-- 想知道各类 401 的具体 reason → [08-exceptions](./08-exceptions.md)
-- 踢人/顶号完整流程 → [09-recipes](./09-recipes.md)
+- 想知道各类 401 的具体 reason → [08-exceptions](/core/exceptions)
+- 踢人/顶号完整流程 → [09-recipes](/core/recipes)

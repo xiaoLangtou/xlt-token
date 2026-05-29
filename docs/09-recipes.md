@@ -29,7 +29,7 @@ XltTokenModule.forRoot({
 
 **效果**：同账号二次登录时，旧 token 的值被改为 `BE_REPLACED`，旧设备下次请求收到 401 `BE_REPLACED`。
 
-**前端处理**：见 [08-exceptions · 前端统一处理](./08-exceptions.md#前端统一处理示例)。
+**前端处理**：见 [08-exceptions · 前端统一处理](/core/exceptions#前端统一处理示例)。
 
 ---
 
@@ -57,7 +57,7 @@ XltTokenModule.forRoot({
 });
 ```
 
-**⚠️ 注意**：1.1.0 起 `sessionKey` 已支持 `device` 后缀，多端场景请用 `forceLogout` 全端登出，详见 [14-multi-device](./14-multi-device.md)。
+**⚠️ 注意**：1.1.0 起 `sessionKey` 已支持 `device` 后缀，多端场景请用 `forceLogout` 全端登出，详见 [14-multi-device](/core/multi-device)。
 
 ---
 
@@ -127,7 +127,7 @@ async kickout(@Param('userId') userId: string) {
 
 **方案**：继承 `XltAbstractLoginGuard`，在 `onAuthSuccess` 里从 Redis 加载用户并挂到 `request.user`。
 
-完整示例见 [05-guards-and-decorators · 完整示例](./05-guards-and-decorators.md#完整示例白名单--redis-加载用户)。
+完整示例见 [05-guards-and-decorators · 完整示例](/core/guards-and-decorators#完整示例白名单--redis-加载用户)。
 
 关键思路：
 
@@ -174,32 +174,24 @@ async detail(@Param('id') id: string, @Req() req: Request) {
 
 ## 9. 查询当前在线人数 / 在线列表
 
-⚠️ xlt-token **没有内置此能力**，需要自行扩展。思路：
-
-1. `login` 成功后把 loginId 写入 Redis 的 `online_users` set，登出 / 踢人时移除
-2. 用 Redis 的 `SCARD online_users` 查总数、`SMEMBERS online_users` 查列表
-
-示例（封装在你的 AuthService 里）：
+1.1.0 起内置观测性 API（`@xlt-token/core`，NestJS 通过 `StpLogic` / `StpUtil` 使用）：
 
 ```ts twoslash
-async login(loginId: string) {
-  const token = await this.stpLogic.login(loginId);
-  await this.redis.sadd('online_users', loginId);
-  return token;
-}
+import { StpUtil } from '@xlt-token/nestjs';
 
-async logout(token: string) {
-  const loginId = await this.stpLogic.getTokenValue({ headers: { authorization: token } } as any);
-  await this.stpLogic.logout(token);
-  await this.redis.srem('online_users', loginId);
-}
+// 在线用户数（有 session-list 的 loginId 数量）
+const count = await StpUtil.getOnlineCount();
 
-async onlineCount() {
-  return this.redis.scard('online_users');
-}
+// 分页 loginId 列表，默认 page=0, pageSize=100
+const loginIds = await StpUtil.getOnlineLoginIds({ page: 0, pageSize: 50 });
+
+// 某用户各端设备详情
+const devices = await StpUtil.getDeviceList('1001');
 ```
 
-（生产实现需处理掉线、过期清理等边界，可用 Redis 的 `ZSET` + 心跳替代。）
+管理后台完整示例见 [Hooks 与观测性](/core/hooks-and-observability#管理后台示例)。
+
+> 实现依赖 Store 的 `keys(pattern)` 扫描 `session-list:*` 前缀；在线量极大时请降低扫描频率或自建索引。
 
 ---
 

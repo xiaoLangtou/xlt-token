@@ -12,7 +12,7 @@
     "lib": ["ES2022"],
     "baseUrl": "../../..",
     "paths": {
-      "xlt-token": ["src/index.ts"]
+      "xlt-token": ["packages/nestjs/src/index.ts"]
     }
   },
   "include": [

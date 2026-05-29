@@ -1,6 +1,8 @@
 # 15 · 二级认证与临时 Token
 
-1.1.0 新增**二级认证（Safe）**与**临时 Token**，用于支付确认、敏感操作、邮件链接等「先验证、再执行」的场景。
+> 包：`@xlt-token/core`（`openSafe` / 临时 token API）；`@XltCheckSafe` 装饰器：`@xlt-token/nestjs`。
+
+1.1.0 新增**二级认证（Safe）**与**临时 Token**，用于支付确认、敏感操作、邮件链接等场景。
 
 ## 二级认证（Safe）
 
@@ -52,7 +54,7 @@ sequenceDiagram
   StpLogic->>Store: set safe:token:pay
 
   Client->>API: POST /transfer @XltCheckSafe('pay')
-  API->>StpLogic: checkLogin(req)
+  API->>StpLogic: checkLogin(httpCtx)
   StpLogic->>Store: get tokenKey / JWT verify
   API->>StpLogic: checkSafe(token, 'pay')
   StpLogic->>Store: has safe:token:pay
@@ -68,7 +70,7 @@ sequenceDiagram
 装饰在 Controller 方法或类上，由 `XltTokenGuard` 在 `checkLogin` 成功后自动调用 `checkSafe`：
 
 ```ts twoslash
-import { XltCheckSafe, LoginId, TokenValue, StpUtil } from 'xlt-token';
+import { XltCheckSafe, LoginId, TokenValue, StpUtil } from '@xlt-token/nestjs';
 
 @Controller('payment')
 export class PaymentController {
@@ -90,7 +92,7 @@ export class PaymentController {
 }
 ```
 
-> **注意**：`StpUtil` 当前尚未封装 `openSafe` / `checkSafe` / `closeSafe`，上例需在 Service 中注入 `StpLogic`，或自行扩展 `StpUtil`。
+`StpUtil` 已封装 `openSafe` / `checkSafe` / `closeSafe` 及临时 token 全套 API，上例可直接使用。
 
 ### 异常
 
@@ -183,6 +185,6 @@ await userService.resetPassword(userId, newPassword);
 
 ## 下一步
 
-- Guard 与装饰器总览 → [05-guards-and-decorators](./05-guards-and-decorators.md)
-- 异常处理（含 403） → [08-exceptions](./08-exceptions.md)
-- JWT 模式下 safe 键仍使用完整 token 字符串 → [16-jwt-strategy](./16-jwt-strategy.md)
+- Guard 与装饰器总览 → [05-guards-and-decorators](/core/guards-and-decorators)
+- 异常处理（含 403） → [08-exceptions](/core/exceptions)
+- JWT 模式下 safe 键仍使用完整 token 字符串 → [16-jwt-strategy](/core/jwt-strategy)

@@ -1,6 +1,7 @@
 import type { StpInterface } from '../perm/stp-interface.js';
-import type { XltHooks, XltTokenConfig } from '../config/xlt-token-config.js';
+import type { XltTokenConfig } from '../config/xlt-token-config.js';
 import { DEFAULT_XLT_TOKEN_CONFIG } from '../config/xlt-token-config.js';
+import type { XltHooks } from '../hooks/xlt-hooks.interface.js';
 import { StpLogic } from '../auth/stp-logic.js';
 import { MemoryStore } from '../store/memory-store.js';
 import { UuidStrategy } from '../token/uuid-strategy.js';

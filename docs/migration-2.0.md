@@ -1,24 +1,31 @@
-# xlt-token 2.0 迁移指南
+# xlt-token 迁移指南
 
-> 适用版本：`2.0.0`（monorepo：`@xlt-token/core` + `@xlt-token/nestjs` + `xlt-token` compat）
+> 适用版本：`1.0.0-rc.2`（monorepo：`@xlt-token/core` + `@xlt-token/nestjs`）
 
-## 对 1.x 用户：零改动
+## 从旧版 `xlt-token` 单包迁移
 
-若你当前使用：
+若你此前使用：
 
 ```ts
 import { XltTokenModule, XltTokenGuard, StpUtil, LoginId } from 'xlt-token';
 ```
 
-**无需修改任何 import**。根包 `xlt-token` 继续作为兼容层，转发 `@xlt-token/nestjs` 的全部导出。
-
-## 推荐写法（2.0）
-
-新项目或愿意显式依赖时可改为：
+请改为显式依赖分包：
 
 ```ts
-import { XltTokenModule, XltTokenGuard, LoginId } from '@xlt-token/nestjs';
-import type { XltTokenConfig, StpInterface } from '@xlt-token/nestjs';
+import {
+  XltTokenModule,
+  XltTokenGuard,
+  StpUtil,
+  LoginId,
+} from '@xlt-token/nestjs';
+```
+
+类型与核心 API 也可从 `@xlt-token/core` 导入（nestjs 包会 re-export 常用符号）：
+
+```ts
+import type { XltTokenConfig, StpInterface } from '@xlt-token/core';
+import { DEFAULT_XLT_TOKEN_CONFIG, MemoryStore } from '@xlt-token/core';
 ```
 
 仅使用框架无关 API（Express、Koa 等）时：
@@ -31,41 +38,36 @@ import { createXltToken, StpUtil, MemoryStore } from '@xlt-token/core';
 
 | 包 | 职责 |
 | --- | --- |
-| `@xlt-token/core` | 鉴权算法、HttpContext、Store/Strategy 契约 |
-| `@xlt-token/nestjs` | Module、Guard、Decorator、Nest 异常包装 |
-| `xlt-token` | 1.x 兼容 re-export（= `@xlt-token/nestjs`） |
+| `@xlt-token/core` | 鉴权算法、HttpContext、Store/Strategy 契约、Hooks |
+| `@xlt-token/nestjs` | Module、Guard、Decorator、RedisStore、JwtStrategy、Nest 异常包装 |
 
 ## 行为变化（内部实现，对外 API 不变）
 
-- Guard 内部通过 `HttpContext` 调用 `StpLogic.checkLogin`，不再直接传 Express `Request`
+- Guard 内部通过 `HttpContext` 调用 `StpLogic.checkLogin`
 - 登录成功后仍写入 `request.stpLoginId` / `request.stpToken`，`@LoginId()` / `@TokenValue()` 无需改动
-- 异常仍为 `NotLoginException` 等 NestJS 子类，HTTP 401/403 响应格式不变
-
-## peerDependencies
-
-`@xlt-token/nestjs` 需要与 1.x 相同的 NestJS peer：
-
-- `@nestjs/common`、`@nestjs/core`
-- `reflect-metadata`、`rxjs`
-- 可选：`redis`（RedisStore）、`jsonwebtoken`（JwtStrategy）
+- 异常仍为继承 NestJS `UnauthorizedException` / `ForbiddenException` 的包装类
 
 ## 安装
 
-Monorepo 内使用 workspace；发布后：
-
 ```bash
-pnpm add xlt-token
-# 或
 pnpm add @xlt-token/nestjs @xlt-token/core
+pnpm add redis              # 可选：RedisStore
+pnpm add jsonwebtoken       # 可选：JwtStrategy
 ```
+
+`@xlt-token/nestjs` peer 依赖：
+
+- `@nestjs/common`、`@nestjs/core`
+- `reflect-metadata`、`rxjs`
+- 可选：`redis`、`jsonwebtoken`
 
 ## 常见问题
 
 **Q：自定义 Guard 继承 `XltAbstractLoginGuard` 需要改吗？**  
-A：不需要，签名与回调保持不变。
+A：不需要，签名与回调保持不变，仅改 import 路径。
 
 **Q：`StpUtil.login()` 还能在 Controller 里用吗？**  
-A：可以。Module 初始化时仍会 `setStpLogic`，静态门面行为不变。
+A：可以。`XltTokenModule` 初始化时仍会 `setStpLogic`。
 
 **Q：Fastify 适配器支持吗？**  
-A：2.0 Phase 2 仅保证默认 Express 适配器；Fastify 后续独立适配包。
+A：Phase 3 规划中；当前 NestJS 默认基于 Express 适配器。

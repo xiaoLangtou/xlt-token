@@ -69,4 +69,12 @@ export class XltTokenKeys {
     return `${this.tokenName}:temp-token:${tempToken}`;
   }
 
+  permCacheKey(loginId: string): string {
+    return `${this.tokenName}:perm-cache:perm:${loginId}`;
+  }
+
+  roleCacheKey(loginId: string): string {
+    return `${this.tokenName}:perm-cache:role:${loginId}`;
+  }
+
 }

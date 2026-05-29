@@ -1,8 +1,8 @@
 # xlt-token · 多框架适配架构方案
 
-> **状态**：规划草案
+> **状态**：Phase 1/2 已完成（`@xlt-token/core` + `@xlt-token/nestjs`）；Phase 3 多框架适配器进行中
 > **目标版本**：`2.0.0`
-> **关系**：本文档承接 [10-roadmap-1.1.0.md](../10-roadmap-1.1.0.md) 之后的下一阶段架构演进。1.x 系列专注于功能补齐（二级认证、多端、JWT、观测性），2.0 系列专注于**框架解耦**——让 xlt-token 从「NestJS 专属库」演进为「核心 + 多适配器」的全 Node.js 框架鉴权方案。
+> **关系**：本文档承接 [1.1.0 功能规划](./10-roadmap-1.1.0.md) 之后的下一阶段架构演进。
 
 本文是一份把 `xlt-token` 从 NestJS 专属库演进为「框架无关 + 多适配器」库的系统架构设计。整体借鉴 `better-auth` / `lucia-auth` / `iron-session` / `pinia` 这类「核心 + 适配器」分包模式，并保持与 1.0 版本 API 语义一致。
 
@@ -29,26 +29,25 @@
 
 ## 二、当前耦合点诊断
 
-对照 `src/` 目录，把代码按耦合度分三层：
+对照当前 monorepo，代码按耦合度分三层：
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
-│ 强耦合 NestJS（必须移到 @xlt-token/nestjs）                       │
-│  - src/xlt-token.module.ts           Dynamic Module               │
-│  - src/guards/xlt-token.guard.ts     CanActivate                  │
-│  - src/guards/xlt-abstract-login.guard.ts                         │
-│  - src/decorators/*.ts               createParamDecorator         │
-│  - src/exceptions/*.ts               extends UnauthorizedException │
+│ 强耦合 NestJS（@xlt-token/nestjs）                                │
+│  - packages/nestjs/src/xlt-token.module.ts    Dynamic Module      │
+│  - packages/nestjs/src/guards/*.ts            CanActivate         │
+│  - packages/nestjs/src/decorators/*.ts        createParamDecorator│
+│  - packages/nestjs/src/exceptions/*.ts        extends Nest 异常   │
 ├──────────────────────────────────────────────────────────────────┤
-│ 弱耦合 NestJS（仅参数类型用了 NestJS 的 Request）                  │
-│  - src/auth/stp-logic.ts             checkLogin(req: Request)     │
-│  - src/auth/stp-util.ts              静态门面                      │
+│ 已解耦（@xlt-token/core，仅依赖 HttpContext）                     │
+│  - packages/core/src/auth/stp-logic.ts        checkLogin(ctx)     │
+│  - packages/core/src/auth/stp-util.ts         静态门面            │
 ├──────────────────────────────────────────────────────────────────┤
-│ 已经框架无关（直接抽到 @xlt-token/core）                          │
-│  - src/store/*                       存储接口与实现                │
-│  - src/token/*                       Token 策略                    │
-│  - src/core/xlt-token-config.ts      配置类型与默认值              │
-│  - src/const/index.ts                NotLoginType / XltMode 常量   │
+│ 框架无关（@xlt-token/core）                                       │
+│  - packages/core/src/store/*                  存储接口与实现       │
+│  - packages/core/src/token/*                  Token 策略           │
+│  - packages/core/src/config/*                 配置类型与默认值     │
+│  - packages/core/src/const/*                  NotLoginType 等     │
 └──────────────────────────────────────────────────────────────────┘
 ```
 
@@ -366,6 +365,8 @@ class AuthController {
 
 ### 7.2 Express
 
+> **详细方案**（分文件）：[express-adapter/](./express-adapter/README.md) — 设计思路、分步实施、API 与 Nest 对齐。
+
 ```ts twoslash
 import express from 'express';
 import { createXltToken } from '@xlt-token/core';
@@ -638,22 +639,18 @@ export class XltTokenGuard implements CanActivate {
 
 ## 十一、迁移路径（4 个阶段）
 
-### Phase 1 · 核心剥离（不破坏 1.0 用户）
+### Phase 1 · 核心剥离 ✅ 已完成
 
-- 在当前仓库新建 `packages/core`
-- 把 `src/auth` / `src/store` / `src/token` / `src/core` / `src/const` 搬过去
-- 引入 `HttpContext` 接口与 `createExpressContext` 内部 helper
-- 当前 `src/` 仍然存在，只是内部转调 `@xlt-token/core`
-- **对外 API 完全不变**
-- **Phase 1 结束后**：决策 `HttpContext.cookies.get` 是否需要 async 化（见第四节警告）
+- 新建 `packages/core`，auth / store / token / config / const 已迁入
+- 引入 `HttpContext` 与 `createExpressContext`
+- 根包 `xlt-token` 转发 `@xlt-token/nestjs`
 
-### Phase 2 · NestJS 包独立
+### Phase 2 · NestJS 包独立 ✅ 已完成
 
-- 新建 `packages/nestjs`，把 Module / Guard / Decorator / NestException 移过去
-- 当前 `xlt-token` 包变成 thin re-export，全部从 `@xlt-token/nestjs` 转发
-- 发 `1.2.0`：用户什么都不改就能继续工作
+- `packages/nestjs` 承载 Module / Guard / Decorator / Nest 异常包装
+- 对外 API 完全兼容 1.x
 
-### Phase 3 · 多框架适配器
+### Phase 3 · 多框架适配器（进行中）
 
 - 实现 `adapter-express` / `adapter-koa` / `adapter-fastify` / `adapter-hono`
 - 每个适配器配套 README、demo、E2E

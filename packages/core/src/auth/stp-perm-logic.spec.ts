@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { StpPermLogic } from './stp-perm-logic';
 import { MemoryStore } from '../store/memory-store.js';
 import { DEFAULT_XLT_TOKEN_CONFIG } from '../config/xlt-token-config.js';
@@ -8,7 +8,7 @@ import { NotRoleException } from '../exceptions/not-role.exception.js';
 import type { StpInterface } from '../perm/stp-interface.js';
 
 const mockStpInterface: StpInterface = {
-  getPermissionList: (loginId: string) => {
+  getPermissionList: vi.fn((loginId: string) => {
     const map: Record<string, string[]> = {
       admin: ['user:add', 'user:delete', 'user:edit', 'order:*', 'system:*'],
       viewer: ['user:view'],
@@ -16,21 +16,23 @@ const mockStpInterface: StpInterface = {
       wildcard: ['*'],
     };
     return map[loginId] ?? [];
-  },
-  getRoleList: (loginId: string) => {
+  }),
+  getRoleList: vi.fn((loginId: string) => {
     const map: Record<string, string[]> = {
       admin: ['admin', 'editor'],
       viewer: ['viewer'],
       empty: [],
     };
     return map[loginId] ?? [];
-  },
+  }),
 };
 
 describe('StpPermLogic', () => {
   let logic: StpPermLogic;
 
   beforeEach(async () => {
+    vi.mocked(mockStpInterface.getPermissionList).mockClear();
+    vi.mocked(mockStpInterface.getRoleList).mockClear();
     logic = new StpPermLogic(mockStpInterface, new MemoryStore(), DEFAULT_XLT_TOKEN_CONFIG);
   });
 
@@ -161,6 +163,34 @@ describe('StpPermLogic', () => {
       await expect(
         logic.checkRole('', ['admin'], XltMode.AND),
       ).rejects.toThrow(NotRoleException);
+    });
+  });
+
+  describe('permCacheTimeout', () => {
+    it('permCacheTimeout=0 时每次查询都调用 StpInterface', async () => {
+      await logic.hasPermission('admin', 'user:add');
+      await logic.hasPermission('admin', 'user:delete');
+      expect(mockStpInterface.getPermissionList).toHaveBeenCalledTimes(2);
+    });
+
+    it('permCacheTimeout>0 时同 loginId 复用缓存', async () => {
+      const cached = new StpPermLogic(mockStpInterface, new MemoryStore(), {
+        ...DEFAULT_XLT_TOKEN_CONFIG,
+        permCacheTimeout: 60,
+      });
+      await cached.hasPermission('admin', 'user:add');
+      await cached.hasPermission('admin', 'user:delete');
+      expect(mockStpInterface.getPermissionList).toHaveBeenCalledTimes(1);
+    });
+
+    it('permCacheTimeout>0 时角色列表同样缓存', async () => {
+      const cached = new StpPermLogic(mockStpInterface, new MemoryStore(), {
+        ...DEFAULT_XLT_TOKEN_CONFIG,
+        permCacheTimeout: 60,
+      });
+      await cached.hasRole('admin', 'admin');
+      await cached.hasRole('admin', 'editor');
+      expect(mockStpInterface.getRoleList).toHaveBeenCalledTimes(1);
     });
   });
 });

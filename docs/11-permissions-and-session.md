@@ -1,5 +1,7 @@
 # 11 · 权限与会话
 
+> `StpInterface` / `StpPermLogic` / `XltSession`：`@xlt-token/core`；`@XltCheckPermission` 等装饰器：`@xlt-token/nestjs`。
+
 `StpInterface` + `StpPermLogic` 提供声明式权限/角色校验；`XltSession` 提供与 token 同生命周期的会话存储。
 
 ## 一、权限/角色校验
@@ -26,7 +28,7 @@ XltTokenGuard
 ```ts twoslash
 // stp.service.ts
 import { Injectable } from '@nestjs/common';
-import { StpInterface } from 'xlt-token';
+import type { StpInterface } from '@xlt-token/core';
 import { UserService } from '@/module/user/user.service';
 
 @Injectable()
@@ -142,7 +144,7 @@ class NotPermissionException extends ForbiddenException {
 不使用装饰器时也可以直接调用：
 
 ```ts twoslash
-import { StpUtil, XltMode } from 'xlt-token';
+import { StpUtil, XltMode } from '@xlt-token/nestjs';
 
 // 是否拥有
 const ok = await StpUtil.hasPermission('1001', 'user:read');
@@ -182,7 +184,7 @@ async someMethod() {
 ### 2.2 获取 Session
 
 ```ts twoslash
-import { StpUtil } from 'xlt-token';
+import { StpUtil } from '@xlt-token/nestjs';
 
 const session = StpUtil.getSession(loginId);  // 同步返回 XltSession 实例
 ```
@@ -281,9 +283,9 @@ const record = await StpUtil.getOfflineReason(token);
 
 | 字段 | 默认 | 说明 |
 | --- | --- | --- |
-| `permCacheTimeout` | `-1` | 权限/角色列表缓存秒数（`-1` = 不缓存，每次请求都调 `StpInterface`） |
-| `offlineRecordEnabled` | `true` | 是否记录下线原因 |
-| `offlineRecordTimeout` | `2592000`（30 天） | 下线记录保留时长（秒） |
+| `permCacheTimeout` | `0` | 权限/角色列表缓存秒数（`0` = 不缓存，每次请求调 `StpInterface`） |
+| `offlineRecordEnabled` | `false` | 是否记录被踢/被顶的下线原因 |
+| `offlineRecordTimeout` | `3600` | 下线记录保留时长（秒） |
 
 ```ts twoslash
 XltTokenModule.forRoot({
@@ -310,6 +312,6 @@ XltTokenModule.forRoot({
 
 ## 六、下一步
 
-- 异常处理与全局过滤器 → [08 · 异常](./08-exceptions.md)
-- 守卫钩子细节 → [05 · 守卫与装饰器](./05-guards-and-decorators.md)
-- 完整源码参考 → [SRC-REFERENCE](./SRC-REFERENCE.md)
+- 异常处理与全局过滤器 → [08 · 异常](/core/exceptions)
+- 守卫钩子细节 → [05 · 守卫与装饰器](/core/guards-and-decorators)
+- 完整源码参考 → [SRC-REFERENCE](/reference/src-reference)

@@ -9,18 +9,23 @@ export const FILE_IMPORTS = `import type {
   TokenStrategy,
   XltHooks,
   XltTokenConfig,
+  XltTokenStore,
+} from '@xlt-token/core'
+import type {
   XltTokenModuleAsyncOptions,
   XltTokenModuleOptions,
-  XltTokenStore,
-} from 'xlt-token'
+} from '@xlt-token/nestjs'
 import {
   DEFAULT_XLT_TOKEN_CONFIG,
-  JwtStrategy,
-  LoginId,
   MemoryStore,
-  RedisStore,
   StpLogic,
   StpUtil,
+  XltMode,
+} from '@xlt-token/core'
+import {
+  JwtStrategy,
+  LoginId,
+  RedisStore,
   TokenValue,
   XLT_REDIS_CLIENT,
   XltAbstractLoginGuard,
@@ -29,13 +34,12 @@ import {
   XltCheckRole,
   XltCheckSafe,
   XltIgnore,
-  XltMode,
   XltTokenGuard,
   XltTokenModule,
   NotLoginException,
   NotPermissionException,
   NotRoleException,
-} from 'xlt-token'
+} from '@xlt-token/nestjs'
 import {
   Body,
   Controller,

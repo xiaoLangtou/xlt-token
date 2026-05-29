@@ -5,10 +5,10 @@ import {
   NotRoleException as CoreNotRoleException,
   NotSafeException as CoreNotSafeException,
 } from '@xlt-token/core';
-import { NotLoginException } from '../exceptions/not-login.exception';
-import { NotPermissionException } from '../exceptions/not-permission.exception';
-import { NotRoleException } from '../exceptions/not-role.exception';
-import { NotSafeException } from '../exceptions/not-safe.exception';
+import { NotLoginException } from '../exceptions/not-login.exception.js';
+import { NotPermissionException } from '../exceptions/not-permission.exception.js';
+import { NotRoleException } from '../exceptions/not-role.exception.js';
+import { NotSafeException } from '../exceptions/not-safe.exception.js';
 
 export function createNestHttpContext(req: any, res: any) {
   return createExpressContext(req, res);

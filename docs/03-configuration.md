@@ -1,10 +1,12 @@
 # 03 · 配置参考
 
+> 包：`XltTokenConfig` 定义于 `@xlt-token/core`；`XltTokenModule.forRoot` 注册于 `@xlt-token/nestjs`。
+
 `XltTokenConfig` 全量字段 + `XltTokenModule` 注册选项 + 同步/异步两种写法。
 
 ## `XltTokenConfig` 全量字段
 
-类型定义见 `src/core/xlt-token-config.ts`：
+类型定义见 `packages/core/src/config/xlt-token-config.ts`：
 
 | 字段 | 类型 | 默认值 | 说明 |
 | --- | --- | --- | --- |
@@ -13,23 +15,24 @@
 | `activeTimeout` | `number` | `-1` | 活跃超时，单位秒。`-1` 关闭；`>0` 启用 lastActive 机制 |
 | `isConcurrent` | `boolean` | `true` | 是否允许同账号多端在线（否则二次登录触发"顶号"） |
 | `isShare` | `boolean` | `true` | 多端在线时是否共享同一 token（仅 `isConcurrent=true` 生效） |
-| `tokenStyle` | `'uuid' \| 'simple-uuid' \| 'random-32'` | `'uuid'` | token 字符串格式，详见 [07-token-strategy](./07-token-strategy.md) |
+| `tokenStyle` | `'uuid' \| 'simple-uuid' \| 'random-32'` | `'uuid'` | token 字符串格式，详见 [Token 策略](/core/token-strategy) |
 | `isReadHeader` | `boolean` | `true` | 是否从 HTTP Header 读取 token |
 | `isReadCookie` | `boolean` | `false` | 是否从 Cookie 读取 |
 | `isReadQuery` | `boolean` | `false` | 是否从 URL Query 读取 |
 | `tokenPrefix` | `string` | `'Bearer '` | header 中 token 的前缀（读取时自动剥离） |
 | `defaultCheck` | `boolean` | `true` | 全局守卫默认行为。`true`=默认全部校验（黑名单），`false`=默认全部放行（白名单） |
-| `deviceConcurrent` | `boolean` | `true` | 是否允许同账号不同 device 共存。`false` 时任意新登录踢掉所有端，详见 [14-multi-device](./14-multi-device.md) |
+| `deviceConcurrent` | `boolean` | `true` | 是否允许同账号不同 device 共存。`false` 时任意新登录踢掉所有端，详见 [多端登录](/core/multi-device) |
 | `offlineRecordEnabled` | `boolean` | `false` | 是否记录被踢/被顶的下线原因 |
 | `offlineRecordTimeout` | `number` | `3600` | 下线记录保留秒数 |
-| `jwt` | `JwtConfig` | — | JWT 策略配置（`secret` 等），见 [16-jwt-strategy](./16-jwt-strategy.md) |
+| `permCacheTimeout` | `number` | `0` | 权限/角色列表缓存秒数（`0` = 不缓存） |
+| `jwt` | `JwtConfig` | — | JWT 策略配置（`secret` 等），见 [JWT 策略](/core/jwt-strategy) |
 
 > **取 token 顺序**：`header → cookie → query`。三者同时开启时，前者优先。
 
 ### 默认值常量
 
 ```ts twoslash
-import { DEFAULT_XLT_TOKEN_CONFIG } from 'xlt-token';
+import { DEFAULT_XLT_TOKEN_CONFIG } from '@xlt-token/core';
 ```
 
 你的 `forRoot({ config })` 会与 `DEFAULT_XLT_TOKEN_CONFIG` **浅合并**，未指定的字段继承默认值。
@@ -89,8 +92,8 @@ import { DEFAULT_XLT_TOKEN_CONFIG } from 'xlt-token';
 | `store` | `{ useClass }` \| `{ useValue }` | `MemoryStore` | 存储实现 |
 | `strategy` | `{ useClass }` | `UuidStrategy` | token 策略 |
 | `isGlobal` | `boolean` | `false` | 是否全局模块（通常 `true`） |
-| `stpInterface` | `class` | 内置 stub | 权限/角色数据源，见 [11-permissions-and-session](./11-permissions-and-session.md) |
-| `hooks` | `XltHooks` | — | 登录/踢人等生命周期钩子，见 [17-hooks-and-observability](./17-hooks-and-observability.md) |
+| `stpInterface` | `class` | 内置 stub | 权限/角色数据源，见 [权限与会话](/core/permissions-and-session) |
+| `hooks` | `XltHooks` | — | 登录/踢人等生命周期钩子，见 [Hooks 与观测性](/core/hooks-and-observability) |
 | `providers` | `Provider[]` | `[]` | 追加 Provider，典型用法是提供 `XLT_REDIS_CLIENT` |
 
 同步写法：
@@ -171,7 +174,7 @@ import {
   XLT_TOKEN_STRATEGY,
   XLT_REDIS_CLIENT,
   StpLogic,
-} from 'xlt-token';
+} from '@xlt-token/nestjs';
 
 @Injectable()
 class SomeService {
@@ -193,6 +196,6 @@ class SomeService {
 
 ## 下一步
 
-- 配置对应的运行时效果在哪看？→ [02-architecture · 三类存储键](./02-architecture.md#三类存储键)
-- 我要切换 Store → [06-storage](./06-storage.md)
-- 我要换 token 格式 → [07-token-strategy](./07-token-strategy.md)
+- 配置对应的运行时效果在哪看？→ [架构设计 · 三类存储键](/guide/architecture#三类存储键)
+- 我要切换 Store → [06-storage](/core/storage)
+- 我要换 token 格式 → [07-token-strategy](/core/token-strategy)

@@ -54,6 +54,7 @@ export class StpLogic {
     const sessionKey = this.keys.sessionKey(_loginId, device);
     const oldToken = await this.store.get(sessionKey);
 
+    let replacedOldFullToken: string | undefined;
 
     let token: string;
     if (!this.config.deviceConcurrent) {
@@ -62,7 +63,10 @@ export class StpLogic {
       token = options.token ?? this.strategy.createToken(_loginId, this.config);
     } else if (!this.config.isConcurrent) {
       // 同设备互踢
-      if (oldToken) await this._replacedToken(_loginId, oldToken, device);
+      if (oldToken) {
+        replacedOldFullToken = await this._resolveHookToken(_loginId, device, oldToken);
+        await this._replacedToken(_loginId, oldToken, device);
+      }
       token = options.token ?? this.strategy.createToken(_loginId, this.config);
     } else if (this.config.isShare && oldToken) {
       if (this._isJwtMode()) {
@@ -97,6 +101,9 @@ export class StpLogic {
 
     // ── 触发钩子 ──
     this.callHook('onLogin', _loginId, token, device);
+    if (replacedOldFullToken) {
+      this.callHook('onReplaced', _loginId, replacedOldFullToken, token);
+    }
     // 返回纯 token，客户端请求时自行拼接前缀（如 "Bearer "）
     return token;
   }
@@ -288,6 +295,7 @@ export class StpLogic {
     const info = list.find(d => d.token === token);
     if (info) await this._removeFromSessionList(loginId, info.device);
 
+    this.callHook('onLogout', loginId, token, 'LOGOUT');
     return true;
   }
 
@@ -304,6 +312,7 @@ export class StpLogic {
     await this.store.delete(this.keys.tokenKey(token));
     await this.store.delete(this.keys.lastActiveKey(token));
     await this.store.delete(this.keys.sessionDataKey(loginId));
+    this.callHook('onLogout', loginId, token, 'LOGOUT_BY_LOGIN_ID');
     return true;
   }
 
@@ -330,6 +339,7 @@ export class StpLogic {
     await this.store.delete(sessionKey);
     await this.store.delete(this.keys.sessionDataKey(loginId));
     this.writeOfflineRecord(fullToken, NotLoginType.KICK_OUT);
+    this.callHook('onKickout', loginId, fullToken);
     return true;
   }
 
@@ -619,6 +629,14 @@ export class StpLogic {
   private _isJwtMode(): boolean {
     return !!(this.config.jwt?.secret && typeof (this.strategy as any).verifyToken === 'function');
 
+  }
+
+  /** 钩子回调用完整 token（JWT 模式下 session 存的是 jti） */
+  private async _resolveHookToken(loginId: string, device: string, sessionValue: string): Promise<string> {
+    if (!this._isJwtMode()) return sessionValue;
+    const list = await this.getDeviceList(loginId);
+    const info = list.find(d => d.device === device);
+    return info?.token ?? sessionValue;
   }
 
   private callHook<K extends keyof XltHooks>(event: K, ...args: Parameters<NonNullable<XltHooks[K]>>): void {

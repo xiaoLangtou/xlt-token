@@ -2,22 +2,24 @@
 
 5 分钟跑通最小登录流程：**注册模块 → 登录签发 token → 守卫自动校验 → 登出**。
 
+> 本章以 **NestJS** 为例，依赖 `@xlt-token/nestjs` + `@xlt-token/core`。架构说明见 [架构设计](/guide/architecture)。
+
 ## 安装
 
 ```bash
-pnpm add xlt-token
+pnpm add @xlt-token/nestjs @xlt-token/core
 # 使用 Redis 存储（可选）
 pnpm add redis
 ```
 
 ## 最小集成（内存存储）
 
-**适合**：单进程开发环境、小项目、Demo。生产环境请走 [Redis 存储](./06-storage.md#redisstore)。
+**适合**：单进程开发环境、小项目、Demo。生产环境请走 [Redis 存储](/core/storage#redisstore)。
 
 在代码块语言后添加 `twoslash`，悬停带**虚线下划线**的标识符可查看类型；`// ^?` 会在下方展示类型查询结果。复杂示例可用 `// @include: imports` 注入常用 import（见 [VueUse twoslash 配置](https://github.com/vueuse/vueuse/blob/main/packages/.vitepress/twoslash.ts)）。
 
 ```ts twoslash
-import type { XltTokenModuleOptions } from 'xlt-token'
+import type { XltTokenModuleOptions } from '@xlt-token/nestjs'
 // ---cut---
 const options = {
   isGlobal: true,
@@ -33,7 +35,7 @@ const options = {
 // src/app.module.ts
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
-import { XltTokenModule, XltTokenGuard } from 'xlt-token';
+import { XltTokenModule, XltTokenGuard } from '@xlt-token/nestjs';
 // ---cut---
 @Module({
   imports: [
@@ -58,7 +60,7 @@ export class AppModule {}
 
 ```ts twoslash
 import { Body, Controller, Post } from '@nestjs/common';
-import { StpUtil, XltIgnore, LoginId, TokenValue } from 'xlt-token';
+import { StpUtil, XltIgnore, LoginId, TokenValue } from '@xlt-token/nestjs';
 
 @Controller('auth')
 export class AuthController {
@@ -109,7 +111,7 @@ curl -X POST http://localhost:3000/auth/logout \
 
 ```ts twoslash
 import { createClient } from 'redis';
-import { XltTokenModule, RedisStore, XLT_REDIS_CLIENT, XltTokenGuard } from 'xlt-token';
+import { XltTokenModule, RedisStore, XLT_REDIS_CLIENT, XltTokenGuard } from '@xlt-token/nestjs';
 import { APP_GUARD } from '@nestjs/core';
 
 @Module({
@@ -135,7 +137,7 @@ import { APP_GUARD } from '@nestjs/core';
 export class AppModule {}
 ```
 
-启动后 `redis-cli KEYS 'authorization:login:*'` 即可看到三类键（详见 [02-architecture](./02-architecture.md#三类存储键)）。
+启动后 `redis-cli KEYS 'authorization:login:*'` 即可看到键（详见 [架构设计 · 三类存储键](/guide/architecture#三类存储键)）。
 
 ## 守卫的两种工作模式
 
@@ -154,11 +156,11 @@ export class AppModule {}
 - 接入自己的元数据键（如 `@RequireLogin()`）
 - 校验通过/失败时记录审计日志
 
-请继承 `XltAbstractLoginGuard` 实现自定义 Guard，详见 [05-guards-and-decorators · 业务扩展](./05-guards-and-decorators.md#xltabstractloginguard业务扩展)。
+请继承 `XltAbstractLoginGuard` 实现自定义 Guard，详见 [05-guards-and-decorators · 业务扩展](/core/guards-and-decorators#xltabstractloginguard业务扩展)。
 
 ## 下一步
 
-- 想了解存储键长啥样、并发/共享到底如何决策？→ [02-architecture](./02-architecture.md)
-- 想一次看完所有配置项？→ [03-configuration](./03-configuration.md)
-- 想知道 `login` / `kickout` / `renewTimeout` 的完整签名？→ [04-core-api](./04-core-api.md)
-- 遇到 `NotLoginException` 不知道怎么处理？→ [08-exceptions](./08-exceptions.md)
+- 想了解存储键长啥样、并发/共享到底如何决策？→ [架构设计](/guide/architecture)
+- 想一次看完所有配置项？→ [配置参考](/guide/configuration)
+- 想知道 `login` / `kickout` / `renewTimeout` 的完整签名？→ [核心 API](/core/core-api)
+- 遇到 `NotLoginException` 不知道怎么处理？→ [异常处理](/core/exceptions)

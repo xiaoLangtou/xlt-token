@@ -1,10 +1,12 @@
 # 07 · Token 策略
 
+> 接口与 `UuidStrategy`：`@xlt-token/core`；内置 `JwtStrategy`：`@xlt-token/nestjs`。
+
 Token 字符串如何生成、内置的三种样式、如何自定义（例如接入 JWT）。
 
 ## `TokenStrategy` 接口
 
-源码：`src/token/token-strategy.interface.ts`
+源码：`packages/core/src/token/token-strategy.interface.ts`
 
 ```ts twoslash
 interface TokenStrategy {
@@ -18,7 +20,7 @@ interface TokenStrategy {
 
 ## 内置 `UuidStrategy`
 
-源码：`src/token/uuid-strategy.ts`
+源码：`packages/core/src/token/uuid-strategy.ts`
 
 根据 `config.tokenStyle` 生成不同格式：
 
@@ -43,7 +45,7 @@ interface TokenStrategy {
 
 ## 自定义策略（典型：接入 JWT）
 
-> **1.1.0 起**库内已内置 `JwtStrategy`，配置、黑名单机制、与 UUID 模式对比见 **[16 · JWT 策略](./16-jwt-strategy.md)**。下面仍保留自定义策略的通用步骤。
+> **1.1.0 起**库内已内置 `JwtStrategy`，配置、黑名单机制、与 UUID 模式对比见 **[16 · JWT 策略](/core/jwt-strategy)**。下面仍保留自定义策略的通用步骤。
 
 ### 步骤
 
@@ -54,7 +56,7 @@ interface TokenStrategy {
 
 ```ts twoslash
 import { Injectable, Inject } from '@nestjs/common';
-import { TokenStrategy, XltTokenConfig } from 'xlt-token';
+import type { TokenStrategy, XltTokenConfig } from '@xlt-token/core';
 import * as jwt from 'jsonwebtoken';
 
 @Injectable()
@@ -82,14 +84,14 @@ export class JwtStrategy implements TokenStrategy {
 注册：
 
 ```ts twoslash
-import { JwtStrategy } from './jwt.strategy';
+import { JwtStrategy, XltTokenModule } from '@xlt-token/nestjs';
 
 @Module({
   imports: [
     XltTokenModule.forRoot({
       isGlobal: true,
       strategy: { useClass: JwtStrategy },
-      providers: [{ provide: 'JWT_SECRET', useValue: process.env.JWT_SECRET }],
+      config: { jwt: { secret: process.env.JWT_SECRET! } },
     }),
   ],
 })
@@ -98,9 +100,9 @@ export class AppModule {}
 
 ### 注意事项
 
-- 推荐使用内置 **`JwtStrategy`**（`import { JwtStrategy } from 'xlt-token'`），无需自行实现黑名单与 `_resolveLoginId` 分支。
+- 推荐使用内置 **`JwtStrategy`**（`import { JwtStrategy } from '@xlt-token/nestjs'`），无需自行实现黑名单与 `_resolveLoginId` 分支。
 - 若自定义 JWT 策略，需实现 `verifyToken`，并在 `config.jwt.secret` 中配置密钥，`StpLogic` 才会进入 JWT 鉴权分支。
-- **`createToken` 只负责生成**。UUID 模式下 token 是否仍有效由 store 决定；JWT 模式下正常鉴权以验签为主，踢人/顶号走 **jti 黑名单**（详见 [16-jwt-strategy](./16-jwt-strategy.md)）。
+- **`createToken` 只负责生成**。UUID 模式下 token 是否仍有效由 store 决定；JWT 模式下正常鉴权以验签为主，踢人/顶号走 **jti 黑名单**（详见 [16-jwt-strategy](/core/jwt-strategy)）。
 - 若只想要「纯无状态 JWT，服务端不保存状态」，xlt-token 并不是合适的方案。
 
 ## 策略 vs 存储：该改哪个？
@@ -114,5 +116,5 @@ export class AppModule {}
 
 ## 下一步
 
-- 看各个 NotLoginType 什么时候触发 → [08-exceptions](./08-exceptions.md)
-- 实战场景（顶号、踢人） → [09-recipes](./09-recipes.md)
+- 看各个 NotLoginType 什么时候触发 → [08-exceptions](/core/exceptions)
+- 实战场景（顶号、踢人） → [09-recipes](/core/recipes)

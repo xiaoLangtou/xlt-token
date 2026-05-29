@@ -275,6 +275,30 @@ describe('StpLogic', () => {
       expect(onKickout).toHaveBeenCalledWith('u1', token);
     });
 
+    it('onKickout kickout(loginId) 时触发', async () => {
+      const onKickout = vi.fn();
+      await buildModule(makeConfig(), { onKickout });
+      const token = await logic.login('u1', { device: 'default' });
+      await logic.kickout('u1');
+      expect(onKickout).toHaveBeenCalledWith('u1', token);
+    });
+
+    it('onLogout logout 成功后触发', async () => {
+      const onLogout = vi.fn();
+      await buildModule(makeConfig(), { onLogout });
+      const token = await logic.login('u1');
+      await logic.logout(token);
+      expect(onLogout).toHaveBeenCalledWith('u1', token, 'LOGOUT');
+    });
+
+    it('onReplaced 同设备顶号时触发', async () => {
+      const onReplaced = vi.fn();
+      await buildModule(makeConfig({ isConcurrent: false }), { onReplaced });
+      const oldToken = await logic.login('u1', { device: 'pc' });
+      const newToken = await logic.login('u1', { device: 'pc' });
+      expect(onReplaced).toHaveBeenCalledWith('u1', oldToken, newToken);
+    });
+
     it('钩子同步抛异常不影响主流程', async () => {
       const onLogin = vi.fn(() => { throw new Error('hook failed'); });
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
