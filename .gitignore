@@ -46,3 +46,5 @@ packages/*/coverage
 /data/mysql
 /data/redis
 .env
+
+/examples/**/node_modules
