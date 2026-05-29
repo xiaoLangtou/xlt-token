@@ -2,6 +2,15 @@
 
 演示 `@xlt-token/nestjs` 全部能力的可运行 NestJS 应用。
 
+## 交互演示页（推荐）
+
+启动服务后打开 **http://localhost:3000/demo/** — 可视化操作全部 API，无需 curl。
+
+- 顶部一键 admin / user 登录，实时显示 token
+- 按功能分组的场景卡片（权限、角色、二级认证、多端…）
+- 右侧 API 日志面板，彩色状态码 + JSON 响应
+- 二级认证流程步骤指示、多端 PC/App token 状态
+
 ## 启动
 
 ```bash

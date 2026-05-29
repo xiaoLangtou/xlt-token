@@ -47,4 +47,5 @@ packages/*/coverage
 /data/redis
 .env
 
-/examples/nestjs/node_modules
+# examples workspace packages
+examples/**/node_modules

@@ -1,9 +1,10 @@
 import { Body, Controller, Get, Post } from '@nestjs/common';
-import { LoginId, StpUtil, TokenValue } from '@xlt-token/nestjs';
+import { LoginId, StpUtil, TokenValue, XltIgnore } from '@xlt-token/nestjs';
 
 @Controller('device')
 export class DeviceController {
   /** 指定 device 登录（pc / app / h5） */
+  @XltIgnore()
   @Post('login')
   async login(@Body() dto: { loginId: string; device: string }) {
     const token = await StpUtil.login(dto.loginId, { device: dto.device });

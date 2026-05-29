@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Post } from '@nestjs/common';
-import { LoginId, StpUtil, TokenValue } from '@xlt-token/nestjs';
+import { LoginId, StpUtil, TokenValue, XltIgnore } from '@xlt-token/nestjs';
 
 @Controller('session')
 export class SessionController {
@@ -7,6 +7,7 @@ export class SessionController {
    * 顶号演示：isConcurrent=false 时同账号二次登录会使旧 token 收到 BE_REPLACED。
    * 可在 AppConfigService 中临时改 isConcurrent: false 体验。
    */
+  @XltIgnore()
   @Post('login-replace')
   async loginReplace(@Body() dto: { loginId: string }) {
     const token = await StpUtil.login(dto.loginId);
@@ -14,6 +15,7 @@ export class SessionController {
   }
 
   /** 共享登录态：isShare=true 时同账号返回相同 token */
+  @XltIgnore()
   @Post('login-share')
   async loginShare(@Body() dto: { loginId: string; device?: string }) {
     const token = await StpUtil.login(dto.loginId, { device: dto.device ?? 'default' });
