@@ -136,7 +136,7 @@
 
   /* Support modal */
   --x-support-overlay: rgba(1, 4, 9, 0.72);
-  --x-support-modal-bg: linear-gradient(180deg, #0d1117 0%, #111318 100%);
+  --x-support-modal-bg: oklch(0.15 0.04 260);
   --x-support-modal-border: rgba(255, 255, 255, 0.08);
   --x-support-modal-shadow: 0 0 0 1px rgba(79, 70, 229, 0.08), 0 24px 64px rgba(0, 0, 0, 0.55), 0 0 48px rgba(79, 70, 229, 0.12);
   --x-support-modal-text: #f0f6fc;
@@ -1447,7 +1447,8 @@ body {
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #6366f1, #818cf8);
+  object-fit: cover;
+  flex-shrink: 0;
 }
 
 .xlt-ghcard__owner {

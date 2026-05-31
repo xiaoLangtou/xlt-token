@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
+import { withBase } from 'vitepress'
 
 const STORAGE_KEY = 'xlt-token-support-modal-dismissed'
 const HIDE_DURATION = 7 * 24 * 60 * 60 * 1000
@@ -87,7 +88,12 @@ onMounted(() => {
                 <div class="xlt-ghcard__scan" />
                 <div class="xlt-ghcard__head">
                   <div class="xlt-ghcard__repo">
-                    <span class="xlt-ghcard__avatar" />
+                    <img
+                      :src="withBase('/logo.png')"
+                      alt=""
+                      class="xlt-ghcard__avatar"
+                      draggable="false"
+                    >
                     <span class="xlt-ghcard__owner">xiaoLangtou</span>
                     <span class="xlt-ghcard__slash">/</span>
                     <span class="xlt-ghcard__name">xlt-token</span>
