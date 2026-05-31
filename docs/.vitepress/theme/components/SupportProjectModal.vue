@@ -23,13 +23,13 @@ function shouldShow(): boolean {
   return Date.now() - dismissedAt > HIDE_DURATION
 }
 
-function dismiss() {
-  localStorage.setItem(STORAGE_KEY, String(Date.now()))
+function close() {
   visible.value = false
 }
 
 function onConfirm() {
-  dismiss()
+  localStorage.setItem(STORAGE_KEY, String(Date.now()))
+  close()
   window.open(GITEE_URL, '_blank', 'noopener,noreferrer')
 }
 
@@ -49,7 +49,7 @@ onMounted(() => {
         v-if="visible"
         class="xlt-support-overlay"
         role="presentation"
-        @click.self="dismiss"
+        @click.self="close"
       >
         <div
           class="xlt-support-modal"
@@ -69,7 +69,7 @@ onMounted(() => {
               type="button"
               class="xlt-support-modal__close"
               aria-label="关闭"
-              @click="dismiss"
+              @click="close"
             >
               <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
                 <path
@@ -169,7 +169,7 @@ onMounted(() => {
           </div>
 
           <footer class="xlt-support-modal__footer">
-            <button type="button" class="xlt-support-modal__later" @click="dismiss">
+            <button type="button" class="xlt-support-modal__later" @click="close">
               稍后再说
             </button>
             <button type="button" class="xlt-support-modal__confirm" @click="onConfirm">

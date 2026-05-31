@@ -24,5 +24,5 @@ const isDoc = computed(() => !isHome.value && frontmatter.value.layout !== false
 <!--      <DocHeader />-->
 <!--    </template>-->
   </DefaultLayout>
-  <SupportProjectModal />
+  <SupportProjectModal v-if="isHome" />
 </template>
