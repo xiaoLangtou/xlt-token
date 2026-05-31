@@ -2,7 +2,45 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.0.0-rc.1] - 2026-04-26
+## [1.0.0-rc.3] - 2026-05-29
+
+> monorepo 架构正式发布：`@xlt-token/core` + `@xlt-token/nestjs` 分包上线；`xlt-token` 根包改为兼容 re-export。
+
+### Added
+
+- **分包发布**：`@xlt-token/core`（框架无关核心）与 `@xlt-token/nestjs`（NestJS 集成）首次发布到 npm
+- **框架无关 API**：`createXltToken()` + `HttpContext` 抽象，支持 Express 等场景接入
+- **发布脚本**：`pnpm publish:packages` / `pnpm publish:dry-run`
+- **CI 发布工作流**：`.github/workflows/publish.yml`（Release 触发或手动 dispatch）
+- **示例项目**：`examples/nestjs` 全功能 Demo（多端 / JWT / 二级认证 / 权限等）
+
+### Changed
+
+- **monorepo 重构**：鉴权语义下沉 `@xlt-token/core`，NestJS Module / Guard / Decorator 上浮 `@xlt-token/nestjs`
+- **`xlt-token` 根包**：由 fat bundle 改为 re-export `@xlt-token/nestjs`，安装时自动带上 core / nestjs 依赖
+- **文档 2.0**：VitePress 全面更新，新增架构设计 / 迁移指南 / 源码参考
+- **README**：同步 monorepo 安装方式与新特性说明
+
+### Migration
+
+```ts
+// 旧（仍可用）
+import { XltTokenModule, StpUtil } from 'xlt-token';
+
+// 新（推荐）
+import { XltTokenModule, StpUtil } from '@xlt-token/nestjs';
+```
+
+详见 [迁移指南](https://xiaolangtou.github.io/xlt-token/guide/migration-2-0)。
+
+### Quality Metrics
+
+- **测试规模**：294 用例（207 core 单测 + 24 nestjs 单测 + 63 E2E）
+- **core 单测覆盖率**：97.79% Stmts / 91.91% Branch / 96.32% Funcs
+
+---
+
+## [1.0.0-rc.2] - 2026-04-26
 
 > 首个正式版预发布。承诺 API 稳定，欢迎试用反馈，无重大问题后将发布 1.0.0。
 

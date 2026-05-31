@@ -1,6 +1,6 @@
 # xlt-token
 
-> NestJS token authentication library inspired by Sa-Token
+> 框架无关 Token 鉴权库，灵感来源于 Sa-Token。核心 `@xlt-token/core` 零框架依赖；NestJS 适配 `@xlt-token/nestjs` 一行接入。
 
 [![npm version](https://badge.fury.io/js/xlt-token.svg)](https://www.npmjs.com/package/xlt-token)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -8,40 +8,61 @@
 
 📖 **在线文档**: https://xiaolangtou.github.io/xlt-token/
 
-xlt-token 是一个为 NestJS 设计的轻量级 token 认证库，灵感来源于 Java 的 Sa-Token。它提供了灵活的 token 管理、会话控制、多端登录支持，以及可插拔的存储策略。
+xlt-token 是一个轻量级 token 认证库，提供灵活的 token 管理、会话控制、多端登录、权限校验，以及可插拔的存储与策略。鉴权语义集中在 `@xlt-token/core`；NestJS 集成（Module、Guard、Decorator、RedisStore、JwtStrategy）在 `@xlt-token/nestjs`。
 
 ## 特性
 
+- 🧩 **核心 + 适配器** - monorepo 分层：`@xlt-token/core` 承载鉴权引擎，`@xlt-token/nestjs` 提供 NestJS 集成
 - 🔐 **灵活的 Token 管理** - 支持登录、登出、续签、踢人下线等完整生命周期
-- 🌐 **多端登录** - 支持同账号多设备同时在线，可配置互踢模式
+- 🌐 **多端登录** - 支持按 `device` 独立会话，可配置互踢 / 顶号 / 共享 token
 - 💾 **内置存储** - 内置内存存储和 Redis 存储实现，开箱即用
-- 🎨 **Token 策略** - 支持多种 token 格式（UUID、Simple UUID、随机字符串）
-- 🛡️ **全局守卫** - 黑名单/白名单双模式，默认安全
-- 🧩 **可扩展守卫** - 提供 `XltAbstractLoginGuard` 抽象基类，通过 `onAuthSuccess` / `onAuthFail` 钩子注入业务会话
-- 🎯 **声明式装饰器** - `@XltIgnore` / `@XltCheckLogin` / `@LoginId` / `@TokenValue` / `@XltCheckPermission` / `@XltCheckRole`
-- 🔑 **权限/角色校验** - `StpPermLogic` 引擎，支持 AND/OR 模式 + 通配符匹配（`user:*`）
-- 🗂️ **会话对象** - `XltSession` 承载一次登录期间的扩展数据，与 token 同生命周期
-- 📜 **下线追溯** - 被踢/被顶后可查询下线时间和原因
+- 🎨 **Token 策略** - UUID / Simple UUID / 随机字符串，以及 JWT 策略（jti 黑名单）
+- 🔒 **二级认证** - Safe 安全窗口 + `@XltCheckSafe`，适用于支付确认等敏感操作
+- 📡 **Hooks 观测** - 登录 / 踢人 / 顶号 / 登出生命周期钩子，支持在线用户查询
+- 🛡️ **全局守卫** - 黑名单 / 白名单双模式，默认安全
+- 🧩 **可扩展守卫** - `XltAbstractLoginGuard` 抽象基类，通过 `onAuthSuccess` / `onAuthFail` 注入业务会话
+- 🎯 **声明式装饰器** - `@XltIgnore` / `@XltCheckLogin` / `@LoginId` / `@TokenValue` / `@XltCheckPermission` / `@XltCheckRole` / `@XltCheckSafe`
+- 🔑 **权限 / 角色校验** - `StpPermLogic` 引擎，支持 AND / OR 模式 + 通配符匹配（`user:*`）
+- 🗂️ **会话对象** - `XltSession` 承载登录期间扩展数据，与 token 同生命周期
+- 📜 **下线追溯** - 被踢 / 被顶后可查询下线时间和原因
 - 🔧 **零业务依赖** - 纯粹的认证库，不依赖任何业务代码
 - 📦 **TypeScript** - 完整的类型定义
-- ⚡ **静态门面** - 提供 StpUtil 静态方法，无需注入即可使用
-- 🧪 **质量保障** - 274 个测试用例（211 单测 + 63 E2E），单测覆盖率 96%+
+- ⚡ **静态门面** - `StpUtil` 静态方法，无需注入即可使用
+- 🧪 **质量保障** - 294 个测试用例（207 core 单测 + 24 nestjs 单测 + 63 E2E），core 单测覆盖率 98%+
 
 ## 安装
 
+**推荐**（显式依赖分包）：
+
+```bash
+pnpm add @xlt-token/nestjs @xlt-token/core
+# 或
+npm install @xlt-token/nestjs @xlt-token/core
+```
+
+**兼容写法**（`xlt-token` 根包 re-export `@xlt-token/nestjs`，旧项目可继续 `import from 'xlt-token'`）：
+
 ```bash
 pnpm add xlt-token
-# 或
-npm install xlt-token
-# 或
-yarn add xlt-token
 ```
 
-如需使用 Redis 存储，还需安装 redis 包：
+可选依赖：
 
 ```bash
-pnpm add redis
+pnpm add redis              # RedisStore
+pnpm add jsonwebtoken       # JwtStrategy
 ```
+
+## 包结构
+
+| 包 | 职责 | 典型 import |
+| --- | --- | --- |
+| `@xlt-token/core` | 鉴权引擎、HttpContext、Store / Strategy 契约、Hooks | `createXltToken`, `StpLogic`, `MemoryStore` |
+| `@xlt-token/nestjs` | Module、Guard、Decorator、RedisStore、JwtStrategy | `XltTokenModule`, `XltTokenGuard`, `@LoginId()` |
+| `xlt-token` | 兼容包，等价于 `@xlt-token/nestjs` | `XltTokenModule`, `StpUtil` |
+
+- NestJS 集成 → `@xlt-token/nestjs`（或 `xlt-token`）
+- 框架无关核心（Express 中间件、脚本、自定义适配）→ `@xlt-token/core`
 
 ## 快速开始
 
@@ -50,7 +71,8 @@ pnpm add redis
 ```ts
 // app.module.ts
 import { Module } from '@nestjs/common';
-import { XltTokenModule } from 'xlt-token';
+import { APP_GUARD } from '@nestjs/core';
+import { XltTokenModule, XltTokenGuard } from '@xlt-token/nestjs';
 
 @Module({
   imports: [
@@ -64,16 +86,21 @@ import { XltTokenModule } from 'xlt-token';
       },
     }),
   ],
+  providers: [
+    { provide: APP_GUARD, useClass: XltTokenGuard }, // 全局登录校验
+  ],
 })
 export class AppModule {}
 ```
+
+默认 `defaultCheck: true` → 所有路由都需要登录，使用 `@XltIgnore()` 放行公开接口。
 
 ### 2. 登录
 
 ```ts
 // auth.service.ts
 import { Injectable } from '@nestjs/common';
-import { StpLogic } from 'xlt-token';
+import { StpLogic } from '@xlt-token/nestjs';
 
 @Injectable()
 export class AuthService {
@@ -90,8 +117,8 @@ export class AuthService {
 
 ```ts
 // user.controller.ts
-import { Controller, Get } from '@nestjs/common';
-import { XltIgnore, LoginId } from 'xlt-token';
+import { Controller, Get, Post } from '@nestjs/common';
+import { XltIgnore, LoginId } from '@xlt-token/nestjs';
 
 @Controller('user')
 export class UserController {
@@ -111,11 +138,29 @@ export class UserController {
 ### 4. 使用静态门面（可选）
 
 ```ts
-import { StpUtil } from 'xlt-token';
+import { StpUtil } from '@xlt-token/nestjs';
 
 // 无需注入，直接调用
 const token = await StpUtil.login(userId);
 const loginId = await StpUtil.getLoginId(req);
+```
+
+### 5. 框架无关用法（可选）
+
+非 NestJS 场景（Express 中间件、脚本等）可直接使用 core：
+
+```ts
+import { createXltToken, MemoryStore, createExpressContext } from '@xlt-token/core';
+
+const xlt = createXltToken({ store: new MemoryStore() });
+
+app.use(async (req, res, next) => {
+  const ctx = createExpressContext(req, res);
+  if (await xlt.stpLogic.isLogin(ctx)) {
+    req.userId = ctx.state.stpLoginId;
+  }
+  next();
+});
 ```
 
 ## 配置选项
@@ -126,26 +171,36 @@ const loginId = await StpUtil.getLoginId(req);
 |---|---|---|---|
 | `config` | `Partial<XltTokenConfig>` | - | 配置选项（见下表） |
 | `store` | `{ useClass } \| { useValue }` | `MemoryStore` | 存储实现（内置 MemoryStore 和 RedisStore） |
-| `strategy` | `{ useClass }` | `UuidStrategy` | 自定义 token 策略 |
+| `strategy` | `{ useClass }` | `UuidStrategy` | Token 策略（`UuidStrategy` / `JwtStrategy`） |
 | `isGlobal` | `boolean` | `false` | 是否全局模块 |
+| `stpInterface` | `class` | 内置 stub | 权限 / 角色数据源 |
+| `hooks` | `XltHooks` | - | 登录 / 踢人等生命周期钩子 |
+| `providers` | `Provider[]` | `[]` | 追加 Provider（如 `XLT_REDIS_CLIENT`） |
 
 ### XltTokenConfig
 
 | 字段 | 类型 | 默认值 | 说明 |
 |---|---|---|---|
 | `tokenName` | `string` | `'authorization'` | HTTP header / cookie / query 中读取 token 的键名 |
-| `timeout` | `number` | `2592000` (30 天) | token 有效期（秒） |
+| `timeout` | `number` | `2592000` (30 天) | token 有效期（秒），`-1` 表示永不过期 |
 | `activeTimeout` | `number` | `-1` | 滑动过期秒数，`-1` 表示不启用 |
 | `isConcurrent` | `boolean` | `true` | 是否允许同账号多端同时在线 |
 | `isShare` | `boolean` | `true` | 同账号多次登录是否共享同一 token |
-| `tokenStyle` | `'uuid' \| 'simple-uuid' \| 'random-32'` | `'uuid'` | token 格式 |
+| `deviceConcurrent` | `boolean` | `true` | 是否允许不同 `device` 共存 |
+| `tokenStyle` | `'uuid' \| 'simple-uuid' \| 'random-32'` | `'uuid'` | token 格式（UUID 策略下生效） |
 | `isReadHeader` | `boolean` | `true` | 是否从 HTTP Header 读取 token |
 | `isReadCookie` | `boolean` | `false` | 是否从 Cookie 读取 |
 | `isReadQuery` | `boolean` | `false` | 是否从 URL Query 读取 |
 | `tokenPrefix` | `string` | `'Bearer '` | Header 中 token 的前缀（读取时自动剥离） |
 | `defaultCheck` | `boolean` | `true` | 全局守卫默认模式：`true`=黑名单，`false`=白名单 |
+| `offlineRecordEnabled` | `boolean` | `false` | 是否记录被踢 / 被顶的下线原因 |
+| `offlineRecordTimeout` | `number` | `3600` | 下线记录保留秒数 |
+| `permCacheTimeout` | `number` | `0` | 权限 / 角色列表缓存秒数（`0` = 不缓存） |
+| `jwt` | `JwtConfig` | - | JWT 策略配置（`secret` 等） |
 
 ## API 文档
+
+> 完整 API 见 [在线文档 · 核心 API](https://xiaolangtou.github.io/xlt-token/core/core-api)。
 
 ### StpLogic
 
@@ -159,37 +214,24 @@ const loginId = await StpUtil.getLoginId(req);
 | `isLogin(req)` | `req: Request` | `Promise<boolean>` | 判断是否登录 |
 | `checkLogin(req)` | `req: Request` | `Promise<{ ok, loginId?, token?, reason? }>` | 校验登录（未登录抛异常） |
 | `getTokenValue(req)` | `req: Request` | `Promise<string \| null>` | 获取 token 值 |
+| `openSafe(token, business, timeout)` | - | `Promise<void>` | 打开二级认证安全窗口 |
+| `checkSafe(token, business)` | - | `Promise<void>` | 校验安全窗口（无效抛 `NotSafeException`） |
+| `closeSafe(token, business)` | - | `Promise<void>` | 关闭安全窗口 |
 
 ### StpUtil（静态门面）
 
 所有方法与 `StpLogic` 相同，但无需注入，直接静态调用：
 
 ```ts
-import { StpUtil } from 'xlt-token';
+import { StpUtil } from '@xlt-token/nestjs';
 
-// 登录
 const token = await StpUtil.login(userId);
-
-// 登出
 await StpUtil.logout(token);
-await StpUtil.logoutByLoginId(userId);
-
-// 踢人下线
 await StpUtil.kickout(userId);
-
-// 续签 token
 await StpUtil.renewTimeout(token, 3600);
 
-// 判断是否登录
 const isLogin = await StpUtil.isLogin(req);
-
-// 校验登录（未登录抛异常）
-const result = await StpUtil.checkLogin(req);
-
-// 获取当前登录用户 ID
 const loginId = await StpUtil.getLoginId(req);
-
-// 获取当前 token 值
 const tokenValue = await StpUtil.getTokenValue(req);
 ```
 
@@ -203,20 +245,20 @@ const tokenValue = await StpUtil.getTokenValue(req);
 | `@TokenValue()` | 注入当前 token 值（参数装饰器） | 无 |
 | `@XltCheckPermission(perms, options?)` | 校验权限 | `perms: string \| string[]`，`options?: { mode: XltMode }` |
 | `@XltCheckRole(roles, options?)` | 校验角色 | `roles: string \| string[]`，`options?: { mode: XltMode }` |
+| `@XltCheckSafe(business)` | 校验二级认证安全窗口 | `business: string` |
 
-### 权限/角色校验
+### 权限 / 角色校验
 
 #### 1. 实现 `StpInterface` 业务接口
 
 ```ts
 // stp.service.ts
 import { Injectable } from '@nestjs/common';
-import { StpInterface } from 'xlt-token';
+import { StpInterface } from '@xlt-token/nestjs';
 
 @Injectable()
 export class StpService implements StpInterface {
   async getPermissionList(loginId: string): Promise<string[]> {
-    // 从数据库 / 缓存读取
     return ['user:read', 'user:write', 'order:*'];
   }
 
@@ -238,55 +280,95 @@ XltTokenModule.forRoot({
 #### 3. 在 Controller 上使用
 
 ```ts
-import { XltCheckPermission, XltCheckRole, XltMode } from 'xlt-token';
+import { XltCheckPermission, XltCheckRole, XltMode } from '@xlt-token/nestjs';
 
 @Controller('order')
 export class OrderController {
-  @XltCheckPermission('order:read')        // 单一权限
+  @XltCheckPermission('order:read')
   @Get()
   list() {}
 
-  @XltCheckPermission(['order:read', 'order:write'], { mode: XltMode.AND })  // 全部满足
+  @XltCheckPermission(['order:read', 'order:write'], { mode: XltMode.AND })
   @Post()
   create() {}
 
-  @XltCheckRole(['admin', 'super'], { mode: XltMode.OR })  // 任一满足
+  @XltCheckRole(['admin', 'super'], { mode: XltMode.OR })
   @Delete(':id')
   remove() {}
-
-  @XltCheckPermission('order:*')            // 通配符匹配
-  @Patch(':id')
-  update() {}
 }
 ```
 
 权限校验失败抛出 `NotPermissionException`（HTTP **403**），角色校验失败抛 `NotRoleException`（HTTP **403**）。
 
-### 会话管理（XltSession）
+### JWT 策略
 
-每个登录账号关联一个 `XltSession`，用于存储登录期间的扩展数据（昵称、最近 IP、扩展字段等）。生命周期与 token 一致。
+xlt-token 的 JWT 模式是「**有状态 JWT**」——JWT 携带身份，Store 负责踢人、顶号、多端索引：
 
 ```ts
-import { StpUtil } from 'xlt-token';
+import { XltTokenModule, JwtStrategy } from '@xlt-token/nestjs';
 
-// 写入
+XltTokenModule.forRoot({
+  strategy: { useClass: JwtStrategy },
+  config: {
+    timeout: 86400,
+    jwt: {
+      secret: process.env.JWT_SECRET!,
+      algorithm: 'HS256',
+    },
+  },
+})
+```
+
+详见 [JWT 策略文档](https://xiaolangtou.github.io/xlt-token/core/jwt-strategy)。
+
+### 二级认证（Safe）
+
+用户在已登录后，还需完成额外验证才能在有限时间窗口内执行敏感操作：
+
+```ts
+import { StpUtil, XltCheckSafe, TokenValue } from '@xlt-token/nestjs';
+
+// 验证通过后打开安全窗口
+await StpUtil.openSafe(token, 'pay', 300);
+
+// 装饰器自动校验
+@XltCheckSafe('pay')
+@Post('transfer')
+transfer() {}
+```
+
+详见 [二级认证文档](https://xiaolangtou.github.io/xlt-token/core/secondary-auth)。
+
+### Hooks 与观测性
+
+通过 `forRoot({ hooks })` 注册生命周期钩子，用于审计日志、消息推送等：
+
+```ts
+XltTokenModule.forRoot({
+  hooks: {
+    onLogin: (loginId, token, device) => {
+      logger.info({ event: 'login', loginId, device });
+    },
+    onKickout: (loginId, token) => {
+      websocket.notify(loginId, '您已被强制下线');
+    },
+  },
+})
+```
+
+详见 [Hooks 文档](https://xiaolangtou.github.io/xlt-token/core/hooks-and-observability)。
+
+### 会话管理（XltSession）
+
+```ts
+import { StpUtil } from '@xlt-token/nestjs';
+
 const session = StpUtil.getSession(loginId);
 await session.set('nickname', 'xlt');
-await session.set('lastLoginIp', '127.0.0.1');
-
-// 读取
 const nickname = await session.get<string>('nickname');
-
-// 其他方法
-await session.has('nickname');   // boolean
-await session.remove('nickname');
-const keys = await session.keys();    // string[]
-await session.clear();
 ```
 
 ### 下线原因追溯
-
-被踢 / 被顶后，旧 token 失效。可查询下线原因：
 
 ```ts
 const record = await StpUtil.getOfflineReason(token);
@@ -295,42 +377,29 @@ const record = await StpUtil.getOfflineReason(token);
 
 ### 异常处理
 
-库提供三种业务异常，建议在全局 `ExceptionFilter` 中统一处理：
-
 | 异常 | HTTP 状态 | 触发场景 |
 | --- | --- | --- |
 | `NotLoginException` | 401 | 未登录 / token 无效 / 被顶 / 被踢 / 冻结 / 超时 |
 | `NotPermissionException` | 403 | `@XltCheckPermission` 校验失败 |
 | `NotRoleException` | 403 | `@XltCheckRole` 校验失败 |
+| `NotSafeException` | 403 | `@XltCheckSafe` / `checkSafe` 校验失败 |
 
-`NotLoginException` 提供了 `NotLoginType` 常量用于区分登录失败场景：
+`NotLoginException` 提供 `NotLoginType` 常量用于区分登录失败场景：
 
 ```ts
-import { NotLoginException, NotLoginType } from 'xlt-token';
+import { NotLoginException, NotLoginType } from '@xlt-token/nestjs';
 
 try {
   await stpLogic.checkLogin(req);
 } catch (e) {
   if (e instanceof NotLoginException) {
     switch (e.message) {
-      case NotLoginType.NOT_TOKEN:
-        // 请求中没 token
-        break;
-      case NotLoginType.INVALID_TOKEN:
-        // token 在服务端找不到
-        break;
-      case NotLoginType.TOKEN_TIMEOUT:
-        // token 已过期
-        break;
-      case NotLoginType.TOKEN_FREEZE:
-        // 临时活跃过期
-        break;
-      case NotLoginType.BE_REPLACED:
-        // 被顶号
-        break;
-      case NotLoginType.KICK_OUT:
-        // 被踢下线
-        break;
+      case NotLoginType.NOT_TOKEN: break;
+      case NotLoginType.INVALID_TOKEN: break;
+      case NotLoginType.TOKEN_TIMEOUT: break;
+      case NotLoginType.TOKEN_FREEZE: break;
+      case NotLoginType.BE_REPLACED: break;
+      case NotLoginType.KICK_OUT: break;
     }
   }
 }
@@ -338,11 +407,9 @@ try {
 
 ### 使用 Redis 存储
 
-库已内置 RedisStore 实现，只需提供 Redis 客户端即可使用：
-
 ```ts
 import { Module } from '@nestjs/common';
-import { XltTokenModule, RedisStore, XLT_REDIS_CLIENT } from 'xlt-token';
+import { XltTokenModule, RedisStore, XLT_REDIS_CLIENT } from '@xlt-token/nestjs';
 import { createClient } from 'redis';
 
 @Module({
@@ -353,9 +420,7 @@ import { createClient } from 'redis';
         {
           provide: XLT_REDIS_CLIENT,
           useFactory: async () => {
-            const client = createClient({
-              url: 'redis://localhost:6379',
-            });
+            const client = createClient({ url: 'redis://localhost:6379' });
             await client.connect();
             return client;
           },
@@ -369,65 +434,30 @@ export class AppModule {}
 
 ### 自定义 Store
 
-如需实现自定义存储，实现 `XltTokenStore` 接口：
+实现 `XltTokenStore` 接口（定义于 `@xlt-token/core`）：
 
 ```ts
-import { XltTokenStore } from 'xlt-token';
+import { XltTokenStore } from '@xlt-token/core';
 
 export class CustomStore implements XltTokenStore {
-  async get(key: string): Promise<string | null> {
-    // 自定义读取逻辑
-  }
-
-  async set(key: string, value: string, timeoutSec: number): Promise<void> {
-    // 自定义写入逻辑
-  }
-
-  async delete(key: string): Promise<void> {
-    // 自定义删除逻辑
-  }
-
-  async has(key: string): Promise<boolean> {
-    // 自定义存在判断
-  }
-
-  async update(key: string, value: string): Promise<void> {
-    // 更新值（不改动过期时间）
-  }
-
-  async updateTimeout(key: string, timeoutSec: number): Promise<void> {
-    // 更新过期时间
-  }
-
-  async getTimeout(key: string): Promise<number> {
-    // 获取过期时间
-  }
+  async get(key: string): Promise<string | null> { /* ... */ }
+  async set(key: string, value: string, timeoutSec: number): Promise<void> { /* ... */ }
+  async delete(key: string): Promise<void> { /* ... */ }
+  async has(key: string): Promise<boolean> { /* ... */ }
+  async update(key: string, value: string): Promise<void> { /* ... */ }
+  async updateTimeout(key: string, timeoutSec: number): Promise<void> { /* ... */ }
+  async getTimeout(key: string): Promise<number> { /* ... */ }
 }
-```
-
-使用自定义 Store：
-
-```ts
-XltTokenModule.forRoot({
-  store: { useClass: CustomStore },
-})
 ```
 
 ### 全局守卫
 
-在 `AppModule` 中注册全局守卫：
-
 ```ts
 import { APP_GUARD } from '@nestjs/core';
-import { XltTokenGuard } from 'xlt-token';
+import { XltTokenGuard } from '@xlt-token/nestjs';
 
 @Module({
-  providers: [
-    {
-      provide: APP_GUARD,
-      useClass: XltTokenGuard,
-    },
-  ],
+  providers: [{ provide: APP_GUARD, useClass: XltTokenGuard }],
 })
 export class AppModule {}
 ```
@@ -436,9 +466,7 @@ export class AppModule {}
 
 ### 自定义登录 Guard（`XltAbstractLoginGuard`）
 
-如果你需要在校验通过后把用户信息加载到 `request.user`、记录审计日志、使用自己的元数据键（如 `@RequireLogin()`），请继承 `XltAbstractLoginGuard`，仅重写你关心的钩子即可。token 校验、异常抛出、默认元数据（`@XltIgnore` / `@XltCheckLogin`）解析已在基类完成。
-
-#### 生命周期
+如需在校验通过后加载 `request.user`、记录审计日志、或使用自有元数据键（如 `@RequireLogin()`），继承 `XltAbstractLoginGuard` 并重写钩子即可：
 
 ```
 canActivate
@@ -451,22 +479,15 @@ canActivate
            → onAuthSuccess(result, request) // 可重写：业务会话加载
 ```
 
-#### 可重写成员
-
-| 成员 | 类型 | 说明 |
-| --- | --- | --- |
-| `requiresLogin(ctx)` | `boolean` | 判定当前路由是否需要校验。默认读 `@XltIgnore` / `@XltCheckLogin` 配合 `defaultCheck`。重写后可接入项目自有元数据（如 `@RequireLogin`） |
-| `onAuthSuccess(result, request)` | `void \| Promise<void>` | 校验通过后触发，常用于加载用户信息到 `request.user` |
-| `onAuthFail(result, request)` | `void \| Promise<void>` | 异常抛出前触发，可记录日志、埋点等 |
-| `reflector` / `config` / `stpLogic` | `protected` | 子类可直接使用 |
-
-#### 示例：加载用户到 `request.user`（白名单模式）
-
 ```ts
 import { ExecutionContext, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { XltAbstractLoginGuard, XLT_TOKEN_CONFIG, XltTokenConfig, StpLogic } from 'xlt-token';
-import { RedisService } from '@/config/modules/redis.service';
+import {
+  XltAbstractLoginGuard,
+  XLT_TOKEN_CONFIG,
+  XltTokenConfig,
+  StpLogic,
+} from '@xlt-token/nestjs';
 
 @Injectable()
 export class LoginGuard extends XltAbstractLoginGuard {
@@ -479,7 +500,6 @@ export class LoginGuard extends XltAbstractLoginGuard {
     super(reflector, config, stpLogic);
   }
 
-  /** 改用项目自己的 @RequireLogin() 白名单 */
   protected requiresLogin(ctx: ExecutionContext): boolean {
     return (
       this.reflector.getAllAndOverride<boolean>('requireLogin', [
@@ -497,18 +517,11 @@ export class LoginGuard extends XltAbstractLoginGuard {
 }
 ```
 
-注册为全局守卫（与 `XltTokenGuard` 二选一）：
-
-```ts
-providers: [{ provide: APP_GUARD, useClass: LoginGuard }]
-```
-
 ## 异步配置
-
-使用 `forRootAsync` 支持异步配置：
 
 ```ts
 import { ConfigService } from '@nestjs/config';
+import { XltTokenModule } from '@xlt-token/nestjs';
 
 XltTokenModule.forRootAsync({
   useFactory: (config: ConfigService) => ({
@@ -520,6 +533,20 @@ XltTokenModule.forRootAsync({
   inject: [ConfigService],
 })
 ```
+
+## 从旧版迁移
+
+若你此前使用 `import { ... } from 'xlt-token'`，可继续工作（根包 re-export），或改为显式依赖：
+
+```ts
+// 旧
+import { XltTokenModule, StpUtil } from 'xlt-token';
+
+// 新（推荐）
+import { XltTokenModule, StpUtil } from '@xlt-token/nestjs';
+```
+
+完整迁移说明见 [迁移指南](https://xiaolangtou.github.io/xlt-token/guide/migration-2-0)。
 
 ## 社区交流群
 
@@ -534,5 +561,6 @@ MIT
 ## 相关链接
 
 - [在线文档](https://xiaolangtou.github.io/xlt-token/) - 完整使用指南与 API 参考
+- [示例项目](./examples/nestjs/) - 可运行的 NestJS Demo
 - [Sa-Token](https://sa-token.cc/) - 灵感来源
 - [NestJS](https://nestjs.com/) - NestJS 官方文档

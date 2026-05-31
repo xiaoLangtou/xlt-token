@@ -3,6 +3,7 @@ import DefaultTheme from 'vitepress/theme';
 import { useData } from 'vitepress';
 import { computed } from 'vue';
 import HomePage from './Home.vue';
+import SupportProjectModal from './components/SupportProjectModal.vue';
 
 const { Layout: DefaultLayout } = DefaultTheme
 const { frontmatter, page } = useData()
@@ -23,4 +24,5 @@ const isDoc = computed(() => !isHome.value && frontmatter.value.layout !== false
 <!--      <DocHeader />-->
 <!--    </template>-->
   </DefaultLayout>
+  <SupportProjectModal />
 </template>

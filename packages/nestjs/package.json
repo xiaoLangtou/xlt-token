@@ -1,9 +1,29 @@
 {
   "name": "@xlt-token/nestjs",
-  "version": "1.0.0-rc.2",
+  "version": "1.0.0-rc.3",
   "description": "NestJS integration for xlt-token",
-  "type": "module",
+  "keywords": [
+    "nestjs",
+    "token",
+    "auth",
+    "jwt",
+    "session"
+  ],
+  "author": "xltorg",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xiaoLangtou/xlt-token.git",
+    "directory": "packages/nestjs"
+  },
+  "bugs": {
+    "url": "https://github.com/xiaoLangtou/xlt-token/issues"
+  },
+  "homepage": "https://xiaolangtou.github.io/xlt-token/",
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
   "exports": {
     ".": {
       "import": "./dist/index.mjs",
@@ -16,11 +36,14 @@
   "types": "./dist/index.d.cts",
   "sideEffects": false,
   "files": [
-    "dist"
+    "dist",
+    "LICENSE",
+    "README.md"
   ],
   "scripts": {
     "build": "tsdown",
     "build:watch": "tsdown --watch",
+    "prepublishOnly": "pnpm run build",
     "test": "vitest run",
     "test:cov": "vitest run --coverage",
     "test:e2e": "vitest run --config vitest.e2e.config.ts",
@@ -30,7 +53,6 @@
   "peerDependencies": {
     "@nestjs/common": "^10.0.0 || ^11.0.0",
     "@nestjs/core": "^10.0.0 || ^11.0.0",
-    "@xlt-token/core": "workspace:*",
     "reflect-metadata": "^0.1.13 || ^0.2.0",
     "rxjs": "^7.0.0"
   },

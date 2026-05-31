@@ -16,6 +16,7 @@
     "rootDir": "."
   },
   "include": [
+    "src/**/*.ts",
     "packages/nestjs/src/**/*.ts"
   ],
   "exclude": [

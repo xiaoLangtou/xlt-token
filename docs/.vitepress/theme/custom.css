@@ -66,6 +66,46 @@
   --vp-local-nav-bg-color: var(--x-bg);
   --vp-code-block-bg: var(--x-code-bg);
   --vp-code-copy-copied-text-content: '已复制';
+
+  /* Support modal */
+  --x-support-overlay: rgba(15, 23, 42, 0.45);
+  --x-support-modal-bg: linear-gradient(180deg, #ffffff 0%, #f8f8fc 100%);
+  --x-support-modal-border: var(--x-border-soft);
+  --x-support-modal-shadow: var(--x-shadow-lg), 0 0 48px rgba(79, 70, 229, 0.08);
+  --x-support-modal-text: var(--x-text);
+  --x-support-modal-text-2: var(--x-text-2);
+  --x-support-modal-text-3: var(--x-text-3);
+  --x-support-modal-divider: var(--x-border-soft);
+  --x-support-modal-close-hover: var(--x-surface-2);
+  --x-support-ghcard-bg: linear-gradient(180deg, #f6f8fa 0%, #ffffff 100%);
+  --x-support-ghcard-border: rgba(79, 70, 229, 0.16);
+  --x-support-ghcard-glow: rgba(79, 70, 229, 0.06);
+  --x-support-ghcard-text: #24292f;
+  --x-support-ghcard-text-2: #57606a;
+  --x-support-ghcard-link: #0969da;
+  --x-support-ghcard-badge-border: #d0d7de;
+  --x-support-ghcard-star-bg: #f6f8fa;
+  --x-support-ghcard-star-border: rgba(9, 105, 218, 0.35);
+  --x-support-ghcard-star-divider: #d0d7de;
+  --x-support-ghcard-scan: rgba(9, 105, 218, 0.08);
+  --x-support-highlight-bg: rgba(34, 197, 94, 0.08);
+  --x-support-highlight-border: rgba(34, 197, 94, 0.22);
+  --x-support-highlight-text: #15803d;
+  --x-support-link-bg: var(--x-surface-2);
+  --x-support-link-border: var(--x-border-soft);
+  --x-support-link-hover-border: rgba(79, 70, 229, 0.25);
+  --x-support-link-hover-bg: var(--x-surface-3);
+  --x-support-link-arrow: var(--x-text-3);
+  --x-support-confirm-bg: var(--x-surface);
+  --x-support-confirm-border: rgba(79, 70, 229, 0.35);
+  --x-support-confirm-shadow: 0 0 16px rgba(79, 70, 229, 0.1);
+  --x-support-confirm-hover-shadow: 0 0 24px rgba(79, 70, 229, 0.18);
+  --x-platform-github-bg: rgba(36, 41, 47, 0.08);
+  --x-platform-github-text: #24292f;
+  --x-platform-gitee-bg: rgba(199, 29, 35, 0.1);
+  --x-platform-gitee-text: #c71d23;
+  --x-platform-gitcode-bg: rgba(47, 129, 247, 0.1);
+  --x-platform-gitcode-text: #0969da;
 }
 
 .dark {
@@ -93,6 +133,46 @@
   --x-code-bg: #14161f;
   --x-code-toolbar: #1a1d28;
   --x-code-border: #2a2e3e;
+
+  /* Support modal */
+  --x-support-overlay: rgba(1, 4, 9, 0.72);
+  --x-support-modal-bg: linear-gradient(180deg, #0d1117 0%, #111318 100%);
+  --x-support-modal-border: rgba(255, 255, 255, 0.08);
+  --x-support-modal-shadow: 0 0 0 1px rgba(79, 70, 229, 0.08), 0 24px 64px rgba(0, 0, 0, 0.55), 0 0 48px rgba(79, 70, 229, 0.12);
+  --x-support-modal-text: #f0f6fc;
+  --x-support-modal-text-2: #c9d1d9;
+  --x-support-modal-text-3: #6e7681;
+  --x-support-modal-divider: rgba(255, 255, 255, 0.06);
+  --x-support-modal-close-hover: rgba(255, 255, 255, 0.06);
+  --x-support-ghcard-bg: linear-gradient(180deg, #0d1117 0%, #161b22 100%);
+  --x-support-ghcard-border: rgba(56, 139, 253, 0.18);
+  --x-support-ghcard-glow: rgba(56, 139, 253, 0.08);
+  --x-support-ghcard-text: #f0f6fc;
+  --x-support-ghcard-text-2: #8b949e;
+  --x-support-ghcard-link: #58a6ff;
+  --x-support-ghcard-badge-border: #30363d;
+  --x-support-ghcard-star-bg: #21262d;
+  --x-support-ghcard-star-border: rgba(56, 139, 253, 0.35);
+  --x-support-ghcard-star-divider: #30363d;
+  --x-support-ghcard-scan: rgba(88, 166, 255, 0.1);
+  --x-support-highlight-bg: rgba(35, 134, 54, 0.12);
+  --x-support-highlight-border: rgba(63, 185, 80, 0.2);
+  --x-support-highlight-text: #3fb950;
+  --x-support-link-bg: rgba(22, 27, 34, 0.8);
+  --x-support-link-border: rgba(255, 255, 255, 0.06);
+  --x-support-link-hover-border: rgba(129, 140, 248, 0.3);
+  --x-support-link-hover-bg: rgba(30, 36, 48, 0.9);
+  --x-support-link-arrow: #484f58;
+  --x-support-confirm-bg: rgba(33, 38, 45, 0.9);
+  --x-support-confirm-border: rgba(56, 139, 253, 0.4);
+  --x-support-confirm-shadow: 0 0 16px rgba(56, 139, 253, 0.15);
+  --x-support-confirm-hover-shadow: 0 0 24px rgba(56, 139, 253, 0.25);
+  --x-platform-github-bg: rgba(201, 209, 217, 0.1);
+  --x-platform-github-text: #c9d1d9;
+  --x-platform-gitee-bg: rgba(199, 29, 35, 0.15);
+  --x-platform-gitee-text: #ff7b72;
+  --x-platform-gitcode-bg: rgba(56, 139, 253, 0.12);
+  --x-platform-gitcode-text: #58a6ff;
 }
 
 html {
@@ -1211,9 +1291,486 @@ body {
   .xlt-preview__tag,
   .xlt-btn--glow::before,
   .xlt-cta__glow,
-  .xlt-preview__glow {
+  .xlt-preview__glow,
+  .xlt-ghcard__scan,
+  .xlt-ghcard__hint {
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;
   }
+
+  .xlt-ghcard__scan {
+    display: none;
+  }
+}
+
+/* Support project modal */
+.xlt-support-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: var(--x-support-overlay);
+  backdrop-filter: blur(8px);
+}
+
+.xlt-support-modal {
+  position: relative;
+  width: min(100%, 480px);
+  overflow: hidden;
+  border: 1px solid var(--x-support-modal-border);
+  border-radius: 16px;
+  background: var(--x-support-modal-bg);
+  box-shadow: var(--x-support-modal-shadow);
+  color: var(--x-support-modal-text);
+}
+
+.xlt-support-modal__bar {
+  height: 3px;
+  background: linear-gradient(
+    90deg,
+    #6366f1 0%,
+    #818cf8 25%,
+    #38bdf8 50%,
+    #818cf8 75%,
+    #6366f1 100%
+  );
+  opacity: 0.85;
+}
+
+.xlt-support-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 18px 14px;
+  border-bottom: 1px solid var(--x-support-modal-divider);
+}
+
+.xlt-support-modal__title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--x-support-modal-text);
+}
+
+.xlt-support-modal__title-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #6366f1, #818cf8);
+  font-size: 14px;
+  line-height: 1;
+  box-shadow: 0 0 16px rgba(99, 102, 241, 0.35);
+}
+
+.xlt-support-modal__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--x-support-modal-text-3);
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.xlt-support-modal__close:hover {
+  background: var(--x-support-modal-close-hover);
+  color: var(--x-support-modal-text-2);
+}
+
+.xlt-support-modal__body {
+  padding: 16px 18px 4px;
+}
+
+.xlt-support-modal__preview {
+  margin-bottom: 14px;
+}
+
+/* GitHub 仿真卡片 */
+.xlt-ghcard {
+  position: relative;
+  overflow: hidden;
+  padding: 14px 16px;
+  border: 1px solid var(--x-support-ghcard-border);
+  border-radius: 12px;
+  background: var(--x-support-ghcard-bg);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 0 24px var(--x-support-ghcard-glow);
+  color: var(--x-support-ghcard-text);
+}
+
+.xlt-ghcard__scan {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    105deg,
+    transparent 40%,
+    var(--x-support-ghcard-scan) 50%,
+    transparent 60%
+  );
+  transform: translateX(-100%);
+  animation: xlt-ghcard-scan 4.5s ease-in-out infinite;
+}
+
+.xlt-ghcard__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.xlt-ghcard__repo {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
+  font-size: 13px;
+}
+
+.xlt-ghcard__avatar {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6366f1, #818cf8);
+}
+
+.xlt-ghcard__owner {
+  color: var(--x-support-ghcard-link);
+  font-weight: 500;
+}
+
+.xlt-ghcard__slash {
+  color: var(--x-support-ghcard-text-2);
+}
+
+.xlt-ghcard__name {
+  color: var(--x-support-ghcard-link);
+  font-weight: 600;
+}
+
+.xlt-ghcard__public {
+  margin-left: 2px;
+  padding: 1px 7px;
+  border: 1px solid var(--x-support-ghcard-badge-border);
+  border-radius: 999px;
+  color: var(--x-support-ghcard-text-2);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.xlt-ghcard__main {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.xlt-ghcard__info {
+  min-width: 0;
+}
+
+.xlt-ghcard__title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--x-support-ghcard-text);
+}
+
+.xlt-ghcard__desc {
+  margin-top: 3px;
+  font-size: 12px;
+  color: var(--x-support-ghcard-text-2);
+}
+
+.xlt-ghcard__star {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  padding: 4px 10px;
+  border: 1px solid var(--x-support-ghcard-star-border);
+  border-radius: 6px;
+  background: var(--x-support-ghcard-star-bg);
+  color: var(--x-support-ghcard-text);
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: 0 0 12px var(--x-support-ghcard-glow);
+}
+
+.xlt-ghcard__star svg {
+  color: #e3b341;
+}
+
+.xlt-ghcard__star-count {
+  padding-left: 7px;
+  border-left: 1px solid var(--x-support-ghcard-star-divider);
+  color: var(--x-support-ghcard-text-2);
+  font-weight: 500;
+}
+
+.xlt-ghcard__meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.xlt-ghcard__stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--x-support-ghcard-text-2);
+}
+
+.xlt-ghcard__stat svg {
+  color: var(--x-support-modal-text-3);
+}
+
+.xlt-ghcard__lang-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #8957e5;
+}
+
+.xlt-ghcard__hint {
+  margin-left: auto;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #1f6feb, #388bfd);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  box-shadow: 0 0 0 0 rgba(56, 139, 253, 0.5);
+  animation: xlt-ghcard-hint-pulse 2.4s ease-out infinite;
+}
+
+@keyframes xlt-ghcard-scan {
+  0%, 60% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes xlt-ghcard-hint-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(56, 139, 253, 0.5);
+  }
+
+  70% {
+    box-shadow: 0 0 0 8px rgba(56, 139, 253, 0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(56, 139, 253, 0);
+  }
+}
+
+.xlt-support-modal__highlight {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--x-support-highlight-border);
+  border-radius: 8px;
+  background: var(--x-support-highlight-bg);
+  color: var(--x-support-highlight-text);
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.xlt-support-modal__highlight-icon {
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: var(--x-support-highlight-text);
+  font-size: 12px;
+}
+
+.xlt-support-modal__text {
+  margin: 0;
+  color: var(--x-support-modal-text-2);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.xlt-support-modal__links-label {
+  margin: 16px 0 8px;
+  color: var(--x-support-modal-text-3);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.xlt-support-modal__links {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.xlt-support-modal__links li + li {
+  margin-top: 6px;
+}
+
+.xlt-support-modal__link-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border: 1px solid var(--x-support-link-border);
+  border-radius: 8px;
+  background: var(--x-support-link-bg);
+  color: inherit;
+  text-decoration: none;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.xlt-support-modal__link-row:hover {
+  border-color: var(--x-support-link-hover-border);
+  background: var(--x-support-link-hover-bg);
+  transform: translateX(2px);
+}
+
+.xlt-support-modal__link-platform {
+  flex-shrink: 0;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.xlt-support-modal__link-platform--github {
+  background: var(--x-platform-github-bg);
+  color: var(--x-platform-github-text);
+}
+
+.xlt-support-modal__link-platform--gitee {
+  background: var(--x-platform-gitee-bg);
+  color: var(--x-platform-gitee-text);
+}
+
+.xlt-support-modal__link-platform--gitcode {
+  background: var(--x-platform-gitcode-bg);
+  color: var(--x-platform-gitcode-text);
+}
+
+.xlt-support-modal__link-url {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--x-support-modal-text-3);
+  font-family: var(--vp-font-family-mono);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.xlt-support-modal__link-arrow {
+  flex-shrink: 0;
+  color: var(--x-support-link-arrow);
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.xlt-support-modal__link-row:hover .xlt-support-modal__link-arrow {
+  color: var(--x-support-modal-text-2);
+  transform: translateX(2px);
+}
+
+.xlt-support-modal__footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 18px 18px;
+  border-top: 1px solid var(--x-support-modal-divider);
+}
+
+.xlt-support-modal__later {
+  padding: 8px 14px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--x-support-modal-text-3);
+  font-size: 13px;
+  cursor: pointer;
+  transition: color 0.2s ease, background 0.2s ease;
+}
+
+.xlt-support-modal__later:hover {
+  background: var(--x-support-modal-close-hover);
+  color: var(--x-support-modal-text-2);
+}
+
+.xlt-support-modal__confirm {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: 1px solid var(--x-support-confirm-border);
+  border-radius: 999px;
+  background: var(--x-support-confirm-bg);
+  color: var(--x-support-modal-text);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: var(--x-support-confirm-shadow);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+.xlt-support-modal__confirm svg {
+  color: #e3b341;
+}
+
+.xlt-support-modal__confirm:hover {
+  border-color: var(--x-support-confirm-border);
+  background: var(--x-support-confirm-bg);
+  box-shadow: var(--x-support-confirm-hover-shadow);
+}
+
+.xlt-support-fade-enter-active,
+.xlt-support-fade-leave-active {
+  transition: opacity 0.25s ease;
+}
+
+.xlt-support-fade-enter-active .xlt-support-modal,
+.xlt-support-fade-leave-active .xlt-support-modal {
+  transition: transform 0.25s ease;
+}
+
+.xlt-support-fade-enter-from,
+.xlt-support-fade-leave-to {
+  opacity: 0;
+}
+
+.xlt-support-fade-enter-from .xlt-support-modal,
+.xlt-support-fade-leave-to .xlt-support-modal {
+  transform: translateY(12px) scale(0.98);
 }

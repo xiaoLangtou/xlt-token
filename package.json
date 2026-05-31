@@ -1,7 +1,7 @@
 {
   "name": "xlt-token",
-  "version": "1.0.0-rc.2",
-  "description": "NestJS token authentication library inspired by Sa-Token",
+  "version": "1.0.0-rc.3",
+  "description": "Framework-agnostic token auth library with NestJS integration, inspired by Sa-Token",
   "keywords": [
     "nestjs",
     "token",
@@ -20,6 +20,9 @@
     "url": "https://github.com/xiaoLangtou/xlt-token/issues"
   },
   "homepage": "https://xiaolangtou.github.io/xlt-token/",
+  "publishConfig": {
+    "access": "public"
+  },
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.cts",
@@ -52,6 +55,8 @@
     "test:junit": "vitest run --reporter=junit --outputFile=reports/junit.xml",
     "test:e2e:junit": "pnpm --filter @xlt-token/nestjs test:e2e:junit",
     "prepublishOnly": "pnpm run build:workspace",
+    "publish:packages": "pnpm publish -r --access public --no-git-checks",
+    "publish:dry-run": "pnpm publish -r --access public --no-git-checks --dry-run",
     "docs:dev": "vitepress dev docs",
     "docs:preview": "vitepress preview docs",
     "docs:build": "pnpm build && vitepress build docs",

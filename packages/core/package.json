@@ -1,9 +1,29 @@
 {
   "name": "@xlt-token/core",
-  "version": "1.0.0-rc.2",
+  "version": "1.0.0-rc.3",
   "description": "Framework-agnostic core contracts and utilities for xlt-token",
-  "type": "module",
+  "keywords": [
+    "token",
+    "auth",
+    "session",
+    "jwt",
+    "sa-token"
+  ],
+  "author": "xltorg",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xiaoLangtou/xlt-token.git",
+    "directory": "packages/core"
+  },
+  "bugs": {
+    "url": "https://github.com/xiaoLangtou/xlt-token/issues"
+  },
+  "homepage": "https://xiaolangtou.github.io/xlt-token/",
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
   "exports": {
     ".": {
       "import": "./dist/index.mjs",
@@ -16,11 +36,14 @@
   "types": "./dist/index.d.cts",
   "sideEffects": false,
   "files": [
-    "dist"
+    "dist",
+    "LICENSE",
+    "README.md"
   ],
   "scripts": {
     "build": "tsdown",
     "build:watch": "tsdown --watch",
+    "prepublishOnly": "pnpm run build",
     "test": "vitest run",
     "test:cov": "vitest run --coverage"
   },

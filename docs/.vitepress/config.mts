@@ -4,7 +4,8 @@ import { defineConfig } from 'vitepress';
 import { transformerTwoslash } from '@shikijs/vitepress-twoslash';
 // @ts-ignore
 import { createFileSystemTypesCache } from '@shikijs/vitepress-twoslash/cache-fs';
-import { FILE_IMPORTS } from './twoslash.ts'
+// @ts-ignore
+import { FILE_IMPORTS } from './twoslash.ts';
 
 // @ts-ignore
 const dir = dirname(fileURLToPath(import.meta.url))
@@ -83,7 +84,7 @@ export default defineConfig({
     ],
   ],
 
-  srcExclude: ['README.md', 'archive/**'],
+  srcExclude: ['README.md', 'archive/**', 'juejin/**'],
 
   themeConfig: {
     siteTitle: 'xlt-token',
