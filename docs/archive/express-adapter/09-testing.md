@@ -38,17 +38,22 @@
 | false | 无 | 跳过 |
 | false | requireLogin | 校验 |
 
-### 2.3 `matchIgnore`
+### 2.3 `resolveRouteAuthMeta` / `matchIgnore`
 
 - 精确路径 `/health`
 - 前缀 `/public/`
 - RegExp `^/api/docs`
+- function matcher `(req) => req.method === 'POST'`
+- `methods` 限制只匹配指定 HTTP method
+- 多条 policy 命中时，后声明的 `ignore` / `requireLogin` 覆盖前声明策略
 
 ### 2.4 `xltMiddleware`
 
-- 跳过 ignore 路径 → `next` 无 err
+- 跳过 ignore 路径或 ignore policy → `next` 无 err
 - 无 token → `next(err)` 且 `err instanceof NotLoginException`
 - 有效 token → `req.stpLoginId` 定义
+- 命中权限 policy → 调用 `stpPermLogic.checkPermission`
+- 命中 safe policy → 调用 `stpLogic.checkSafe`
 
 ### 2.5 `xltErrorHandler`
 
@@ -79,7 +84,12 @@ function createExpressApp(xlt: XltTokenContext) {
   const app = express();
   app.use(express.json());
   const api = express.Router();
-  api.use(xltMiddleware(xlt));
+  api.use(xltMiddleware(xlt, {
+    policies: [
+      { match: '/api/public', ignore: true },
+      { match: '/api/admin', permissions: { list: ['admin:*'], mode: XltMode.AND } },
+    ],
+  }));
   // 注册路由...
   app.use('/api', api);
   app.use(xltErrorHandler());
@@ -97,7 +107,8 @@ Nest setup 保持现有 `Test.createTestingModule`，**断言函数共用**。
 | --- | --- |
 | token 顺序 header → cookie → query | 单测 mock 三种来源优先级 |
 | state 字段名 | 登录后 `ctx.state` 与 `req.stpLoginId` 一致 |
-| defaultCheck + ignore/require | `shouldCheckLogin` 矩阵 |
+| defaultCheck + ignore/require | `resolveRouteAuthMeta` + `shouldCheckLogin` 矩阵 |
+| route helper 顺序陷阱 | 反例 E2E，证明后置 helper 不能作为推荐模式 |
 | 异常含 `type` | E2E 快照 body |
 | Session API | E2E `xlt.stpLogic.getSession` |
 | Hooks | E2E mock `onLogin` 被调用 |
@@ -114,7 +125,7 @@ Nest setup 保持现有 `Test.createTestingModule`，**断言函数共用**。
 - pnpm e2e:express  # 根脚本聚合
 ```
 
-`turbo.json` 中 `adapter-express#test` 依赖 `core#build`。
+`turbo.json` 使用当前仓库的通用 `test` 任务即可。新包提供 `test` script 后，`turbo run test` 会按 workspace 依赖图调度。
 
 ---
 

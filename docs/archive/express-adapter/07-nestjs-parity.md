@@ -11,11 +11,11 @@
 | --- | --- |
 | `XltTokenModule.forRoot()` | `createXltToken()` |
 | `APP_GUARD` + `XltTokenGuard` | `xltMiddleware(xlt)` |
-| `@XltIgnore()` | `ignoreAuth()` 或 `options.ignore` |
-| `@XltCheckLogin()` | `requireLogin()`（`defaultCheck: false` 时） |
-| `@XltCheckPermission()` | `checkPermission(...)` |
-| `@XltCheckRole()` | `checkRole(...)` |
-| `@XltCheckSafe()` | `checkSafe(business)` |
+| `@XltIgnore()` | `policies: [{ match, ignore: true }]` 或 `options.ignore` |
+| `@XltCheckLogin()` | `policies: [{ match, requireLogin: true }]`（`defaultCheck: false` 时） |
+| `@XltCheckPermission()` | `policies: [{ match, permissions }]` |
+| `@XltCheckRole()` | `policies: [{ match, roles }]` |
+| `@XltCheckSafe()` | `policies: [{ match, safeBusiness }]` |
 | `@LoginId()` | `req.stpLoginId` |
 | `@TokenValue()` | `req.stpToken` |
 | `NotLoginException`（Nest HTTP） | `xltErrorHandler` → 401 JSON |
@@ -42,7 +42,7 @@ if (config.defaultCheck) return true;
 return meta.requireLogin ?? false;
 ```
 
-行为矩阵一致，见 [03-design-thinking.md](./03-design-thinking.md#5-defaultcheck-黑白名单思路)。
+行为矩阵一致，见 [03-design-thinking.md](./03-design-thinking.md#6-defaultcheck-黑白名单思路)。
 
 ---
 
@@ -52,9 +52,9 @@ return meta.requireLogin ?? false;
 | --- | --- | --- |
 | 1 | `checkLogin(httpCtx)` | 同左 |
 | 2 | `req.stpLoginId = result.loginId` | `syncExpressAuthState` |
-| 3 | `checkPermission`（若有 meta） | 读 `req._xltRouteMeta.permissions` |
-| 4 | `checkRole`（若有 meta） | 读 `req._xltRouteMeta.roles` |
-| 5 | `checkSafe`（若有 business） | 读 `req._xltRouteMeta.safeBusiness` |
+| 3 | `checkPermission`（若有 meta） | 先解析策略表，再读 `req._xltRouteMeta.permissions` |
+| 4 | `checkRole`（若有 meta） | 先解析策略表，再读 `req._xltRouteMeta.roles` |
+| 5 | `checkSafe`（若有 business） | 先解析策略表，再读 `req._xltRouteMeta.safeBusiness` |
 
 异常均通过 `rethrowCoreAuthException`（Nest）或 `next(err)`（Express）向上抛。
 
@@ -74,7 +74,7 @@ return meta.requireLogin ?? false;
 
 | Nest 能力 | Express 替代建议 |
 | --- | --- |
-| `Reflector` 类级 + 方法级 meta 合并 | 路由链上多个 meta 中间件手动合并；或按 Router 拆分 |
+| `Reflector` 类级 + 方法级 meta 合并 | `policies` 通过前缀策略 + 更具体策略覆盖表达；必要时用函数 matcher |
 | `ExecutionContext` / 非 HTTP | 不适用；仅 HTTP 场景 |
 | 全局 `APP_GUARD` 自动作用于所有 Controller | 需显式 `app.use` 或 Router `use` |
 | 参数装饰器 `@LoginId()` | 直接读 `req.stpLoginId` |

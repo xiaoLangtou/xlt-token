@@ -18,7 +18,7 @@
 | [03-design-thinking.md](./03-design-thinking.md) | 设计思路：为何用中间件、state、与 core 分工 |
 | [04-package-structure.md](./04-package-structure.md) | 包结构、依赖、文件职责 |
 | [05-l2-adapter-layer.md](./05-l2-adapter-layer.md) | L2：`createExpressContext`、state 同步 |
-| [06-l3-integration-api.md](./06-l3-integration-api.md) | L3：中间件、路由元数据、异常处理 |
+| [06-l3-integration-api.md](./06-l3-integration-api.md) | L3：中间件、路由策略、异常处理 |
 | [07-nestjs-parity.md](./07-nestjs-parity.md) | NestJS Guard/Decorator ↔ Express 对照表 |
 | [08-implementation-steps.md](./08-implementation-steps.md) | **分步实施计划**（PR 粒度、验收） |
 | [09-testing.md](./09-testing.md) | 单测、E2E、行为契约 |

@@ -34,10 +34,10 @@
 | 序号 | 项 | 说明 |
 | --- | --- | --- |
 | 1 | `packages/adapter-express` 包 | 脚手架、tsdown、workspace |
-| 2 | 从 core 迁出 `createExpressContext` | core 保留 deprecated re-export |
+| 2 | 从 core 迁出 `createExpressContext` | core 保留 deprecated 旧实现，adapter 成为 canonical |
 | 3 | `xltMiddleware` | 全局登录校验 |
-| 4 | `ignoreAuth` / `requireLogin` | 路由级 meta |
-| 5 | `checkPermission` / `checkRole` / `checkSafe` | 路由级 meta + `runAuth` |
+| 4 | `RouteAuthPolicy` / `resolveRouteAuthMeta` | 在鉴权前按 method + path 解析路由策略 |
+| 5 | `ignoreAuth` / `requireLogin` / `checkPermission` / `checkRole` / `checkSafe` | 可选 route-local helper，仅用于与 `xltMiddleware` 同链且位于其前面的场景 |
 | 6 | `runAuth` | 编排 checkLogin + 权限 + safe |
 | 7 | `xltErrorHandler` | core 异常 → 401/403 JSON |
 | 8 | Express `Request` 类型增强 | `stpLoginId`、`stpToken`、`_xltRouteMeta` |

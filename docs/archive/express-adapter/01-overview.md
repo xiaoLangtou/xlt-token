@@ -13,13 +13,17 @@
 ```ts
 import express from 'express';
 import { createXltToken } from '@xlt-token/core';
-import { xltMiddleware, ignoreAuth, xltErrorHandler } from '@xlt-token/adapter-express';
+import { xltMiddleware, xltErrorHandler } from '@xlt-token/adapter-express';
 
 const xlt = createXltToken({ config: { tokenName: 'authorization' } });
 const app = express();
 
-app.use(xltMiddleware(xlt));
-app.get('/public', ignoreAuth(), handler);
+app.use(xltMiddleware(xlt, {
+  policies: [
+    { match: '/public', ignore: true },
+  ],
+}));
+app.get('/public', handler);
 app.use(xltErrorHandler());
 ```
 
@@ -31,7 +35,7 @@ app.use(xltErrorHandler());
 | --- | --- | --- |
 | L1 | `@xlt-token/core` | `StpLogic` / `StpPermLogic` / `createXltToken` — **不改动** |
 | L2 | `@xlt-token/adapter-express` | `(req, res)` → `HttpContext`；`state` ↔ `req` 同步 |
-| L3 | `@xlt-token/adapter-express` | `xltMiddleware`、路由级 helper、`xltErrorHandler` |
+| L3 | `@xlt-token/adapter-express` | `xltMiddleware`、路由策略表、可选路由级 helper、`xltErrorHandler` |
 
 **本包不做的事**
 
@@ -57,7 +61,7 @@ app.use(xltErrorHandler());
 ## 4. 非目标（Express 范围外）
 
 - Fastify / Koa / Hono 适配（各自独立包）
-- 将 Express 路由元数据统一成装饰器 DSL
+- 将 Express 路由策略统一成装饰器 DSL
 - 在 adapter 内实现 Redis / JWT（仍用 core 或独立 store/strategy 包）
 
 ---
@@ -66,7 +70,8 @@ app.use(xltErrorHandler());
 
 - [ ] `packages/adapter-express` 可独立 build、发布
 - [ ] `defaultCheck` + 白名单/黑名单与 `XltTokenGuard` 行为一致
-- [ ] 权限 / 角色 / 二级认证可通过中间件链表达
+- [ ] 权限 / 角色 / 二级认证可通过策略表表达，并在鉴权前生效
+- [ ] 路由级策略在鉴权前可见，不依赖后续 route middleware 写入 meta
 - [ ] `req.stpLoginId` / `req.stpToken` 与 Nest 一致
 - [ ] Express E2E 覆盖与 Nest 共享的场景表（登录、顶号、踢人、权限）
 - [ ] `apps/playground/express` 可本地跑通 demo

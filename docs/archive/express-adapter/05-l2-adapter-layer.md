@@ -97,6 +97,16 @@ export interface RouteAuthMeta {
   safeBusiness?: string;
 }
 
+export type AuthMatcher =
+  | string
+  | RegExp
+  | ((req: import('express').Request) => boolean);
+
+export interface RouteAuthPolicy extends RouteAuthMeta {
+  match: AuthMatcher | AuthMatcher[];
+  methods?: string[];
+}
+
 export interface ExpressRequest {
   _xltState?: Record<string, unknown>;
   _xltRouteMeta?: RouteAuthMeta;
@@ -126,7 +136,7 @@ declare global {
 
 1. 复制 `packages/core/src/http/express.ts` → `adapter-express/src/context.ts`
 2. 收紧类型为 `Request` / `Response`
-3. core 改为 `export { createExpressContext } from '@xlt-token/adapter-express'` + `@deprecated`
+3. core 暂时保留现有 `createExpressContext`，标记为 `@deprecated`，但不要从 core 反向 re-export adapter，避免依赖环
 4. nestjs `nest-bridge.ts` 改 import 路径
 
 ---

@@ -8,15 +8,15 @@
 
 | 风险 | 缓解 |
 | --- | --- |
-| 现有用户从 `@xlt-token/core` 导入 | 保留 **至少一个 minor** 的 deprecated re-export |
-| core 构建依赖 adapter 形成环 | re-export 使用 **types-only** 或文档要求先装 adapter；或 Phase 3.1 再删 core 导出 |
+| 现有用户从 `@xlt-token/core` 导入 | 保留 **至少一个 minor** 的 deprecated 旧实现 |
+| core 构建依赖 adapter 形成环 | core 不反向依赖 adapter；core 暂时保留旧实现并标记 deprecated，后续 breaking 版本删除 |
 | Nest 双路径 | Step 7 统一 nestjs → adapter-express |
 
 **Breaking 时间表建议**
 
 | 版本 | 行为 |
 | --- | --- |
-| `2.0.0-rc` | core 导出 deprecated `createExpressContext` |
+| `2.0.0-rc` | core 保留 deprecated `createExpressContext` 旧实现 |
 | `2.0.0` | 文档改为仅从 adapter 导入 |
 | `2.1.0` 或 `3.0.0` | 删除 core 中的 re-export |
 
@@ -26,8 +26,8 @@
 
 | 风险 | 缓解 |
 | --- | --- |
-| 全局 `xltMiddleware` 在 router 前注册，读不到 `ignoreAuth` meta | 文档 **强制推荐** Router 级 `api.use(xltMiddleware)`；示例见 [10-usage-examples.md](./10-usage-examples.md) |
-| 用户误用顺序 | playground 与 E2E 仅演示推荐写法 |
+| 全局或 Router 级 `xltMiddleware` 先于 route helper 执行，读不到后续 helper 写入的 meta | 首选 API 改为 `policies` 策略表，由 `xltMiddleware` 在鉴权前解析 |
+| 用户误用 `api.use(xltMiddleware); api.get('/public', ignoreAuth(), handler)` | README、playground 与 E2E 只演示策略表；测试加入该反例 |
 
 ---
 
@@ -60,10 +60,10 @@ Express 适配 **不涉及** `HttpCookies.get` 异步化。
 
 | 风险 | 缓解 |
 | --- | --- |
-| `req.path` 与 `baseUrl` 组合导致 ignore 不匹配 | `matchIgnore` 使用 `req.originalUrl` 或文档说明仅匹配 `path` |
-| 多 Router 嵌套 | 每级 Router 自行 `use(xltMiddleware)` 或仅顶层一次 |
+| `req.path` 与 `baseUrl` 组合导致策略不匹配 | `matchPolicy` 使用 `req.originalUrl`；文档示例在策略中包含挂载前缀 |
+| 多 Router 嵌套 | 策略 matcher 支持函数，复杂场景可按 `req.baseUrl` / `req.path` 自定义 |
 
-**待定**：是否在 `XltMiddlewareOptions` 增加 `match: (req) => boolean` 自定义函数。
+`XltMiddlewareOptions` 必须支持函数 matcher：`(req) => boolean`。
 
 ---
 
@@ -78,10 +78,10 @@ Express 适配 **不涉及** `HttpCookies.get` 异步化。
 
 | 优先级 | 项 |
 | --- | --- |
-| P0 | Router 级 vs App 级 middleware 在 README 二选一写死为推荐 |
+| P0 | README 写死推荐 `xltMiddleware + policies`，不要推荐后置 route helper |
 | P1 | `createXltAuthMiddleware` 是否首版就导出 |
 | P1 | `e2e/shared` 场景表抽取时机（Step 8 前或后） |
-| P2 | 是否提供 `express.Router` 工厂 `createXltRouter(xlt)` 封装顺序 |
+| P2 | 是否提供 `express.Router` 工厂 `createXltRouter(xlt)` 来生成策略表或封装 route 注册 |
 | P2 | Redis / JWT 示例是否放在 playground |
 
 ---

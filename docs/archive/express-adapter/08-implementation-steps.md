@@ -11,9 +11,9 @@
 | --- | --- | --- | --- |
 | 1 | 包脚手架 + 迁入 `createExpressContext` | 0.5 天 | `pnpm build` 通过 |
 | 2 | L2 单测 + core 兼容 re-export | 0.5 天 | core + adapter 测试绿 |
-| 3 | `runAuth` + `shouldCheckLogin` + `matchIgnore` | 0.5 天 | 单元测试覆盖分支 |
+| 3 | `resolveRouteAuthMeta` + `shouldCheckLogin` + `runAuth` | 0.5 天 | 单元测试覆盖策略匹配与鉴权分支 |
 | 4 | `xltMiddleware` + `syncExpressAuthState` | 1 天 | 手动 / 单测验证登录流 |
-| 5 | 路由 meta 中间件族 | 0.5 天 | 与 Nest 矩阵用例一致 |
+| 5 | 可选 route helper 中间件族 | 0.5 天 | helper 顺序约束有单测覆盖 |
 | 6 | `xltErrorHandler` | 0.5 天 | 401/403 body 快照 |
 | 7 | nestjs 改依赖 adapter + playground | 1 天 | Nest E2E 仍绿 |
 | 8 | Express E2E + 文档站入口 | 1 天 | 共享场景表通过 |
@@ -55,16 +55,16 @@ pnpm --filter @xlt-token/adapter-express build
 - [ ] 实现 `context.ts`（见 [05-l2-adapter-layer.md](./05-l2-adapter-layer.md)）
 - [ ] 实现 `types.ts`、`sync-state.ts`
 - [ ] 迁移 `packages/core/src/http/express.spec.ts` → adapter 包
-- [ ] core `express.ts` 改为：
+- [ ] core `express.ts` 保留现有实现，并添加 `@deprecated` 注释：
 
 ```ts
 /** @deprecated Import from `@xlt-token/adapter-express` */
-export { createExpressContext, type ExpressLikeRequest, type ExpressLikeResponse } from '@xlt-token/adapter-express';
+export function createExpressContext(...) { ... }
 ```
 
-- [ ] core `package.json` 增加对 adapter 的 **dev** 或 **optional** 依赖（仅 re-export 构建期需要）— 或 re-export 写在 nestjs/compat，core 直接删除导出（breaking，需 minor 说明）
+- [ ] 不要让 core 依赖 adapter。删除 core 导出应放到后续 breaking 版本。
 
-**推荐**：core 保留 `ExpressLikeRequest` 类型 + deprecated re-export，adapter 为 canonical。
+**推荐**：core 保留旧实现作为 deprecated 兼容入口，adapter 复制该实现并成为新 canonical。
 
 ### 验收
 
@@ -82,9 +82,11 @@ export { createExpressContext, type ExpressLikeRequest, type ExpressLikeResponse
 ### 操作清单
 
 - [ ] `auth/should-check-login.ts`
+- [ ] `auth/resolve-route-auth-meta.ts`
 - [ ] `auth/match-ignore.ts`
 - [ ] `auth/run-auth.ts`（见 [06-l3-integration-api.md](./06-l3-integration-api.md)）
 - [ ] vitest：覆盖 `defaultCheck` true/false × ignore/require 四种组合
+- [ ] vitest：覆盖 `policies` 的 string / RegExp / function matcher、method 限制、后声明策略覆盖前声明策略
 - [ ] vitest：`runAuth` 在 mock `checkLogin` throw 时向上抛
 
 ### 验收
@@ -110,22 +112,23 @@ pnpm --filter @xlt-token/adapter-express test
 ### 验收
 
 - 无 token 请求 → `next(NotLoginException)`
-- `ignore: ['/health']` → 直接 `next()`
+- `ignore: ['/health']` 或 `policies: [{ match: '/health', ignore: true }]` → 直接 `next()`
 - 有效 token（MemoryStore + `createXltToken`）→ `req.stpLoginId` 有值
 
 ---
 
-## Step 5：路由 meta 中间件
+## Step 5：可选 route helper 中间件
 
 ### 思路
 
-每个 helper 仅写 `req._xltRouteMeta`，单测断言 meta 合并正确。
+每个 helper 仅写 `req._xltRouteMeta`，单测断言 meta 合并正确。helper 不是推荐主路径，集成测试必须证明 `api.use(xltMiddleware); api.get('/public', ignoreAuth(), handler)` 这种顺序无效，避免文档再次推荐错误模式。
 
 ### 操作清单
 
 - [ ] `ignore-auth.ts`、`require-login.ts`
 - [ ] `check-permission.ts`、`check-role.ts`、`check-safe.ts`
-- [ ] 集成单测：Router 上 `ignoreAuth` + `xltMiddleware` 顺序（见 [06-l3-integration-api.md](./06-l3-integration-api.md#6-推荐挂载顺序)）
+- [ ] 集成单测：`policies` 下 `ignore` / `permission` / `safe` 在鉴权前生效
+- [ ] 反例单测：`api.use(xltMiddleware); api.get('/public', ignoreAuth(), handler)` 不应被当作推荐用法
 
 ### 验收
 
@@ -164,7 +167,7 @@ Nest 与 Express 共用 adapter，避免双实现。
 - [ ] 跑通 `packages/nestjs` 全部 E2E
 - [ ] 新建 `apps/playground/express`：
   - `createXltToken` + MemoryStore
-  - POST `/auth/login`、GET `/me`、GET `/health` + `ignoreAuth`
+  - POST `/auth/login`、GET `/me`、GET `/health` + ignore policy
   - README 说明启动方式
 
 ### 验收

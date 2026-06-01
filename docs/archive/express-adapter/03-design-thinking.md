@@ -9,9 +9,9 @@
 Express 没有内置的「路由守卫」或反射元数据系统。idiomatic 做法是：
 
 - **全局**：`app.use(xltMiddleware(xlt))` — 对标 Nest `APP_GUARD` + `XltTokenGuard`
-- **路由级**：在路由定义前挂 `ignoreAuth()` / `requireLogin()` / `checkPermission()` — 对标 `@XltIgnore()` 等装饰器
+- **路由级**：在 `xltMiddleware` 的策略表里声明 `ignore` / `requireLogin` / `permissions` — 对标 `@XltIgnore()` 等装饰器
 
-思路：**不发明 Express 版装饰器**，用「前置中间件写 meta + 全局中间件读 meta」复刻 Reflector 行为。
+思路：**不发明 Express 版装饰器**，用「请求进入时按 method + path 解析策略」复刻 Reflector 行为。后续路由中间件可以作为高级用法，但首选 API 必须保证策略在鉴权前可见。
 
 ---
 
@@ -47,13 +47,15 @@ req.stpToken = ctx.state.stpToken as string;
 
 ---
 
-## 4. 路由元数据：`req._xltRouteMeta`
+## 4. 路由策略：`RouteAuthPolicy`
 
 Nest 用 `Reflector.getAllAndOverride(XLT_IGNORE_KEY, [handler, class])`。
 
-Express 无 handler 对象，采用 **请求级 meta 对象**：
+Express 无稳定的 handler 反射对象。适配器采用 **策略表**，在 `xltMiddleware` 执行时根据 `req.method` 与 `req.originalUrl` 解析出本次请求的 meta：
 
 ```ts
+type AuthMatcher = string | RegExp | ((req: Request) => boolean);
+
 interface RouteAuthMeta {
   ignore?: boolean;
   requireLogin?: boolean;
@@ -61,44 +63,38 @@ interface RouteAuthMeta {
   roles?: { list: string[]; mode: XltMode };
   safeBusiness?: string;
 }
+
+interface RouteAuthPolicy extends RouteAuthMeta {
+  match: AuthMatcher | AuthMatcher[];
+  methods?: string[];
+}
 ```
 
-各 helper 中间件只负责 **合并写入** `req._xltRouteMeta`；`xltMiddleware` 在 `checkLogin` 前读取并决定 `shouldCheckLogin`。
-
-**中间件顺序约定**（重要）：
-
-```
-app.use(xltMiddleware(xlt));     // 全局，读 meta
-app.get('/x', ignoreAuth(), fn); // 路由级 meta 须在 xlt 之后、handler 之前生效
-```
-
-更稳妥写法：路由级 meta 中间件写在 **该路由链最前面**：
-
-```ts
-app.get('/public', ignoreAuth(), handler);
-// ignoreAuth 先于 handler 执行；xltMiddleware 已在更上层执行过 —— 需约定 xlt 在路由匹配后仍能读到 meta
-```
-
-**推荐模式**：全局 `xltMiddleware` 放在 **路由注册之后不可行**；应使用「先注册路由 meta，再统一鉴权」或「xltMiddleware 内根据 `req.route?.path` + 全局 ignore 表」组合。
-
-**最终采用**（与 Nest 语义一致）：
-
-1. 全局 `xltMiddleware` 对所有请求执行
-2. 路由在注册时把 meta **挂到 layer stack**：`router.get(path, ignoreAuth(), checkPermission(), handler)`
-3. `ignoreAuth` 等必须在 **同一路由** 的 handler 之前；`xltMiddleware` 作为 `app.use` 时，在 Express 4 中先于 router 执行 —— **meta 中间件需把标记写在 `req` 上，且 xlt 在 router 之前无法看到后续 route 的 meta**
-
-**解决办法**：将 `xltMiddleware` 挂载在 **router 级别** 或拆成两层：
-
-- **方案 A（推荐）**：`app.use(xltMiddleware)` + 路由 meta 使用 `req._xltRouteMeta`，且 **每个 Router 上** `router.use(xltMiddleware)`，保证顺序为 `meta → xlt → handler`
-- **方案 B**：仅依赖 `options.ignore` 路径表 + 显式 `requireLogin()` 路由（`defaultCheck: false` 时）
-
-实施文档 [08-implementation-steps.md](./08-implementation-steps.md) 采用 **方案 A 变体**：全局 middleware 在 `next()` 前读取 **已执行过的** 同请求内 meta——通过把 `ignoreAuth` 放在 **子 router** 且 `router.use(xltMiddleware)` 解决顺序问题；根 app 文档示例用 `Router` 说明。
-
-简化 **MVP**：全局 `xltMiddleware` + `options.ignore` 路径白名单；`ignoreAuth()` 设置 `req._xltRouteMeta.ignore = true`，并要求用户将需忽略的路由注册在 **带 `ignoreAuth` 的 Router** 内，且该 Router `use(xltMiddleware)` 在 `ignoreAuth` 之后——详见 [06-l3-integration-api.md](./06-l3-integration-api.md)。
+`xltMiddleware` 先调用 `resolveRouteAuthMeta(req, options.policies)`，再把结果写入 `req._xltRouteMeta`，最后执行 `shouldCheckLogin` 与 `runAuth`。因此 ignore、权限、角色和 safe 都在鉴权前可见。
 
 ---
 
-## 5. `defaultCheck` 黑白名单思路
+## 5. 为什么不把 route helper 作为主方案
+
+Express 中间件按注册顺序执行。如果用户这样写：
+
+```ts
+api.use(xltMiddleware(xlt));
+api.get('/public', ignoreAuth(), handler);
+api.post('/pay', checkPermission('order:pay'), handler);
+```
+
+`xltMiddleware` 会先于 `ignoreAuth()` 和 `checkPermission()` 执行，因此它看不到这些 helper 写入的 `req._xltRouteMeta`。这会导致公开路由无法放行，权限、角色和 safe 也不会生效。
+
+因此首版必须把策略放到 `xltMiddleware` options 中，或提供一个封装顺序的 Router 工厂。普通 helper 中间件只能作为高级用法，且必须在同一条 route chain 中位于 `xltMiddleware` 之前：
+
+```ts
+api.get('/public', ignoreAuth(), xltMiddleware(xlt), handler);
+```
+
+这种写法容易漏挂鉴权中间件，不作为文档推荐路径。
+
+## 6. `defaultCheck` 黑白名单思路
 
 与 `XltTokenGuard.requiresLogin` 相同：
 
@@ -110,14 +106,14 @@ function shouldCheckLogin(req: Request, config: XltTokenConfig): boolean {
 }
 ```
 
-| `defaultCheck` | 路由未标 meta | `ignoreAuth()` | `requireLogin()` |
+| `defaultCheck` | 路由无策略 | `ignore: true` | `requireLogin: true` |
 | --- | --- | --- | --- |
 | `true`（默认） | 校验 | 跳过 | 校验 |
 | `false` | 跳过 | 跳过 | 校验 |
 
 ---
 
-## 6. 异常走 Express 四参数错误中间件
+## 7. 异常走 Express 四参数错误中间件
 
 core 抛 `NotLoginException` 等 **纯 Error 子类**。Express 惯用：
 
@@ -134,18 +130,18 @@ try {
 
 ---
 
-## 7. `createExpressContext` 从 core 迁出的理由
+## 8. `createExpressContext` 从 core 迁出的理由
 
 | 留在 core | 迁到 adapter-express |
 | --- | --- |
 | Nest 可直接 `import { createExpressContext } from '@xlt-token/core'` | 违反「core 零框架依赖」原则 |
 | 实现已是 ExpressLike 结构类型，非真零依赖 | 包边界清晰，符合 [12-multi-framework-architecture.md](../12-multi-framework-architecture.md) |
 
-迁移策略：adapter 为 **canonical**；core **deprecated re-export** 至少一个 minor。见 [11-risks-and-migration.md](./11-risks-and-migration.md)。
+迁移策略：adapter 为 **canonical**；core 保留旧实现并标记 `@deprecated` 至少一个 minor，避免 core 反向依赖 adapter。见 [11-risks-and-migration.md](./11-risks-and-migration.md)。
 
 ---
 
-## 8. 与 NestJS 共用适配器
+## 9. 与 NestJS 共用适配器
 
 `@xlt-token/nestjs` 的 `createNestHttpContext` 应改为：
 

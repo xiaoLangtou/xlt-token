@@ -13,7 +13,6 @@ import { createXltToken } from '@xlt-token/core';
 import {
   xltMiddleware,
   xltErrorHandler,
-  ignoreAuth,
 } from '@xlt-token/adapter-express';
 
 const xlt = createXltToken({
@@ -29,14 +28,19 @@ app.use(express.json());
 app.use(cookieParser());
 
 const api = express.Router();
-api.use(xltMiddleware(xlt, { ignore: ['/health'] }));
+api.use(xltMiddleware(xlt, {
+  policies: [
+    { match: '/api/auth/login', ignore: true, methods: ['POST'] },
+    { match: '/api/health', ignore: true },
+  ],
+}));
 
 api.post('/auth/login', async (req, res) => {
   const token = await xlt.stpLogic.login(req.body.userId);
   res.json({ token });
 });
 
-api.get('/health', ignoreAuth(), (_req, res) => {
+api.get('/health', (_req, res) => {
   res.json({ ok: true });
 });
 
@@ -77,10 +81,14 @@ const xlt = createXltToken({
   config: { defaultCheck: false },
 });
 
-api.use(xltMiddleware(xlt));
+api.use(xltMiddleware(xlt, {
+  policies: [
+    { match: '/api/admin', requireLogin: true },
+  ],
+}));
 
 // 仅显式标记的路由需要登录
-api.get('/admin', requireLogin(), adminHandler);
+api.get('/admin', adminHandler);
 api.get('/public', publicHandler); // 无需 token
 ```
 
@@ -90,21 +98,25 @@ api.get('/public', publicHandler); // 无需 token
 
 ```ts
 import {
-  requireLogin,
-  checkPermission,
-  checkSafe,
+  xltMiddleware,
 } from '@xlt-token/adapter-express';
 import { XltMode } from '@xlt-token/core';
 
-api.post(
-  '/pay',
-  requireLogin(),
-  checkPermission(['order:pay', 'wallet:use'], XltMode.AND),
-  checkSafe('pay'),
-  async (req, res) => {
-    res.json({ ok: true, userId: req.stpLoginId });
-  },
-);
+api.use(xltMiddleware(xlt, {
+  policies: [
+    {
+      match: '/api/pay',
+      methods: ['POST'],
+      requireLogin: true,
+      permissions: { list: ['order:pay', 'wallet:use'], mode: XltMode.AND },
+      safeBusiness: 'pay',
+    },
+  ],
+}));
+
+api.post('/pay', async (req, res) => {
+  res.json({ ok: true, userId: req.stpLoginId });
+});
 ```
 
 需在 `createXltToken` 时注入 `stpInterface`（权限数据源），与 Nest 配置相同。
@@ -116,17 +128,19 @@ api.post(
 中间件只负责「当前请求的登录态」；登出、踢人、Session 等仍用 `xlt.stpLogic`：
 
 ```ts
-api.post('/auth/logout', requireLogin(), async (req, res) => {
+api.post('/auth/logout', async (req, res) => {
   const token = req.stpToken!;
   await xlt.stpLogic.logout(token);
   res.json({ ok: true });
 });
 
-api.post('/admin/kickout/:id', requireLogin(), checkPermission('user:kick'), async (req, res) => {
+api.post('/admin/kickout/:id', async (req, res) => {
   await xlt.stpLogic.kickout(req.params.id);
   res.json({ ok: true });
 });
 ```
+
+`/auth/logout` 与 `/admin/kickout/:id` 的登录和权限要求应写在 `xltMiddleware` 的 `policies` 中。不要在 `api.use(xltMiddleware)` 后面依赖 route helper 写入鉴权 meta。
 
 ---
 
@@ -136,11 +150,15 @@ api.post('/admin/kickout/:id', requireLogin(), checkPermission('user:kick'), asy
 import { createXltAuthMiddleware } from '@xlt-token/adapter-express';
 
 api.use(
-  createXltAuthMiddleware(xlt, {
-    onAuthFail: async (err, req) => {
-      console.warn('auth fail', req.path, err.type);
+  createXltAuthMiddleware(
+    xlt,
+    { policies: [{ match: '/api/profile', requireLogin: true }] },
+    {
+      onAuthFail: async (err, req) => {
+        console.warn('auth fail', req.path, err.type);
+      },
     },
-  }),
+  ),
 );
 ```
 

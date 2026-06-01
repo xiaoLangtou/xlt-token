@@ -9,9 +9,20 @@
 ### 1.1 签名
 
 ```ts
+export type AuthMatcher = string | RegExp | ((req: Request) => boolean);
+
+export interface RouteAuthPolicy extends RouteAuthMeta {
+  /** 匹配 req.originalUrl；字符串规则支持精确匹配和前缀匹配 */
+  match: AuthMatcher | AuthMatcher[];
+  /** 不传表示匹配所有 HTTP method */
+  methods?: string[];
+}
+
 export interface XltMiddlewareOptions {
-  /** 路径白名单：字符串前缀或 RegExp，匹配则跳过鉴权 */
-  ignore?: Array<string | RegExp>;
+  /** 快捷白名单，会被转换为 { match, ignore: true } */
+  ignore?: AuthMatcher[];
+  /** 路由级鉴权策略。xltMiddleware 会在鉴权前解析这些规则。 */
+  policies?: RouteAuthPolicy[];
 }
 
 export function xltMiddleware(
@@ -25,12 +36,12 @@ export function xltMiddleware(
 ```
 请求进入
   → createExpressContext(req, res)
-  → matchIgnore(req.path, options.ignore)? → next()
+  → resolveRouteAuthMeta(req, options) → req._xltRouteMeta
   → shouldCheckLogin(req, xlt.config)? → next()
   → try runAuth(xlt, httpCtx, req)
        → stpLogic.checkLogin (失败 throw)
-       → stpPermLogic 按 meta 校验
-       → stpLogic.checkSafe 按 meta
+       → stpPermLogic 按已解析的 meta 校验
+       → stpLogic.checkSafe 按已解析的 meta 校验
   → syncExpressAuthState(req, httpCtx)
   → next()
   catch → next(err)
@@ -42,8 +53,11 @@ export function xltMiddleware(
 export function xltMiddleware(xlt: XltTokenContext, options: XltMiddlewareOptions = {}) {
   return async (req: Request, res: Response, next: NextFunction) => {
     const httpCtx = createExpressContext(req, res);
+    req._xltRouteMeta = {
+      ...req._xltRouteMeta,
+      ...resolveRouteAuthMeta(req, options),
+    };
 
-    if (matchIgnore(req.path, options.ignore)) return next();
     if (!shouldCheckLogin(req, xlt.config)) return next();
 
     try {
@@ -59,33 +73,56 @@ export function xltMiddleware(xlt: XltTokenContext, options: XltMiddlewareOption
 
 ---
 
-## 2. 路由级 Meta 中间件
+## 2. 路由策略解析
 
-均 **只写** `req._xltRouteMeta`，不调用 `next` 以外的鉴权逻辑。
+策略解析必须发生在 `shouldCheckLogin` 和 `runAuth` 之前。适配器使用 `req.originalUrl` 作为默认匹配目标，避免 `Router` 嵌套时 `req.path` 丢失挂载前缀。
 
-### 2.1 `ignoreAuth()`
+### 2.1 `resolveRouteAuthMeta`
 
 ```ts
-export function ignoreAuth(): RequestHandler {
-  return (req, _res, next) => {
-    req._xltRouteMeta = { ...req._xltRouteMeta, ignore: true };
-    next();
-  };
+export function resolveRouteAuthMeta(
+  req: Request,
+  options: XltMiddlewareOptions = {},
+): RouteAuthMeta {
+  const policies: RouteAuthPolicy[] = [
+    ...(options.ignore ?? []).map((match) => ({ match, ignore: true })),
+    ...(options.policies ?? []),
+  ];
+
+  return policies.reduce<RouteAuthMeta>((meta, policy) => {
+    if (!matchPolicy(req, policy)) return meta;
+    const { match: _match, methods: _methods, ...nextMeta } = policy;
+    return mergeRouteAuthMeta(meta, nextMeta);
+  }, {});
 }
 ```
 
-### 2.2 `requireLogin()`
+当多条策略同时命中时，后面的策略覆盖前面的简单字段，并合并权限/角色字段。这样用户可以先声明 `/api` 默认策略，再声明 `/api/public` 例外。
+
+### 2.2 匹配规则
 
 ```ts
-export function requireLogin(): RequestHandler {
-  return (req, _res, next) => {
-    req._xltRouteMeta = { ...req._xltRouteMeta, requireLogin: true };
-    next();
-  };
+export function matchPolicy(req: Request, policy: RouteAuthPolicy): boolean {
+  if (policy.methods?.length && !policy.methods.includes(req.method.toUpperCase())) {
+    return false;
+  }
+
+  const matchers = Array.isArray(policy.match) ? policy.match : [policy.match];
+  return matchers.some((matcher) => {
+    if (typeof matcher === 'function') return matcher(req);
+    if (typeof matcher === 'string') {
+      return req.originalUrl === matcher || req.originalUrl.startsWith(matcher);
+    }
+    return matcher.test(req.originalUrl);
+  });
 }
 ```
 
-### 2.3 `checkPermission(permission, mode?)`
+---
+
+## 3. 可选路由级 helper
+
+`ignoreAuth()`、`requireLogin()`、`checkPermission()`、`checkRole()`、`checkSafe()` 可以保留为高级用法，但它们不是推荐主路径。它们只写 `req._xltRouteMeta`，因此必须在同一条 route chain 中位于 `xltMiddleware` 之前才有效。
 
 ```ts
 export function checkPermission(
@@ -105,9 +142,22 @@ export function checkPermission(
 
 `checkRole`、`checkSafe` 同理，字段见 `RouteAuthMeta`。
 
+错误用法：
+
+```ts
+api.use(xltMiddleware(xlt));
+api.get('/public', ignoreAuth(), handler); // ignoreAuth 执行太晚，xltMiddleware 看不到
+```
+
+有效但不推荐的高级用法：
+
+```ts
+api.get('/public', ignoreAuth(), xltMiddleware(xlt), handler);
+```
+
 ---
 
-## 3. 编排 `runAuth`
+## 4. 编排 `runAuth`
 
 ```ts
 export async function runAuth(
@@ -144,21 +194,26 @@ export async function runAuth(
 
 ---
 
-## 4. 路径白名单 `matchIgnore`
+## 5. 路径白名单 `matchIgnore`
+
+`matchIgnore` 是 `resolveRouteAuthMeta` 的快捷分支。内部可以复用 `matchPolicy`，对外保留便于单测和高级用户调用。
 
 ```ts
-export function matchIgnore(path: string, rules?: Array<string | RegExp>): boolean {
+export function matchIgnore(req: Request, rules?: AuthMatcher[]): boolean {
   if (!rules?.length) return false;
   return rules.some((rule) => {
-    if (typeof rule === 'string') return path === rule || path.startsWith(rule);
-    return rule.test(path);
+    if (typeof rule === 'function') return rule(req);
+    if (typeof rule === 'string') {
+      return req.originalUrl === rule || req.originalUrl.startsWith(rule);
+    }
+    return rule.test(req.originalUrl);
   });
 }
 ```
 
 ---
 
-## 5. 错误处理 `xltErrorHandler`
+## 6. 错误处理 `xltErrorHandler`
 
 四参数 Express 错误中间件，挂在链末尾：
 
@@ -191,48 +246,39 @@ export function xltErrorHandler(): ErrorRequestHandler {
 
 ---
 
-## 6. 推荐挂载顺序
+## 7. 推荐挂载顺序
 
 ```ts
 const app = express();
 app.use(express.json());
 app.use(cookieParser());
 
-// 业务路由（带 meta）
 const api = express.Router();
-api.get('/public', ignoreAuth(), publicHandler);
+api.use(xltMiddleware(xlt, {
+  policies: [
+    { match: '/api/public', ignore: true },
+    { match: '/api/admin', permissions: { list: ['admin:*'], mode: XltMode.AND } },
+  ],
+}));
+
+api.get('/public', publicHandler);
 api.get('/me', meHandler);
-api.delete('/users/:id', requireLogin(), checkPermission('user:delete'), deleteHandler);
+api.delete('/admin/users/:id', deleteHandler);
 
 app.use('/api', api);
-
-// 鉴权：对 /api 下请求生效（Router 级更清晰）
-app.use('/api', xltMiddleware(xlt, { ignore: [] }));
-
 app.use(xltErrorHandler());
 ```
 
-**注意**：Express 中间件顺序为注册顺序。若 `xltMiddleware` 在 router **之前** 注册，则 **看不到** router 内 `ignoreAuth` 写入的 meta。
-
-**推荐**：
-
-```ts
-const api = express.Router();
-api.use(xltMiddleware(xlt)); // Router 内第一层
-api.get('/public', ignoreAuth(), handler);
-api.get('/me', handler);
-app.use('/api', api);
-```
-
-文档与 playground 采用 **Router 级 xltMiddleware** 作为默认最佳实践。
+文档与 playground 采用 **Router 级 `xltMiddleware` + `policies` 策略表** 作为默认最佳实践。策略中的 `match` 使用挂载后的 `req.originalUrl`，因此示例中包含 `/api` 前缀。
 
 ---
 
-## 7. 自定义鉴权中间件（对标 `XltAbstractLoginGuard`）
+## 8. 自定义鉴权中间件（对标 `XltAbstractLoginGuard`）
 
 ```ts
 export function createXltAuthMiddleware(
   xlt: XltTokenContext,
+  options: XltMiddlewareOptions = {},
   hooks?: {
     onAuthSuccess?: (result: AuthResult, req: Request) => void | Promise<void>;
     onAuthFail?: (err: NotLoginException, req: Request) => void | Promise<void>;
@@ -240,6 +286,10 @@ export function createXltAuthMiddleware(
 ): RequestHandler {
   return async (req, res, next) => {
     const httpCtx = createExpressContext(req, res);
+    req._xltRouteMeta = {
+      ...req._xltRouteMeta,
+      ...resolveRouteAuthMeta(req, options),
+    };
     try {
       const result = await runAuth(xlt, httpCtx, req);
       syncExpressAuthState(req, httpCtx);

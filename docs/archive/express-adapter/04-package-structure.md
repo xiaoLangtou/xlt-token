@@ -65,6 +65,7 @@ packages/adapter-express/
     ├── sync-state.ts            # ctx.state → req
     ├── auth/
     │   ├── should-check-login.ts
+    │   ├── resolve-route-auth-meta.ts
     │   ├── run-auth.ts
     │   └── match-ignore.ts
     ├── middleware/
@@ -103,10 +104,11 @@ export { xltErrorHandler } from './error/xlt-error-handler.js';
 // 编排（高级用法 / 自定义中间件）
 export { runAuth } from './auth/run-auth.js';
 export { shouldCheckLogin } from './auth/should-check-login.js';
+export { resolveRouteAuthMeta } from './auth/resolve-route-auth-meta.js';
 export { syncExpressAuthState } from './sync-state.js';
 
 // 类型
-export type { RouteAuthMeta } from './types.js';
+export type { AuthMatcher, RouteAuthMeta, RouteAuthPolicy } from './types.js';
 ```
 
 ---
@@ -115,18 +117,7 @@ export type { RouteAuthMeta } from './types.js';
 
 `pnpm-workspace.yaml` 已包含 `packages/*`，新建目录即可。
 
-`turbo.json` 增加：
-
-```json
-{
-  "adapter-express#build": {
-    "dependsOn": ["@xlt-token/core#build"]
-  },
-  "adapter-express#test": {
-    "dependsOn": ["@xlt-token/core#build"]
-  }
-}
-```
+当前根 `turbo.json` 已定义通用 `build`、`test`、`test:cov` 任务。新包只需要在自己的 `package.json` 中提供同名 scripts，Turbo 会通过 workspace 依赖图让 `@xlt-token/adapter-express` 的任务依赖 `@xlt-token/core` 的构建产物。
 
 ---
 
