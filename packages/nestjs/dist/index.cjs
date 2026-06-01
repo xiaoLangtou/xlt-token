@@ -403,8 +403,31 @@ var NotSafeException = class extends _nestjs_common.ForbiddenException {
 
 //#endregion
 //#region src/http/nest-bridge.ts
+/**
+* Fastify reply 的写回 API 与 Express response 不同：
+* - 写 header：Express 用 `res.setHeader(n, v)`，Fastify 用 `reply.header(n, v)`
+* - 写 cookie：Express 用 `res.cookie(n, v, o)`，Fastify 用 `reply.setCookie(n, v, o)`
+*
+* 这里把任意一种 response 归一化成 core 期望的 {@link ExpressLikeResponse} 形态，
+* 让核心层无需感知底层 HTTP 平台。读取侧（headers/cookies/query）两个平台形态一致，
+* 直接复用 core 的 createExpressContext。
+*/
+function normalizeResponse(res) {
+	return {
+		setHeader(name, value) {
+			if (typeof res?.setHeader === "function") res.setHeader(name, value);
+			else if (typeof res?.header === "function") res.header(name, value);
+			else throw new Error("xlt-token: 当前 response 不支持写入 header（既无 setHeader 也无 header 方法）");
+		},
+		cookie(name, value, options) {
+			if (typeof res?.cookie === "function") res.cookie(name, value, options);
+			else if (typeof res?.setCookie === "function") res.setCookie(name, value, options);
+			else throw new Error("xlt-token: 当前 response 不支持写入 cookie。若使用 Fastify，请先注册 @fastify/cookie 插件。");
+		}
+	};
+}
 function createNestHttpContext(req, res) {
-	return (0, _xlt_token_core.createExpressContext)(req, res);
+	return (0, _xlt_token_core.createExpressContext)(req, normalizeResponse(res));
 }
 function rethrowCoreAuthException(error) {
 	if (error instanceof _xlt_token_core.NotLoginException) throw new NotLoginException(error.type, error.token);
