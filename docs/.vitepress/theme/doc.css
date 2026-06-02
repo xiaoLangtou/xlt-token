@@ -341,6 +341,15 @@
   max-width: var(--x-read);
 }
 
+.VPDoc .content:has(._xlt-token_reference_changelog),
+.VPDoc .content-container:has(._xlt-token_reference_changelog) {
+  max-width: 1120px !important;
+}
+
+.vp-doc._xlt-token_reference_changelog {
+  max-width: none;
+}
+
 /* ── Sidebar ──
    勿用 padding 简写，否则会破坏大屏下 VitePress 的 left 对齐计算 */
 .VPSidebar {

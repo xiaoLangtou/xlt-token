@@ -23,7 +23,7 @@
 | | [守卫与装饰器](/adapters/nestjs/guards-and-decorators) | `XltTokenGuard`、`@LoginId`、`@XltIgnore` |
 | **1.1.0** | [多端登录](/core/multi-device) · [二级认证](/core/secondary-auth) · [JWT](/core/jwt-strategy) · [Hooks](/core/hooks-and-observability) | 新特性专题 |
 | **进阶** | [异常处理](/core/exceptions) · [场景手册](/core/recipes) | 实战与排错 |
-| **参考** | [源码参考](/reference/src-reference) | 单文件速查 |
+| **参考** | [更新日志](/reference/changelog) · [源码参考](/reference/src-reference) | 发布说明与单文件速查 |
 
 ## 包结构与 import
 

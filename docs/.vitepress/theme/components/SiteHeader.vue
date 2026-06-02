@@ -33,7 +33,12 @@ const navItems = [
   {
     text: '参考',
     link: '/reference/src-reference',
-    match: ['/reference/'],
+    match: ['/reference/src-reference'],
+  },
+  {
+    text: 'Release',
+    link: '/reference/changelog',
+    match: ['/reference/changelog'],
   },
 ]
 
@@ -68,9 +73,9 @@ function toggleTheme() {
 
       <div class="xlt-site-header__tools">
         <details class="xlt-site-header__version">
-          <summary>v1.0.0-rc.2</summary>
+          <summary>v1.0.0-rc.3</summary>
           <div class="xlt-site-header__version-menu">
-            <a href="https://github.com/xiaoLangtou/xlt-token/blob/master/CHANGELOG.md" target="_blank" rel="noreferrer">更新日志</a>
+            <a :href="withBase('/reference/changelog')">更新日志</a>
             <a href="https://github.com/xiaoLangtou/xlt-token/releases" target="_blank" rel="noreferrer">GitHub Releases</a>
             <a href="https://www.npmjs.com/package/xlt-token" target="_blank" rel="noreferrer">npm</a>
           </div>

@@ -97,9 +97,9 @@ export default defineConfig({
 
     nav: [
       {
-        text: 'v1.0.0-rc.2',
+        text: 'v1.0.0-rc.3',
         items: [
-          { text: '更新日志', link: 'https://github.com/xiaoLangtou/xlt-token/blob/master/CHANGELOG.md' },
+          { text: '更新日志', link: '/reference/changelog' },
           { text: 'GitHub Releases', link: 'https://github.com/xiaoLangtou/xlt-token/releases' },
           { text: 'npm', link: 'https://www.npmjs.com/package/xlt-token' },
         ],
@@ -189,6 +189,7 @@ export default defineConfig({
         {
           text: '参考',
           items: [
+            { text: '更新日志', link: '/reference/changelog' },
             { text: '源码参考', link: '/reference/src-reference' },
           ],
         },
@@ -267,6 +268,7 @@ export default defineConfig({
     '15-secondary-auth.md': 'core/secondary-auth.md',
     '16-jwt-strategy.md': 'core/jwt-strategy.md',
     '17-hooks-and-observability.md': 'core/hooks-and-observability.md',
+    'CHANGELOG.md': 'reference/changelog.md',
     'SRC-REFERENCE.md': 'reference/src-reference.md',
   },
 })
