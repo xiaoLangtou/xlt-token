@@ -8,15 +8,19 @@
 
 | 分区 | 文档 | 适合场景 |
 | --- | --- | --- |
-| **入门** | [快速开始](/guide/getting-started) | 第一次接入 NestJS，5 分钟跑通登录/登出 |
+| **指南** | [选择接入方式](/guide/getting-started) | 在 Core、NestJS 和后续框架适配器之间选择入口 |
 | | [架构设计](/guide/architecture) | 了解 monorepo 分层、HttpContext、存储键 |
-| | [配置参考](/guide/configuration) | 查阅 `XltTokenConfig`、`forRoot` / `forRootAsync` |
 | | [迁移指南](/guide/migration-2-0) | 从旧版单包升级、包职责说明 |
-| **核心** | [核心 API](/core/core-api) | `StpLogic` / `StpUtil` 所有方法 |
+| **Core** | [Core 快速开始](/core/getting-started) | 框架无关地创建 `createXltToken` 实例 |
+| | [配置参考](/core/configuration) | 查阅 `XltTokenConfig` 与 `createXltToken` 选项 |
+| | [核心 API](/core/core-api) | `StpLogic` / `StpUtil` 所有方法 |
 | | [权限与会话](/core/permissions-and-session) | `StpInterface`、`XltSession`、权限装饰器语义 |
 | | [存储层](/core/storage) | `MemoryStore` / `RedisStore` / 自定义 Store |
 | | [Token 策略](/core/token-strategy) | UUID / JWT 策略与自定义 |
-| **NestJS** | [守卫与装饰器](/core/guards-and-decorators) | `XltTokenGuard`、`@LoginId`、`@XltIgnore` |
+| **适配器** | [适配器总览](/adapters) | 查看可用框架适配器 |
+| **NestJS** | [快速开始](/adapters/nestjs/getting-started) | 第一次接入 NestJS，5 分钟跑通登录/登出 |
+| | [模块配置](/adapters/nestjs/module-config) | `XltTokenModule.forRoot` / `forRootAsync` |
+| | [守卫与装饰器](/adapters/nestjs/guards-and-decorators) | `XltTokenGuard`、`@LoginId`、`@XltIgnore` |
 | **1.1.0** | [多端登录](/core/multi-device) · [二级认证](/core/secondary-auth) · [JWT](/core/jwt-strategy) · [Hooks](/core/hooks-and-observability) | 新特性专题 |
 | **进阶** | [异常处理](/core/exceptions) · [场景手册](/core/recipes) | 实战与排错 |
 | **参考** | [源码参考](/reference/src-reference) | 单文件速查 |

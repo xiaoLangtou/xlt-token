@@ -198,4 +198,4 @@ import { XLT_TOKEN_HOOKS } from '@xlt-token/core';
 
 - 多端 API 详解 → [多端登录](/core/multi-device)
 - Store `keys()` 实现 → [存储层](/core/storage)
-- 模块注册选项 → [配置参考](/guide/configuration)
+- 模块注册选项 → [NestJS 模块配置](/adapters/nestjs/module-config)

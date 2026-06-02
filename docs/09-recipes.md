@@ -127,7 +127,7 @@ async kickout(@Param('userId') userId: string) {
 
 **方案**：继承 `XltAbstractLoginGuard`，在 `onAuthSuccess` 里从 Redis 加载用户并挂到 `request.user`。
 
-完整示例见 [05-guards-and-decorators · 完整示例](/core/guards-and-decorators#完整示例白名单--redis-加载用户)。
+完整示例见 [守卫与装饰器 · 完整示例](/adapters/nestjs/guards-and-decorators#完整示例白名单--redis-加载用户)。
 
 关键思路：
 

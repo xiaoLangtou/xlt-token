@@ -96,9 +96,6 @@ export default defineConfig({
     },
 
     nav: [
-      { text: '指南', link: '/guide/getting-started', activeMatch: '/guide/' },
-      { text: '核心', link: '/core/core-api', activeMatch: '/core/' },
-      { text: '参考', link: '/reference/src-reference', activeMatch: '/reference/' },
       {
         text: 'v1.0.0-rc.2',
         items: [
@@ -112,11 +109,10 @@ export default defineConfig({
     sidebar: {
       '/guide/': [
         {
-          text: '入门',
+          text: '指南',
           items: [
-            { text: '快速开始', link: '/guide/getting-started' },
+            { text: '选择接入方式', link: '/guide/getting-started' },
             { text: '架构设计', link: '/guide/architecture' },
-            { text: '配置参考', link: '/guide/configuration' },
             { text: '2.0 迁移指南', link: '/guide/migration-2-0' },
           ],
         },
@@ -126,17 +122,12 @@ export default defineConfig({
           text: '核心（@xlt-token/core）',
           collapsed: false,
           items: [
+            { text: '快速开始', link: '/core/getting-started' },
+            { text: '配置参考', link: '/core/configuration' },
             { text: '核心 API', link: '/core/core-api' },
             { text: '权限与会话', link: '/core/permissions-and-session' },
             { text: '存储层', link: '/core/storage' },
             { text: 'Token 策略', link: '/core/token-strategy' },
-          ],
-        },
-        {
-          text: 'NestJS 集成（@xlt-token/nestjs）',
-          collapsed: false,
-          items: [
-            { text: '守卫与装饰器', link: '/core/guards-and-decorators' },
           ],
         },
         {
@@ -153,6 +144,42 @@ export default defineConfig({
           text: '进阶',
           collapsed: false,
           items: [
+            { text: '异常处理', link: '/core/exceptions' },
+            { text: '场景手册', link: '/core/recipes' },
+          ],
+        },
+      ],
+      '/adapters/': [
+        {
+          text: '适配器总览',
+          collapsed: false,
+          items: [
+            { text: '总览', link: '/adapters' },
+          ],
+        },
+        {
+          text: 'NestJS',
+          collapsed: false,
+          items: [
+            { text: '快速开始', link: '/adapters/nestjs/getting-started' },
+            { text: '模块配置', link: '/adapters/nestjs/module-config' },
+            { text: '守卫与装饰器', link: '/adapters/nestjs/guards-and-decorators' },
+          ],
+        },
+        {
+          text: 'Express（规划中）',
+          collapsed: false,
+          items: [
+            { text: '路线说明', link: '/adapters/express' },
+          ],
+        },
+        {
+          text: 'Core 相关能力',
+          collapsed: false,
+          items: [
+            { text: '权限与会话', link: '/core/permissions-and-session' },
+            { text: 'Redis 存储', link: '/core/storage' },
+            { text: 'JWT 策略', link: '/core/jwt-strategy' },
             { text: '异常处理', link: '/core/exceptions' },
             { text: '场景手册', link: '/core/recipes' },
           ],
@@ -223,9 +250,14 @@ export default defineConfig({
     'migration-2.0.md': 'guide/migration-2-0.md',
     '01-getting-started.md': 'guide/getting-started.md',
     '02-architecture.md': 'guide/architecture.md',
-    '03-configuration.md': 'guide/configuration.md',
+    '03-configuration.md': 'core/configuration.md',
+    '10-core-getting-started.md': 'core/getting-started.md',
+    '10-nestjs-getting-started.md': 'adapters/nestjs/getting-started.md',
+    '12-nestjs-module-config.md': 'adapters/nestjs/module-config.md',
+    '13-adapters-overview.md': 'adapters/index.md',
+    '18-express-adapter.md': 'adapters/express.md',
     '04-core-api.md': 'core/core-api.md',
-    '05-guards-and-decorators.md': 'core/guards-and-decorators.md',
+    '05-guards-and-decorators.md': 'adapters/nestjs/guards-and-decorators.md',
     '06-storage.md': 'core/storage.md',
     '07-token-strategy.md': 'core/token-strategy.md',
     '08-exceptions.md': 'core/exceptions.md',

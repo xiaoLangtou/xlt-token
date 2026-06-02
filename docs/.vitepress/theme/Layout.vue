@@ -4,6 +4,7 @@ import { useData } from 'vitepress';
 import { computed } from 'vue';
 import HomePage from './Home.vue';
 import SupportProjectModal from './components/SupportProjectModal.vue';
+import SiteHeader from './components/SiteHeader.vue';
 
 const { Layout: DefaultLayout } = DefaultTheme
 const { frontmatter, page } = useData()
@@ -12,10 +13,11 @@ const isHome = computed(
   () => frontmatter.value.layout === 'home' || page.value.relativePath === 'index.md',
 )
 
-const isDoc = computed(() => !isHome.value && frontmatter.value.layout !== false)
+const hasHeader = computed(() => frontmatter.value.layout !== false)
 </script>
 
 <template>
+  <SiteHeader v-if="hasHeader" :show-tabs="!isHome" />
   <DefaultLayout>
     <template v-if="isHome" #home-hero-before>
       <HomePage />

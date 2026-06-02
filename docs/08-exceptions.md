@@ -184,5 +184,5 @@ A：顶号只是把 `tokenKey` 的值 `update` 成 `'BE_REPLACED'`，**保留 TT
 
 ## 下一步
 
-- 搭配 Guard 使用 → [05-guards-and-decorators](/core/guards-and-decorators)
+- 搭配 Guard 使用 → [守卫与装饰器](/adapters/nestjs/guards-and-decorators)
 - 主动踢人 / 查所有在线用户 → [09-recipes](/core/recipes)

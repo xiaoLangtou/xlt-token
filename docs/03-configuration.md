@@ -1,8 +1,8 @@
-# 03 · 配置参考
+# Core 配置参考
 
-> 包：`XltTokenConfig` 定义于 `@xlt-token/core`；`XltTokenModule.forRoot` 注册于 `@xlt-token/nestjs`。
+> 包：`XltTokenConfig` 定义于 `@xlt-token/core`。
 
-`XltTokenConfig` 全量字段 + `XltTokenModule` 注册选项 + 同步/异步两种写法。
+本页说明 `@xlt-token/core` 的配置字段和 `createXltToken` 写法。NestJS 的 `XltTokenModule.forRoot` / `forRootAsync` 见 [NestJS 模块配置](/adapters/nestjs/module-config)。
 
 ## `XltTokenConfig` 全量字段
 
@@ -35,7 +35,7 @@
 import { DEFAULT_XLT_TOKEN_CONFIG } from '@xlt-token/core';
 ```
 
-你的 `forRoot({ config })` 会与 `DEFAULT_XLT_TOKEN_CONFIG` **浅合并**，未指定的字段继承默认值。
+传入 `createXltToken({ config })` 或 `XltTokenModule.forRoot({ config })` 的配置会与 `DEFAULT_XLT_TOKEN_CONFIG` **浅合并**，未指定的字段继承默认值。
 
 ## 典型配置模板
 
@@ -84,106 +84,29 @@ import { DEFAULT_XLT_TOKEN_CONFIG } from '@xlt-token/core';
 }
 ```
 
-## `XltTokenModule.forRoot(options)` 选项
+## `createXltToken(options)` 选项
 
 | 选项 | 类型 | 默认 | 说明 |
 | --- | --- | --- | --- |
 | `config` | `Partial<XltTokenConfig>` | `DEFAULT_XLT_TOKEN_CONFIG` | 上表字段 |
-| `store` | `{ useClass }` \| `{ useValue }` | `MemoryStore` | 存储实现 |
-| `strategy` | `{ useClass }` | `UuidStrategy` | token 策略 |
-| `isGlobal` | `boolean` | `false` | 是否全局模块（通常 `true`） |
-| `stpInterface` | `class` | 内置 stub | 权限/角色数据源，见 [权限与会话](/core/permissions-and-session) |
+| `store` | `XltTokenStore` | `MemoryStore` | 存储实现 |
+| `strategy` | `TokenStrategy` | `UuidStrategy` | token 生成策略 |
+| `stpInterface` | `StpInterface` | 内置 stub | 权限/角色数据源，见 [权限与会话](/core/permissions-and-session) |
 | `hooks` | `XltHooks` | — | 登录/踢人等生命周期钩子，见 [Hooks 与观测性](/core/hooks-and-observability) |
-| `providers` | `Provider[]` | `[]` | 追加 Provider，典型用法是提供 `XLT_REDIS_CLIENT` |
 
-同步写法：
-
-```ts twoslash
-XltTokenModule.forRoot({
-  isGlobal: true,
-  config: { timeout: 3600 },
-  store: { useClass: RedisStore },
-  providers: [
-    {
-      provide: XLT_REDIS_CLIENT,
-      useFactory: async () => {
-        const client = createClient({ url: 'redis://localhost:6379' });
-        await client.connect();
-        return client;
-      },
-    },
-  ],
-})
-```
-
-## `XltTokenModule.forRootAsync(options)` 选项
-
-在 `config` 依赖其他模块（典型：`ConfigModule`）时使用。
+示例：
 
 ```ts twoslash
-export interface XltTokenModuleAsyncOptions {
-  imports?: ModuleMetadata['imports'];
-  useFactory: (...args: any[]) => Promise<XltTokenModuleOptions> | XltTokenModuleOptions;
-  inject?: any[];
-  store?: { useClass } | { useValue };
-  strategy?: { useClass };
-  isGlobal?: boolean;
-  providers?: Provider[];
-}
-```
+import { createXltToken, MemoryStore } from '@xlt-token/core';
 
-典型示例：从 `@nestjs/config` 读取配置
-
-```ts twoslash
-import { ConfigModule, ConfigService } from '@nestjs/config';
-
-XltTokenModule.forRootAsync({
-  isGlobal: true,
-  imports: [ConfigModule],
-  inject: [ConfigService],
-  useFactory: (cfg: ConfigService) => ({
-    config: {
-      tokenName: cfg.get<string>('TOKEN_NAME', 'authorization'),
-      timeout: cfg.get<number>('TOKEN_TTL', 2592000),
-      tokenStyle: cfg.get<'random-32'>('TOKEN_STYLE', 'random-32'),
-    },
-  }),
-  store: { useClass: RedisStore },
-  providers: [
-    {
-      provide: XLT_REDIS_CLIENT,
-      inject: [ConfigService],
-      useFactory: async (cfg: ConfigService) => {
-        const client = createClient({ url: cfg.get<string>('REDIS_URL') });
-        await client.connect();
-        return client;
-      },
-    },
-  ],
-})
-```
-
-## 导出的 DI Token 与 Provider
-
-在 `AppModule` 中可通过以下 DI Token 手动注入：
-
-```ts twoslash
-import {
-  XLT_TOKEN_CONFIG,
-  XLT_TOKEN_STORE,
-  XLT_TOKEN_STRATEGY,
-  XLT_REDIS_CLIENT,
-  StpLogic,
-} from '@xlt-token/nestjs';
-
-@Injectable()
-class SomeService {
-  constructor(
-    @Inject(XLT_TOKEN_CONFIG) private config: XltTokenConfig,
-    @Inject(XLT_TOKEN_STORE) private store: XltTokenStore,
-    private stpLogic: StpLogic,
-  ) {}
-}
+const xlt = createXltToken({
+  config: {
+    tokenName: 'authorization',
+    timeout: 3600,
+    tokenStyle: 'random-32',
+  },
+  store: new MemoryStore(),
+});
 ```
 
 ## 常见误配与提醒
@@ -197,5 +120,6 @@ class SomeService {
 ## 下一步
 
 - 配置对应的运行时效果在哪看？→ [架构设计 · 三类存储键](/guide/architecture#三类存储键)
-- 我要切换 Store → [06-storage](/core/storage)
-- 我要换 token 格式 → [07-token-strategy](/core/token-strategy)
+- NestJS 模块注册 → [NestJS 模块配置](/adapters/nestjs/module-config)
+- 我要切换 Store → [存储层](/core/storage)
+- 我要换 token 格式 → [Token 策略](/core/token-strategy)

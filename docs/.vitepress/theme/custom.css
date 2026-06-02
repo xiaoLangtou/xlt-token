@@ -177,12 +177,37 @@
 
 html {
   scroll-behavior: smooth;
+  scrollbar-color: color-mix(in srgb, var(--x-text-3) 55%, transparent) transparent;
+  scrollbar-width: thin;
 }
 
 body {
   -webkit-font-smoothing: antialiased;
   background: var(--x-bg-gradient);
   background-attachment: fixed;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  border: 3px solid transparent;
+  border-radius: 999px;
+  background:
+    linear-gradient(color-mix(in srgb, var(--x-text-3) 50%, transparent), color-mix(in srgb, var(--x-text-3) 50%, transparent))
+    padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background:
+    linear-gradient(color-mix(in srgb, var(--x-brand) 60%, var(--x-text-3)), color-mix(in srgb, var(--x-brand) 60%, var(--x-text-3)))
+    padding-box;
 }
 
 /* ── Global canvas gradient ── */
@@ -197,13 +222,17 @@ body {
 
 /* ── Nav ── */
 .VPNav {
-  backdrop-filter: blur(14px) saturate(1.15);
-  background: color-mix(in srgb, var(--x-bg) 72%, transparent) !important;
-  border-bottom: 1px solid var(--x-border-soft) !important;
+  position: fixed !important;
+  width: 1px !important;
+  height: 1px !important;
+  overflow: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
 }
 
-.dark .VPNav {
-  background: color-mix(in srgb, var(--x-bg) 75%, transparent) !important;
+.VPNav .DocSearch-Button,
+.VPNav .VPSwitchAppearance {
+  pointer-events: auto !important;
 }
 
 .VPNavBarTitle .title {
@@ -260,7 +289,7 @@ body {
 /* ── Hero background ── */
 .xlt-hero {
   position: relative;
-  padding: calc(var(--x-nav) + 48px) 24px 88px;
+  padding: 108px 24px 88px;
   border-bottom: 1px solid var(--x-border-soft);
   overflow: hidden;
 }

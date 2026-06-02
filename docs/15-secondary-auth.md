@@ -185,6 +185,6 @@ await userService.resetPassword(userId, newPassword);
 
 ## 下一步
 
-- Guard 与装饰器总览 → [05-guards-and-decorators](/core/guards-and-decorators)
+- Guard 与装饰器总览 → [守卫与装饰器](/adapters/nestjs/guards-and-decorators)
 - 异常处理（含 403） → [08-exceptions](/core/exceptions)
 - JWT 模式下 safe 键仍使用完整 token 字符串 → [16-jwt-strategy](/core/jwt-strategy)

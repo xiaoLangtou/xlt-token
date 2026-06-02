@@ -8,11 +8,17 @@ hero:
   tagline: 核心 @xlt-token/core 零框架依赖；NestJS 适配一行接入。覆盖登录态、权限、多端会话、JWT 与观测性。
   actions:
     - theme: brand
-      text: 快速开始
+      text: 开始使用
       link: /guide/getting-started
     - theme: alt
-      text: 架构设计
-      link: /guide/architecture
+      text: NestJS 在线 Demo
+      link: https://cloudstudio.net/a/35877741980655616?channel=share&sharetype=Markdown
+    - theme: alt
+      text: Core 文档
+      link: /core/getting-started
+    - theme: alt
+      text: NestJS 文档
+      link: /adapters/nestjs/getting-started
     - theme: alt
       text: GitHub
       link: https://github.com/xiaoLangtou/xlt-token

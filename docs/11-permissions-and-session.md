@@ -313,5 +313,5 @@ XltTokenModule.forRoot({
 ## 六、下一步
 
 - 异常处理与全局过滤器 → [08 · 异常](/core/exceptions)
-- 守卫钩子细节 → [05 · 守卫与装饰器](/core/guards-and-decorators)
+- 守卫钩子细节 → [守卫与装饰器](/adapters/nestjs/guards-and-decorators)
 - 完整源码参考 → [SRC-REFERENCE](/reference/src-reference)

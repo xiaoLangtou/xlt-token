@@ -215,4 +215,4 @@ kickoutByDevice('1001', 'pc')
 
 - 在线人数 / 在线列表 API → [17-hooks-and-observability](/core/hooks-and-observability)
 - 管理员踢人场景代码 → [09-recipes · 管理员踢人](/core/recipes#6-管理员踢人下线)
-- 配置字段完整列表 → [03-configuration](/guide/configuration)
+- 配置字段完整列表 → [Core 配置参考](/core/configuration)

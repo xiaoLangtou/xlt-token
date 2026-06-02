@@ -206,7 +206,7 @@ StpLogic.logout(token)
 
 ## 下一步
 
-- 想看 Guard 如何调 `checkLogin`？→ [守卫与装饰器](/core/guards-and-decorators)
+- 想看 Guard 如何调 `checkLogin`？→ [守卫与装饰器](/adapters/nestjs/guards-and-decorators)
 - 多端登录与 device API → [多端登录](/core/multi-device)
 - 二级认证与临时 Token → [二级认证](/core/secondary-auth)
 - JWT 模式 → [JWT 策略](/core/jwt-strategy)
