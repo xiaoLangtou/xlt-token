@@ -160,6 +160,34 @@ importers:
         specifier: ^2.0.0
         version: 2.1.9(@types/node@20.19.39)(@vitest/ui@2.1.9)
 
+  packages/express:
+    dependencies:
+      '@xlt-token/core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      '@types/express':
+        specifier: ^4.17.21
+        version: 4.17.25
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.39
+      '@vitest/coverage-v8':
+        specifier: ^2.1.9
+        version: 2.1.9(vitest@2.1.9)
+      express:
+        specifier: ^4.22.0
+        version: 4.22.1
+      tsdown:
+        specifier: ^0.20.0
+        version: 0.20.3(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.1.0
+        version: 5.9.3
+      vitest:
+        specifier: ^2.0.0
+        version: 2.1.9(@types/node@20.19.39)(@vitest/ui@2.1.9)
+
   packages/nestjs:
     dependencies:
       '@xlt-token/core':
