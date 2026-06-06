@@ -1,6 +1,6 @@
 {
   "name": "@xlt-token/express",
-  "version": "1.0.0-rc.4",
+  "version": "1.0.0",
   "description": "Express middleware adapter for xlt-token",
   "keywords": [
     "express",

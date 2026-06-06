@@ -204,7 +204,7 @@ const stats = [
           <h2>加入社区</h2>
           <p>扫码加入交流群，获取更新通知与用法答疑。</p>
         </div>
-        <img :src="withBase('/img.png')" alt="交流群二维码" width="112" height="112" loading="lazy" />
+        <img :src="withBase('/img.png')" alt="交流群二维码" width="300" height="300" loading="lazy" />
       </div>
     </section>
   </div>

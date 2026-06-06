@@ -1,9 +1,9 @@
 # xlt-token 源码参考文档
 
-> 版本：`1.0.0-rc.2`（monorepo）
-> 包：`@xlt-token/core` · `@xlt-token/nestjs`
-> 简介：受 Sa-Token 启发的 Token 鉴权库，核心框架无关，NestJS 一行接入。
-> 源码路径：`packages/core/` · `packages/nestjs/`
+> 版本：`1.0.0`（monorepo）
+> 包：`@xlt-token/core` · `@xlt-token/nestjs` · `@xlt-token/express`
+> 简介：受 Sa-Token 启发的 Token 鉴权库，核心框架无关，NestJS / Express 一包接入。
+> 源码路径：`packages/core/` · `packages/nestjs/` · `packages/express/`
 
 > **提示**：日常查阅请优先使用分区文档（[指南](/guide/getting-started) / [核心](/core/core-api)）。本文档为单文件速查，部分路径可能滞后于 monorepo 演进。
 

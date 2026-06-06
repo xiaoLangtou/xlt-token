@@ -98,7 +98,7 @@ export default defineConfig({
 
     nav: [
       {
-        text: 'v1.0.0-rc.3',
+        text: 'v1.0.0',
         items: [
           { text: '更新日志', link: '/reference/changelog' },
           { text: 'GitHub Releases', link: 'https://github.com/xiaoLangtou/xlt-token/releases' },
@@ -114,7 +114,7 @@ export default defineConfig({
           items: [
             { text: '选择接入方式', link: '/guide/getting-started' },
             { text: '架构设计', link: '/guide/architecture' },
-            { text: '2.0 迁移指南', link: '/guide/migration-2-0' },
+            { text: '1.0 迁移指南', link: '/guide/migration-2-0' },
           ],
         },
       ],

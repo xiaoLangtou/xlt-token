@@ -1,6 +1,6 @@
 # xlt-token 迁移指南
 
-> 适用版本：`1.0.0-rc.2`（monorepo：`@xlt-token/core` + `@xlt-token/nestjs`）
+> 适用版本：`1.0.0`（monorepo：`@xlt-token/core` + `@xlt-token/nestjs` + `@xlt-token/express`）
 
 ## 从旧版 `xlt-token` 单包迁移
 

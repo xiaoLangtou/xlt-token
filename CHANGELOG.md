@@ -2,6 +2,32 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.0] - 2026-06-06
+
+> xlt-token 首个正式大版本发布。`@xlt-token/core`、`@xlt-token/nestjs`、`@xlt-token/express` 统一进入 v1.0.0，适配器包现在可作为业务侧唯一安装入口。
+
+### Added
+
+- **Express 官方适配器**：发布 `@xlt-token/express`，提供 `xltTokenMiddleware()`、`requireLogin()`、`checkPermission()`、`checkRole()`、`checkSafe()` 与策略覆盖能力
+- **Express E2E 覆盖**：补齐中间件、路由策略、白名单、权限、角色、二级认证、错误处理、Hooks 与请求辅助方法的端到端测试
+- **Express 文档 Twoslash**：`docs/18-express-adapter.md` 的 TypeScript 示例启用 Twoslash 类型校验与提示
+- **一包安装体验**：`@xlt-token/nestjs` 与 `@xlt-token/express` re-export core 常用 API，业务项目无需再显式安装 `@xlt-token/core`
+
+### Changed
+
+- **版本统一**：根包、core、nestjs、express 统一为 `1.0.0`
+- **安装文档**：NestJS 推荐 `pnpm add @xlt-token/nestjs`，Express 推荐 `pnpm add express @xlt-token/express`
+- **包命名**：Express 适配器正式使用 `@xlt-token/express`
+
+### Quality Metrics
+
+- **Express 单测**：53 个用例通过
+- **Express E2E**：23 个用例通过
+- **NestJS 单测**：29 个用例通过
+- **文档构建**：VitePress build 通过
+
+---
+
 ## [1.0.0-rc.3] - 2026-05-29
 
 > monorepo 架构正式发布：`@xlt-token/core` + `@xlt-token/nestjs` 分包上线；`xlt-token` 根包改为兼容 re-export。
