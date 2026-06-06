@@ -18,6 +18,14 @@ export interface RouteAuthPolicy extends RouteAuthMeta {
   methods?: string[];
 }
 
+export interface XltMiddlewareOptions {
+  /** 快捷白名单，会被转换为 { match, ignore: true } */
+  ignore?: AuthMatcher[];
+  /** 路由级鉴权策略。xltMiddleware 会在鉴权前解析这些规则。 */
+  policies?: RouteAuthPolicy[];
+}
+
+
 export interface ExpressRequest {
   _xltState?: Record<string, unknown>;
   _xltRouteMeta?: RouteAuthMeta;

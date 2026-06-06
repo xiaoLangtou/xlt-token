@@ -45,7 +45,9 @@
     "build:watch": "tsdown --watch",
     "prepublishOnly": "pnpm run build",
     "test": "vitest run",
-    "test:cov": "vitest run --coverage"
+    "test:cov": "vitest run --coverage",
+    "test:e2e": "vitest run --config vitest.e2e.config.ts",
+    "test:e2e:cov": "vitest run --config vitest.e2e.config.ts --coverage"
   },
   "peerDependencies": {
     "express": "^4.18.0 || ^5.0.0"
@@ -56,8 +58,10 @@
   "devDependencies": {
     "@types/express": "^4.17.21",
     "@types/node": "^20.0.0",
+    "@types/supertest": "^7.2.0",
     "@vitest/coverage-v8": "^2.1.9",
     "express": "^4.22.0",
+    "supertest": "^7.2.2",
     "tsdown": "^0.20.0",
     "typescript": "^5.1.0",
     "vitest": "^2.0.0"
