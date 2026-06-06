@@ -1,0 +1,22 @@
+{
+  "name": "@xlt-token/example-express",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Full-feature Express example for @xlt-token/express",
+  "scripts": {
+    "start": "tsx src/main.ts",
+    "start:dev": "tsx watch src/main.ts",
+    "start:whitelist": "XLT_DEFAULT_CHECK=false tsx src/main.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@xlt-token/express": "workspace:*",
+    "express": "^4.22.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.1.0"
+  }
+}

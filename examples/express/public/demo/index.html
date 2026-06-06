@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>xlt-token · Express 交互演示</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div class="brand">
+        <span class="logo">xlt</span>
+        <div>
+          <h1>xlt-token 交互演示</h1>
+          <p class="subtitle">点击按钮即可调用 API，无需 curl</p>
+        </div>
+      </div>
+      <div class="auth-bar" id="authBar">
+        <div class="auth-status" id="authStatus">
+          <span class="dot offline"></span>
+          <span>未登录</span>
+        </div>
+        <div class="token-preview" id="tokenPreview" hidden>
+          <code id="tokenShort">—</code>
+          <button type="button" class="btn ghost sm" id="copyToken">复制</button>
+        </div>
+        <button type="button" class="btn primary sm" data-login="admin">admin 登录</button>
+        <button type="button" class="btn secondary sm" data-login="user">user 登录</button>
+        <button type="button" class="btn ghost sm" id="logoutBtn" disabled>登出</button>
+      </div>
+    </header>
+
+    <div class="layout">
+      <nav class="sidebar" id="sidebar">
+        <a href="#sec-auth" class="nav-item active">登录与会话</a>
+        <a href="#sec-public" class="nav-item">公开访问</a>
+        <a href="#sec-perm" class="nav-item">权限校验</a>
+        <a href="#sec-role" class="nav-item">角色校验</a>
+        <a href="#sec-safe" class="nav-item">二级认证</a>
+        <a href="#sec-device" class="nav-item">多端登录</a>
+        <a href="#sec-session" class="nav-item">会话管理</a>
+        <a href="#sec-profile" class="nav-item">自定义中间件</a>
+        <a href="#sec-admin" class="nav-item">管理 & Hooks</a>
+        <a href="#sec-temp" class="nav-item">临时 Token</a>
+      </nav>
+
+      <main class="content">
+        <!-- 登录与会话 -->
+        <section class="section" id="sec-auth">
+          <h2>登录与会话</h2>
+          <p class="section-desc">演示 <code>ignore</code>、<code>req.stpLoginId</code>、<code>req.stpToken</code>、滑动续期</p>
+          <div class="card-grid">
+            <article class="card">
+              <div class="card-head"><span class="method post">POST</span><code>/auth/login</code></div>
+              <p>自定义用户名密码登录，可选 device</p>
+              <div class="form-row">
+                <input id="loginUser" value="admin" placeholder="username" />
+                <input id="loginPass" type="password" value="admin123" placeholder="password" />
+                <input id="loginDevice" value="default" placeholder="device" />
+              </div>
+              <button type="button" class="btn primary" data-action="customLogin">登录</button>
+            </article>
+            <article class="card">
+              <div class="card-head"><span class="method get">GET</span><code>/auth/me</code></div>
+              <p>获取当前 loginId 与 token</p>
+              <button type="button" class="btn" data-action="me">执行</button>
+            </article>
+            <article class="card">
+              <div class="card-head"><span class="method post">POST</span><code>/auth/renew</code></div>
+              <p>滑动续期 renewTimeout</p>
+              <button type="button" class="btn" data-action="renew">执行</button>
+            </article>
+            <article class="card">
+              <div class="card-head"><span class="method post">POST</span><code>/auth/logout</code></div>
+              <p>登出当前 token</p>
+              <button type="button" class="btn danger" data-action="logout">执行</button>
+            </article>
+          </div>
+        </section>
+
+        <!-- 公开访问 -->
+        <section class="section" id="sec-public">
+          <h2>公开访问</h2>
+          <p class="section-desc">演示 <code>ignore</code> 与软检测登录态（匿名/登录均可）</p>
+          <div class="card-grid">
+            <article class="card">
+              <div class="card-head"><span class="method get">GET</span><code>/public/health</code></div>
+              <p>完全公开，无需 token</p>
+              <button type="button" class="btn" data-action="health">执行</button>
+            </article>
+            <article class="card">
+              <div class="card-head"><span class="method get">GET</span><code>/public/product/:id</code></div>
+              <p>匿名访问；登录后额外返回 myRating</p>
+              <div class="form-row">
+                <input id="productId" value="42" />
+                <label class="checkbox"><input type="checkbox" id="productWithAuth" checked /> 携带 token</label>
+              </div>
+              <button type="button" class="btn" data-action="product">执行</button>
+            </article>
+          </div>
+        </section>
+
+        <!-- 权限 -->
+        <section class="section" id="sec-perm">
+          <h2>权限校验</h2>
+          <p class="section-desc">演示 <code>policies.permissions</code> — admin 全过，user 仅 user:read</p>
+          <div class="card-grid">
+            <article class="card">
+              <div class="card-head"><span class="method get">GET</span><code>/permission/read</code></div>
+              <p>需要 <code>user:read</code></p>
+              <button type="button" class="btn" data-action="permRead">执行</button>
+            </article>
+            <article class="card">
+              <div class="card-head"><span class="method get">GET</span><code>/permission/delete</code></div>
+              <p>AND：<code>user:read</code> + <code>user:delete</code></p>
+              <button type="button" class="btn" data-action="permDelete">执行</button>
+            </article>
+            <article class="card">
+              <div class="card-head"><span class="method get">GET</span><code>/permission/order-create</code></div>
+              <p>通配符 <code>order:*</code> 匹配</p>
+              <button type="button" class="btn" data-action="permOrder">执行</button>
+            </article>
+          </div>
+          <div class="hint">💡 先用 <strong>user 登录</strong> 再点 delete，观察 403</div>
+        </section>
+
+        <!-- 角色 -->
+        <section class="section" id="sec-role">
+          <h2>角色校验</h2>
+          <p class="section-desc">演示 <code>policies.roles</code></p>
+          <div class="card-grid">
+            <article class="card">
+              <div class="card-head"><span class="method get">GET</span><code>/role/admin-only</code></div>
+              <p>需要 admin 角色</p>
+              <button type="button" class="btn" data-action="roleAdmin">执行</button>
+            </article>
+            <article class="card">
+              <div class="card-head"><span class="method get">GET</span><code>/role/admin-or-super</code></div>
+              <p>OR：admin 或 super</p>
+              <button type="button" class="btn" data-action="roleAdminOr">执行</button>
+            </article>
+          </div>
+        </section>
+
+        <!-- 二级认证 -->
+        <section class="section" id="sec-safe">
+          <h2>二级认证</h2>
+          <p class="section-desc">演示 <code>safeBusiness: 'pay'</code> — 需先 openSafe</p>
+          <div class="flow-steps">
+            <div class="step" id="safeStep1">1. openSafe</div>
+            <div class="step-arrow">→</div>
+            <div class="step" id="safeStep2">2. transfer</div>
+            <div class="step-arrow">→</div>
+            <div class="step" id="safeStep3">3. closeSafe（可选）</div>
+          </div>
+          <div class="card-grid">
+            <article class="card">
+              <div class="card-head"><span class="method post">POST</span><code>/safe/transfer</code></div>
+              <p>未 openSafe 时 → 403 NOT_SAFE</p>
+              <button type="button" class="btn" data-action="safeTransfer">转账</button>
+            </article>
+            <article class="card">
+              <div class="card-head"><span class="method post">POST</span><code>/safe/open</code></div>
+              <p>打开 300 秒安全窗口</p>
+              <button type="button" class="btn primary" data-action="safeOpen">openSafe</button>
+            </article>
+            <article class="card">
+              <div class="card-head"><span class="method post">POST</span><code>/safe/close</code></div>
+              <p>关闭安全窗口</p>
+              <button type="button" class="btn" data-action="safeClose">closeSafe</button>
+            </article>
+          </div>
+        </section>
+
+        <!-- 多端 -->
+        <section class="section" id="sec-device">
+          <h2>多端登录</h2>
+          <p class="section-desc">同一账号 PC / App 独立 token，可按设备踢人</p>
+          <div class="device-tokens">
+            <div class="device-chip"><span>PC</span><code id="pcToken">—</code></div>
+            <div class="device-chip"><span>App</span><code id="appToken">—</code></div>
+          </div>
+          <div class="card-grid">
+            <article class="card">
+              <div class="card-head"><span class="method post">POST</span><code>/device/login</code></div>
+              <p>分别以 pc / app 设备登录 1001</p>
+              <div class="btn-group">
+                <button type="button" class="btn" data-action="deviceLoginPc">PC 登录</button>
+                <button type="button" class="btn" data-action="deviceLoginApp">App 登录</button>
+              </div>
+            </article>
+            <article class="card">
+              <div class="card-head"><span class="method get">GET</span><code>/device/me</code></div>
+              <p>用指定设备 token 访问</p>
+              <div class="btn-group">
+                <button type="button" class="btn" data-action="deviceMePc">PC token</button>
+                <button type="button" class="btn" data-action="deviceMeApp">App token</button>
+              </div>
+            </article>
+            <article class="card">
+              <div class="card-head"><span class="method get">GET</span><code>/device/list</code></div>
+              <p>查看在线设备列表</p>
+              <button type="button" class="btn" data-action="deviceList">执行</button>
+            </article>
+            <article class="card">
+              <div class="card-head"><span class="method post">POST</span><code>/device/kickout-by-device</code></div>
+              <p>仅踢 PC 设备</p>
+              <button type="button" class="btn danger" data-action="kickoutPc">踢 PC</button>
+            </article>
+          </div>
+        </section>
+
+        <!-- 会话管理 -->
+        <section class="section" id="sec-session">
+          <h2>会话管理</h2>
+          <p class="section-desc">踢人、在线统计、按 loginId 登出</p>
+          <div class="card-grid">
+            <article class="card">
+              <div class="card-head"><span class="method get">GET</span><code>/session/online-count</code></div>
+              <p>在线用户数</p>
+              <button type="button" class="btn" data-action="onlineCount">执行</button>
+            </article>
+            <article class="card">
+              <div class="card-head"><span class="method get">GET</span><code>/session/online-ids</code></div>
+              <p>在线 loginId 列表</p>
+              <button type="button" class="btn" data-action="onlineIds">执行</button>
+            </article>
+            <article class="card">
+              <div class="card-head"><span class="method post">POST</span><code>/session/kickout</code></div>
+              <p>踢掉 user (1002)</p>
+              <button type="button" class="btn danger" data-action="kickoutUser">踢 1002</button>
+            </article>
+            <article class="card">
+              <div class="card-head"><span class="method post">POST</span><code>/session/login-replace</code></div>
+              <p>同账号二次登录（顶号演示，需 isConcurrent=false）</p>
+              <button type="button" class="btn" data-action="loginReplace">顶号登录</button>
+            </article>
+          </div>
+        </section>
+
+        <!-- Profile -->
+        <section class="section" id="sec-profile">
+          <h2>自定义中间件</h2>
+          <p class="section-desc"><code>loadProfileUser</code> 填充 <code>request.user</code></p>
+          <div class="card-grid">
+            <article class="card">
+              <div class="card-head"><span class="method get">GET</span><code>/profile/me</code></div>
+              <p>返回 stpLoginId + user（loadProfileUser 加载）</p>
+              <button type="button" class="btn" data-action="profileMe">执行</button>
+            </article>
+          </div>
+        </section>
+
+        <!-- Admin -->
+        <section class="section" id="sec-admin">
+          <h2>管理 & Hooks</h2>
+          <p class="section-desc">需 admin 角色；查看 Hooks 审计事件</p>
+          <div class="card-grid">
+            <article class="card">
+              <div class="card-head"><span class="method get">GET</span><code>/admin/hooks</code></div>
+              <p>最近 50 条 onLogin/onKickout 等事件</p>
+              <button type="button" class="btn" data-action="adminHooks">执行</button>
+            </article>
+            <article class="card">
+              <div class="card-head"><span class="method get">GET</span><code>/admin/dashboard</code></div>
+              <p>管理员面板</p>
+              <button type="button" class="btn" data-action="adminDashboard">执行</button>
+            </article>
+          </div>
+        </section>
+
+        <!-- 临时 Token -->
+        <section class="section" id="sec-temp">
+          <h2>临时 Token</h2>
+          <p class="section-desc">邮件链接场景：create → consume（一次性）</p>
+          <div class="card-grid">
+            <article class="card">
+              <div class="card-head"><span class="method post">POST</span><code>/temp-token/create</code></div>
+              <p>创建 resetPwd 临时 token</p>
+              <button type="button" class="btn primary" data-action="tempCreate">创建</button>
+            </article>
+            <article class="card">
+              <div class="card-head"><span class="method post">POST</span><code>/temp-token/consume</code></div>
+              <p>消费上一步创建的 token</p>
+              <code class="inline-code" id="tempTokenDisplay">尚未创建</code>
+              <button type="button" class="btn" data-action="tempConsume" disabled id="tempConsumeBtn">消费</button>
+            </article>
+          </div>
+        </section>
+      </main>
+
+      <aside class="log-panel">
+        <div class="log-header">
+          <h3>API 日志</h3>
+          <button type="button" class="btn ghost sm" id="clearLog">清空</button>
+        </div>
+        <div class="log-list" id="logList">
+          <div class="log-empty">点击左侧按钮发起请求，响应将显示在这里</div>
+        </div>
+      </aside>
+    </div>
+  </div>
+  <script src="./app.js"></script>
+</body>
+</html>
