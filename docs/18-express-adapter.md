@@ -1,5 +1,7 @@
 # Express 适配器
 
+[![Cloud Studio Template](https://cs-res.codehub.cn/common/assets/icon-badge.svg)](https://cloudstudio.net/a/35979106969571328?channel=share&sharetype=Markdown)
+
 `@xlt-token/express` 为纯 Express 应用提供中间件、路由策略和错误处理器。它把 Express 的 `req` / `res` 转换为 core 的 `HttpContext`，再复用 `@xlt-token/core` 中的登录、权限、角色和二级认证语义。
 
 适配器适合不使用 NestJS 的 Express 项目。如果你使用 NestJS，请优先阅读 [NestJS 快速开始](/adapters/nestjs/getting-started)。

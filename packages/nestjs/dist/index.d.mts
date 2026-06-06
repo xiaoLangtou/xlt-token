@@ -1,6 +1,5 @@
 import * as _nestjs_common0 from "@nestjs/common";
 import { CanActivate, ExecutionContext, ForbiddenException, ModuleMetadata, Provider, UnauthorizedException } from "@nestjs/common";
-import * as _xlt_token_core0 from "@xlt-token/core";
 import { AuthResult, CreateOptions, DEFAULT_XLT_TOKEN_CONFIG, DeviceInfo, HttpContext, MemoryStore, NotLoginType, NotLoginType as NotLoginType$1, StpInterface, StpInterface as StpInterface$1, StpLogic, StpLogic as StpLogic$1, StpPermLogic, StpPermLogic as StpPermLogic$1, StpUtil, TokenStrategy, TokenStrategy as TokenStrategy$1, UuidStrategy, XLT_STP_INTERFACE, XLT_TOKEN_CONFIG, XLT_TOKEN_HOOKS, XLT_TOKEN_STORE, XLT_TOKEN_STRATEGY, XltHooks, XltHooks as XltHooks$1, XltMode, XltMode as XltMode$1, XltSession, XltTokenConfig, XltTokenConfig as XltTokenConfig$1, XltTokenContext, XltTokenStore, XltTokenStore as XltTokenStore$1, createExpressContext, createMockHttpContext, createXltToken, matchPermission, setStpLogic, setStpPermLogic } from "@xlt-token/core";
 import { JwtPayload } from "jsonwebtoken";
 import { Reflector } from "@nestjs/core";
@@ -48,36 +47,22 @@ declare class XltTokenModule {
   private static readonly moduleExports;
   static forRoot(options?: XltTokenModuleOptions): {
     module: typeof XltTokenModule;
-    providers: Provider[];
-    exports: (string | typeof StpLogic$1 | typeof StpPermLogic$1)[];
+    providers: (_nestjs_common0.Type<any> | _nestjs_common0.ClassProvider<any> | _nestjs_common0.FactoryProvider<any> | _nestjs_common0.ExistingProvider<any> | {
+      provide: any;
+      useValue: any;
+    })[];
+    exports: any[];
     global: boolean;
   };
   static forRootAsync(options: XltTokenModuleAsyncOptions): {
     module: typeof XltTokenModule;
     imports: (_nestjs_common0.Type<any> | _nestjs_common0.DynamicModule | Promise<_nestjs_common0.DynamicModule> | _nestjs_common0.ForwardReference<any>)[];
     providers: (_nestjs_common0.Type<any> | _nestjs_common0.ClassProvider<any> | _nestjs_common0.ValueProvider<any> | _nestjs_common0.FactoryProvider<any> | _nestjs_common0.ExistingProvider<any> | {
-      provide: string;
-      useFactory: (...args: any[]) => Promise<{
-        tokenName: string;
-        timeout: number;
-        activeTimeout: number;
-        isConcurrent: boolean;
-        isShare: boolean;
-        tokenStyle: "uuid" | "simple-uuid" | "random-32";
-        isReadHeader: boolean;
-        isReadCookie: boolean;
-        isReadQuery: boolean;
-        tokenPrefix: string;
-        defaultCheck: boolean;
-        permCacheTimeout?: number;
-        offlineRecordEnabled?: boolean;
-        offlineRecordTimeout?: number;
-        deviceConcurrent?: boolean;
-        jwt?: _xlt_token_core0.JwtConfig;
-      }>;
+      provide: any;
+      useFactory: (...args: any[]) => Promise<any>;
       inject: any[];
     })[];
-    exports: (string | typeof StpLogic$1 | typeof StpPermLogic$1)[];
+    exports: any[];
     global: boolean;
   };
 }
@@ -114,10 +99,10 @@ declare class JwtStrategy implements TokenStrategy$1 {
  * 登录校验装饰器
  * @constructor
  */
-declare const XltCheckLogin: () => _nestjs_common0.CustomDecorator<string>;
+declare const XltCheckLogin: () => _nestjs_common0.CustomDecorator<any>;
 //#endregion
 //#region src/decorators/xlt-ignore.decorator.d.ts
-declare const XltIgnore: () => _nestjs_common0.CustomDecorator<string>;
+declare const XltIgnore: () => _nestjs_common0.CustomDecorator<any>;
 //#endregion
 //#region src/decorators/login-id.decorator.d.ts
 /**
@@ -143,7 +128,7 @@ declare const TokenValue: (...dataOrPipes: any[]) => ParameterDecorator;
  */
 declare const XltCheckPermission: (permissions: string | string[], options?: {
   mode: XltMode$1;
-}) => _nestjs_common0.CustomDecorator<string>;
+}) => _nestjs_common0.CustomDecorator<any>;
 //#endregion
 //#region src/decorators/xlt-check-role.decorator.d.ts
 /**
@@ -155,7 +140,7 @@ declare const XltCheckPermission: (permissions: string | string[], options?: {
  */
 declare const XltCheckRole: (roles: string | string[], options?: {
   mode: XltMode$1;
-}) => _nestjs_common0.CustomDecorator<string>;
+}) => _nestjs_common0.CustomDecorator<any>;
 //#endregion
 //#region src/decorators/xlt-check-safe.decorator.d.ts
 declare const XLT_CHECK_SAFE_KEY = "XLT_CHECK_SAFE";
@@ -167,7 +152,7 @@ declare class XltTokenGuard implements CanActivate {
   private readonly config;
   private readonly stpLogic;
   private readonly stpPermLogic?;
-  constructor(reflector: Reflector, config: XltTokenConfig$1, stpLogic: StpLogic$1, stpPermLogic?: StpPermLogic$1 | undefined);
+  constructor(reflector: Reflector, config: XltTokenConfig$1, stpLogic: StpLogic$1, stpPermLogic?: StpPermLogic$1);
   canActivate(context: ExecutionContext): Promise<boolean>;
   private requiresLogin;
   private getBusiness;

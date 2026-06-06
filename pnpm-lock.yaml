@@ -9,10 +9,10 @@ importers:
   .:
     dependencies:
       '@xlt-token/core':
-        specifier: workspace:*
+        specifier: ^1.0.1
         version: link:packages/core
       '@xlt-token/nestjs':
-        specifier: workspace:*
+        specifier: ^1.0.1
         version: link:packages/nestjs
       redis:
         specifier: ^4.0.0 || ^5.0.0
@@ -87,6 +87,28 @@ importers:
       vitest:
         specifier: ^2.0.0
         version: 2.1.9(@types/node@20.19.39)(@vitest/ui@2.1.9)
+
+  examples/express:
+    dependencies:
+      '@xlt-token/express':
+        specifier: workspace:*
+        version: link:../../packages/express
+      express:
+        specifier: ^4.22.0
+        version: 4.22.1
+    devDependencies:
+      '@types/express':
+        specifier: ^4.17.21
+        version: 4.17.25
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.39
+      tsx:
+        specifier: ^4.19.0
+        version: 4.22.3
+      typescript:
+        specifier: ^5.1.0
+        version: 5.9.3
 
   examples/nestjs:
     dependencies:
@@ -163,7 +185,7 @@ importers:
   packages/express:
     dependencies:
       '@xlt-token/core':
-        specifier: workspace:*
+        specifier: ^1.0.1
         version: link:../core
     devDependencies:
       '@types/express':
@@ -197,7 +219,7 @@ importers:
   packages/nestjs:
     dependencies:
       '@xlt-token/core':
-        specifier: workspace:*
+        specifier: ^1.0.1
         version: link:../core
       uuid:
         specifier: ^10.0.0
@@ -1490,6 +1512,7 @@ packages:
 
   '@ungap/structured-clone@1.3.0':
     resolution: {integrity: sha512-WmoN8qaIAo7WTYWbAZuG8PYEhn5fkz7dZrqTBZ7dtt//lL2Gwms1IcnQ5yHqjDfX8Ft5j4YzDM23f87zBfDe9g==}
+    deprecated: Potential CWE-502 - Update to 1.3.1 or higher
 
   '@vitejs/plugin-vue@5.2.4':
     resolution: {integrity: sha512-7Yx/SXSOcQq5HiiV3orevHUFn+pmMB4cgbEkDYgnkUWb0WfeQ/wa2yFv6D5ICiCQOVpjA7vYDXrC7AGO8yjDHA==}

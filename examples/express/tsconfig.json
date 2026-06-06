@@ -7,6 +7,11 @@
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@xlt-token/express": ["../../packages/express/dist/index.d.cts"],
+      "@xlt-token/core": ["../../packages/core/dist/index.d.cts"]
+    },
     "outDir": "./dist",
     "rootDir": "./src"
   },

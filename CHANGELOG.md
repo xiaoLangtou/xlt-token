@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.1] - 2026-06-06
+
+### Fixed
+
+- 修复发布包中残留 `workspace:*` 依赖的问题。`@xlt-token/express`、`@xlt-token/nestjs` 与根包现在使用 npm 可解析的 `@xlt-token/core@^1.0.1` 依赖范围，独立项目执行 `pnpm install` 不再报 `ERR_PNPM_WORKSPACE_PKG_NOT_FOUND`。
+
+---
+
 ## [1.0.0] - 2026-06-06
 
 > xlt-token 首个正式大版本发布。`@xlt-token/core`、`@xlt-token/nestjs`、`@xlt-token/express` 统一进入 v1.0.0，适配器包现在可作为业务侧唯一安装入口。

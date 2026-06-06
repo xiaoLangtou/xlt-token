@@ -1,6 +1,6 @@
 {
   "name": "xlt-token",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Framework-agnostic token auth library with NestJS and Express integrations, inspired by Sa-Token",
   "keywords": [
     "nestjs",
@@ -84,8 +84,8 @@
     }
   },
   "dependencies": {
-    "@xlt-token/core": "workspace:*",
-    "@xlt-token/nestjs": "workspace:*"
+    "@xlt-token/core": "^1.0.1",
+    "@xlt-token/nestjs": "^1.0.1"
   },
   "devDependencies": {
     "@nestjs/common": "^10.0.0",

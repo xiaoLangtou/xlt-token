@@ -1,5 +1,7 @@
 # @xlt-token/express
 
+[![Cloud Studio Template](https://cs-res.codehub.cn/common/assets/icon-badge.svg)](https://cloudstudio.net/a/35979106969571328?channel=share&sharetype=Markdown)
+
 Express middleware adapter for xlt-token. It connects Express `req` / `res` to `@xlt-token/core` and provides login checks, route policies, route helpers, and JSON error handling.
 
 ## Installation
