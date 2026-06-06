@@ -126,7 +126,7 @@ declare global {
 }
 ```
 
-用户项目 `tsconfig` 需能解析本包类型；或通过 `/// <reference types="@xlt-token/adapter-express" />` 引入。
+用户项目 `tsconfig` 需能解析本包类型；或通过 `/// <reference types="@xlt-token/express" />` 引入。
 
 ---
 

@@ -264,7 +264,7 @@ export class NotRoleException extends XltError { /* ... */ }
 3. 把核心异常映射到框架响应
 
 ```ts twoslash
-// @xlt-token/adapter-express
+// @xlt-token/express
 import type { Request, Response } from 'express';
 import { HttpContext } from '@xlt-token/core';
 
@@ -370,7 +370,7 @@ class AuthController {
 ```ts twoslash
 import express from 'express';
 import { createXltToken } from '@xlt-token/core';
-import { xltMiddleware } from '@xlt-token/adapter-express'; // 注意：包名与 monorepo 保持一致
+import { xltMiddleware } from '@xlt-token/express'; // 注意：包名与 monorepo 保持一致
 
 const xlt = createXltToken({ config: { tokenName: 'authorization' } });
 
@@ -486,7 +486,7 @@ xlt-token/                                    # 仓库根（pnpm workspace + tur
 │   ├── store-ioredis/                         # @xlt-token/store-ioredis  （ioredis）
 │   ├── strategy-jwt/                          # @xlt-token/strategy-jwt   （JWT 策略）
 │   │
-│   ├── adapter-express/                       # @xlt-token/adapter-express
+│   ├── adapter-express/                       # @xlt-token/express
 │   ├── adapter-koa/                           # @xlt-token/adapter-koa
 │   ├── adapter-fastify/                       # @xlt-token/adapter-fastify
 │   ├── adapter-hono/                          # @xlt-token/adapter-hono
@@ -529,7 +529,7 @@ xlt-token/                                    # 仓库根（pnpm workspace + tur
   │
   ├── @xlt-token/store-redis
   ├── @xlt-token/strategy-jwt
-  ├── @xlt-token/adapter-express   ⬅ peer: express
+  ├── @xlt-token/express   ⬅ peer: express
   ├── @xlt-token/adapter-koa       ⬅ peer: koa
   ├── @xlt-token/adapter-fastify   ⬅ peer: fastify
   ├── @xlt-token/adapter-hono      ⬅ peer: hono

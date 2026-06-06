@@ -1,4 +1,4 @@
-import { NotLoginException, NotPermissionException, NotRoleException, NotSafeException, XltMode } from "@xlt-token/core";
+import { DEFAULT_XLT_TOKEN_CONFIG, MemoryStore, NotLoginException, NotLoginException as NotLoginException$1, NotLoginType, NotPermissionException, NotPermissionException as NotPermissionException$1, NotRoleException, NotRoleException as NotRoleException$1, NotSafeException, NotSafeException as NotSafeException$1, StpLogic, StpPermLogic, StpUtil, UuidStrategy, XLT_STP_INTERFACE, XLT_TOKEN_CONFIG, XLT_TOKEN_HOOKS, XLT_TOKEN_STORE, XLT_TOKEN_STRATEGY, XltError, XltMode, XltMode as XltMode$1, XltSession, createMockHttpContext, createXltToken, matchPermission, setStpLogic, setStpPermLogic } from "@xlt-token/core";
 
 //#region src/context.ts
 /**
@@ -25,6 +25,10 @@ function createExpressContext(req, res) {
 
 //#endregion
 //#region src/auth/resolve-route-auth-meta.ts
+function matchPathPrefix(path, prefix) {
+	const pathname = path.split("?")[0] ?? path;
+	return prefix === "/" || pathname === prefix || pathname.startsWith(`${prefix}/`);
+}
 /**
 * 解析当前请求命中的路由鉴权元数据。
 *
@@ -52,7 +56,7 @@ function matchPolicy(req, policy) {
 	}
 	return (Array.isArray(policy.match) ? policy.match : [policy.match]).some((matcher) => {
 		if (typeof matcher === "function") return matcher(req);
-		if (typeof matcher === "string") return req.originalUrl === matcher || req.originalUrl.startsWith(matcher);
+		if (typeof matcher === "string") return matchPathPrefix(req.originalUrl, matcher);
 		return matcher.test(req.originalUrl);
 	});
 }
@@ -198,7 +202,7 @@ function requireLogin() {
 *
 * 仅写入 `req._xltRouteMeta.permissions`，必须位于 `xltMiddleware` 之前才生效。
 */
-function checkPermission(permission, mode = XltMode.AND) {
+function checkPermission(permission, mode = XltMode$1.AND) {
 	return (req, _res, next) => {
 		const list = Array.isArray(permission) ? permission : [permission];
 		req._xltRouteMeta = {
@@ -219,7 +223,7 @@ function checkPermission(permission, mode = XltMode.AND) {
 *
 * 仅写入 `req._xltRouteMeta.roles`，必须位于 `xltMiddleware` 之前才生效。
 */
-function checkRole(role, mode = XltMode.AND) {
+function checkRole(role, mode = XltMode$1.AND) {
 	return (req, _res, next) => {
 		const list = Array.isArray(role) ? role : [role];
 		req._xltRouteMeta = {
@@ -257,7 +261,7 @@ function checkSafe(business) {
 * 非 xlt-token 异常返回 `null`，交由调用方继续向后传递。
 */
 function mapXltError(err) {
-	if (err instanceof NotLoginException) return {
+	if (err instanceof NotLoginException$1) return {
 		status: 401,
 		body: {
 			statusCode: 401,
@@ -267,7 +271,7 @@ function mapXltError(err) {
 			token: err.token
 		}
 	};
-	if (err instanceof NotPermissionException) return {
+	if (err instanceof NotPermissionException$1) return {
 		status: 403,
 		body: {
 			statusCode: 403,
@@ -277,7 +281,7 @@ function mapXltError(err) {
 			message: err.message
 		}
 	};
-	if (err instanceof NotRoleException) return {
+	if (err instanceof NotRoleException$1) return {
 		status: 403,
 		body: {
 			statusCode: 403,
@@ -287,7 +291,7 @@ function mapXltError(err) {
 			message: err.message
 		}
 	};
-	if (err instanceof NotSafeException) return {
+	if (err instanceof NotSafeException$1) return {
 		status: 403,
 		body: {
 			statusCode: 403,
@@ -320,5 +324,5 @@ function xltErrorHandler() {
 }
 
 //#endregion
-export { checkPermission, checkRole, checkSafe, createExpressContext, ignoreAuth, requireLogin, resolveRouteAuthMeta, runAuth, shouldCheckLogin, syncExpressAuthState, xltErrorHandler, xltMiddleware };
+export { DEFAULT_XLT_TOKEN_CONFIG, MemoryStore, NotLoginException, NotLoginType, NotPermissionException, NotRoleException, NotSafeException, StpLogic, StpPermLogic, StpUtil, UuidStrategy, XLT_STP_INTERFACE, XLT_TOKEN_CONFIG, XLT_TOKEN_HOOKS, XLT_TOKEN_STORE, XLT_TOKEN_STRATEGY, XltError, XltMode, XltSession, checkPermission, checkRole, checkSafe, createExpressContext, createMockHttpContext, createXltToken, ignoreAuth, matchPermission, requireLogin, resolveRouteAuthMeta, runAuth, setStpLogic, setStpPermLogic, shouldCheckLogin, syncExpressAuthState, xltErrorHandler, xltMiddleware };
 //# sourceMappingURL=index.mjs.map

@@ -1,6 +1,58 @@
 export { createExpressContext } from './context.js';
 export type { ExpressLikeRequest, ExpressLikeResponse } from './context.js';
 
+// 核心逻辑（来自 @xlt-token/core）
+export {
+  createXltToken,
+  MemoryStore,
+  UuidStrategy,
+  StpLogic,
+  StpPermLogic,
+  StpUtil,
+  XltSession,
+  setStpLogic,
+  setStpPermLogic,
+} from '@xlt-token/core';
+export type {
+  AuthResult,
+  CreateOptions,
+  XltTokenContext,
+} from '@xlt-token/core';
+
+// 配置、常量与类型
+export {
+  DEFAULT_XLT_TOKEN_CONFIG,
+  XLT_TOKEN_CONFIG,
+  XLT_TOKEN_STORE,
+  XLT_TOKEN_STRATEGY,
+  XLT_STP_INTERFACE,
+  XLT_TOKEN_HOOKS,
+  NotLoginType,
+  XltMode,
+  matchPermission,
+  createMockHttpContext,
+} from '@xlt-token/core';
+export type {
+  CookieOptions,
+  DeviceInfo,
+  HttpContext,
+  JwtConfig,
+  StpInterface,
+  TokenStrategy,
+  XltHooks,
+  XltTokenConfig,
+  XltTokenStore,
+} from '@xlt-token/core';
+
+// Core 异常
+export {
+  XltError,
+  NotLoginException,
+  NotPermissionException,
+  NotRoleException,
+  NotSafeException,
+} from '@xlt-token/core';
+
 // 中间件
 export { xltMiddleware } from './middleware/xlt-middleware.js';
 export type { XltMiddlewareOptions } from './middleware/xlt-middleware.js';

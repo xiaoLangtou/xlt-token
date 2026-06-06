@@ -15,7 +15,7 @@
 ## 安装
 
 ```bash
-pnpm add @xlt-token/nestjs @xlt-token/core
+pnpm add @xlt-token/nestjs
 # 使用 Redis 存储（可选）
 pnpm add redis
 ```
@@ -24,7 +24,6 @@ pnpm add redis
 
 **适合**：单进程开发环境、小项目、Demo。生产环境请走 [Redis 存储](/core/storage#redisstore)。
 
-在代码块语言后添加 `twoslash`，悬停带**虚线下划线**的标识符可查看类型；`// ^?` 会在下方展示类型查询结果。复杂示例可用 `// @include: imports` 注入常用 import（见 [VueUse twoslash 配置](https://github.com/vueuse/vueuse/blob/main/packages/.vitepress/twoslash.ts)）。
 
 ```ts twoslash
 import type { XltTokenModuleOptions } from '@xlt-token/nestjs'

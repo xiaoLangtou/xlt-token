@@ -61,7 +61,7 @@
 ```
 @xlt-token/core
        ↑
-@xlt-token/adapter-express  (peer: express)
+@xlt-token/express  (peer: express)
        ↑（可选，Phase 3 后）
 @xlt-token/nestjs           可改为依赖 adapter-express 的 createExpressContext
 ```

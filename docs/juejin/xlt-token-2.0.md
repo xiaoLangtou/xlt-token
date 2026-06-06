@@ -133,7 +133,7 @@ NestJS 用户通过 `StpLogic` / `StpUtil` 透明调用，无感知。
 
 | 场景 | 安装 | import 来源 |
 | --- | --- | --- |
-| NestJS 项目 | `pnpm add @xlt-token/nestjs @xlt-token/core` | `@xlt-token/nestjs` |
+| NestJS 项目 | `pnpm add @xlt-token/nestjs` | `@xlt-token/nestjs` |
 | Express / 脚本 / 自研框架 | `pnpm add @xlt-token/core` | `@xlt-token/core` |
 | Redis 存储 | 额外 `pnpm add redis` | `RedisStore` from nestjs 包 |
 | JWT Token | 额外 `pnpm add jsonwebtoken` | `JwtStrategy` from nestjs 包 |
@@ -369,7 +369,7 @@ xlt-token 2.0 的核心变化，不是换了一套 API，而是 **把鉴权引�
 如果你正在找一套 **轻量、语义清晰、Sa-Token 风格** 的 NestJS Token 方案，不妨 clone 仓库跑一下 Demo：
 
 ```bash
-pnpm add @xlt-token/nestjs @xlt-token/core
+pnpm add @xlt-token/nestjs
 ```
 
 **相关链接：**

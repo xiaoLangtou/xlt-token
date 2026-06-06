@@ -50,7 +50,7 @@ import { createXltToken, StpUtil, MemoryStore } from '@xlt-token/core';
 ## 安装
 
 ```bash
-pnpm add @xlt-token/nestjs @xlt-token/core
+pnpm add @xlt-token/nestjs
 pnpm add redis              # 可选：RedisStore
 pnpm add jsonwebtoken       # 可选：JwtStrategy
 ```

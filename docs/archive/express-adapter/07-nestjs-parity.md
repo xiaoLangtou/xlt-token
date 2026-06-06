@@ -7,7 +7,7 @@
 
 ## 1. 总对照表
 
-| NestJS（1.x / @xlt-token/nestjs） | Express（@xlt-token/adapter-express） |
+| NestJS（1.x / @xlt-token/nestjs） | Express（@xlt-token/express） |
 | --- | --- |
 | `XltTokenModule.forRoot()` | `createXltToken()` |
 | `APP_GUARD` + `XltTokenGuard` | `xltMiddleware(xlt)` |

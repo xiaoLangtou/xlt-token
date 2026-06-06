@@ -5,7 +5,7 @@ NestJS integration for [xlt-token](https://github.com/xiaoLangtou/xlt-token).
 ## Install
 
 ```bash
-pnpm add @xlt-token/nestjs @xlt-token/core
+pnpm add @xlt-token/nestjs
 ```
 
 ## Usage

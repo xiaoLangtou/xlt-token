@@ -13,7 +13,7 @@ import { createXltToken } from '@xlt-token/core';
 import {
   xltMiddleware,
   xltErrorHandler,
-} from '@xlt-token/adapter-express';
+} from '@xlt-token/express';
 
 const xlt = createXltToken({
   config: {
@@ -99,7 +99,7 @@ api.get('/public', publicHandler); // 无需 token
 ```ts
 import {
   xltMiddleware,
-} from '@xlt-token/adapter-express';
+} from '@xlt-token/express';
 import { XltMode } from '@xlt-token/core';
 
 api.use(xltMiddleware(xlt, {
@@ -147,7 +147,7 @@ api.post('/admin/kickout/:id', async (req, res) => {
 ## 6. 自定义鉴权（对标 `XltAbstractLoginGuard`）
 
 ```ts
-import { createXltAuthMiddleware } from '@xlt-token/adapter-express';
+import { createXltAuthMiddleware } from '@xlt-token/express';
 
 api.use(
   createXltAuthMiddleware(

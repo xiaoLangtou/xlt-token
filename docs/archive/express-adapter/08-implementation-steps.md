@@ -39,7 +39,7 @@
 ### 验收
 
 ```bash
-pnpm --filter @xlt-token/adapter-express build
+pnpm --filter @xlt-token/express build
 ```
 
 ---
@@ -58,7 +58,7 @@ pnpm --filter @xlt-token/adapter-express build
 - [ ] core `express.ts` 保留现有实现，并添加 `@deprecated` 注释：
 
 ```ts
-/** @deprecated Import from `@xlt-token/adapter-express` */
+/** @deprecated Import from `@xlt-token/express` */
 export function createExpressContext(...) { ... }
 ```
 
@@ -92,7 +92,7 @@ export function createExpressContext(...) { ... }
 ### 验收
 
 ```bash
-pnpm --filter @xlt-token/adapter-express test
+pnpm --filter @xlt-token/express test
 ```
 
 ---
@@ -162,8 +162,8 @@ Nest 与 Express 共用 adapter，避免双实现。
 
 ### 操作清单
 
-- [ ] `packages/nestjs/package.json` 增加 `@xlt-token/adapter-express` 依赖
-- [ ] `nest-bridge.ts`：`import { createExpressContext } from '@xlt-token/adapter-express'`
+- [ ] `packages/nestjs/package.json` 增加 `@xlt-token/express` 依赖
+- [ ] `nest-bridge.ts`：`import { createExpressContext } from '@xlt-token/express'`
 - [ ] 跑通 `packages/nestjs` 全部 E2E
 - [ ] 新建 `apps/playground/express`：
   - `createXltToken` + MemoryStore
@@ -214,7 +214,7 @@ Step 7 可与 Step 5–6 并行（不同开发者），但 Step 7 依赖 Step 2 
 
 ## 发布检查清单
 
-- [ ] `CHANGELOG` 增加 `@xlt-token/adapter-express` 初始版本
+- [ ] `CHANGELOG` 增加 `@xlt-token/express` 初始版本
 - [ ] README：安装、`peerDependencies`、cookie-parser 说明
 - [ ] npm `files` 仅含 `dist`
 - [ ] 与 core 主版本对齐（如 core `2.0.0` → adapter `2.0.0`）

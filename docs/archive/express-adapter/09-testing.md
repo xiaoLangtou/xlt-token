@@ -120,7 +120,7 @@ Nest setup 保持现有 `Test.createTestingModule`，**断言函数共用**。
 ```yaml
 # 概念性任务
 - pnpm --filter @xlt-token/core test
-- pnpm --filter @xlt-token/adapter-express test
+- pnpm --filter @xlt-token/express test
 - pnpm --filter @xlt-token/nestjs test:e2e
 - pnpm e2e:express  # 根脚本聚合
 ```

@@ -5,7 +5,7 @@ markdownStyles: false
 hero:
   name: xlt-token
   text: 框架无关的轻量 Token 鉴权库
-  tagline: 核心 @xlt-token/core 零框架依赖；NestJS 适配一行接入。覆盖登录态、权限、多端会话、JWT 与观测性。
+  tagline: 核心 @xlt-token/core 零框架依赖；NestJS 与 Express 适配器可直接接入。覆盖登录态、权限、多端会话、JWT 与观测性。
   actions:
     - theme: brand
       text: 开始使用
@@ -20,16 +20,19 @@ hero:
       text: NestJS 文档
       link: /adapters/nestjs/getting-started
     - theme: alt
+      text: Express 文档
+      link: /adapters/express
+    - theme: alt
       text: GitHub
       link: https://github.com/xiaoLangtou/xlt-token
 
 features:
   - icon: 🧩
     title: 核心 + 适配器
-    details: '@xlt-token/core 承载鉴权语义；@xlt-token/nestjs 提供 Module / Guard / Decorator。'
+    details: '@xlt-token/core 承载鉴权语义；@xlt-token/nestjs 和 @xlt-token/express 提供框架接入。'
   - icon: 🚀
-    title: NestJS 开箱即用
-    details: forRoot 一行注册，默认配置跑通登录、鉴权、踢人与登出。
+    title: 框架接入开箱即用
+    details: NestJS 使用 Module / Guard；Express 使用 middleware、路由策略和错误处理器。
   - icon: 🔐
     title: Sa-Token 语义
     details: 顶号、踢人、活跃过期、多端并发等能力原生支持。

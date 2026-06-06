@@ -1,6 +1,6 @@
 {
-  "name": "@xlt-token/adapter-express",
-  "version": "0.0.0",
+  "name": "@xlt-token/express",
+  "version": "1.0.0-rc.4",
   "description": "Express middleware adapter for xlt-token",
   "keywords": [
     "express",
@@ -14,7 +14,7 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/xiaoLangtou/xlt-token.git",
-    "directory": "packages/adapter-express"
+    "directory": "packages/express"
   },
   "bugs": {
     "url": "https://github.com/xiaoLangtou/xlt-token/issues"

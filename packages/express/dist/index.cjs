@@ -26,6 +26,10 @@ function createExpressContext(req, res) {
 
 //#endregion
 //#region src/auth/resolve-route-auth-meta.ts
+function matchPathPrefix(path, prefix) {
+	const pathname = path.split("?")[0] ?? path;
+	return prefix === "/" || pathname === prefix || pathname.startsWith(`${prefix}/`);
+}
 /**
 * 解析当前请求命中的路由鉴权元数据。
 *
@@ -53,7 +57,7 @@ function matchPolicy(req, policy) {
 	}
 	return (Array.isArray(policy.match) ? policy.match : [policy.match]).some((matcher) => {
 		if (typeof matcher === "function") return matcher(req);
-		if (typeof matcher === "string") return req.originalUrl === matcher || req.originalUrl.startsWith(matcher);
+		if (typeof matcher === "string") return matchPathPrefix(req.originalUrl, matcher);
 		return matcher.test(req.originalUrl);
 	});
 }
@@ -321,14 +325,158 @@ function xltErrorHandler() {
 }
 
 //#endregion
+Object.defineProperty(exports, 'DEFAULT_XLT_TOKEN_CONFIG', {
+  enumerable: true,
+  get: function () {
+    return _xlt_token_core.DEFAULT_XLT_TOKEN_CONFIG;
+  }
+});
+Object.defineProperty(exports, 'MemoryStore', {
+  enumerable: true,
+  get: function () {
+    return _xlt_token_core.MemoryStore;
+  }
+});
+Object.defineProperty(exports, 'NotLoginException', {
+  enumerable: true,
+  get: function () {
+    return _xlt_token_core.NotLoginException;
+  }
+});
+Object.defineProperty(exports, 'NotLoginType', {
+  enumerable: true,
+  get: function () {
+    return _xlt_token_core.NotLoginType;
+  }
+});
+Object.defineProperty(exports, 'NotPermissionException', {
+  enumerable: true,
+  get: function () {
+    return _xlt_token_core.NotPermissionException;
+  }
+});
+Object.defineProperty(exports, 'NotRoleException', {
+  enumerable: true,
+  get: function () {
+    return _xlt_token_core.NotRoleException;
+  }
+});
+Object.defineProperty(exports, 'NotSafeException', {
+  enumerable: true,
+  get: function () {
+    return _xlt_token_core.NotSafeException;
+  }
+});
+Object.defineProperty(exports, 'StpLogic', {
+  enumerable: true,
+  get: function () {
+    return _xlt_token_core.StpLogic;
+  }
+});
+Object.defineProperty(exports, 'StpPermLogic', {
+  enumerable: true,
+  get: function () {
+    return _xlt_token_core.StpPermLogic;
+  }
+});
+Object.defineProperty(exports, 'StpUtil', {
+  enumerable: true,
+  get: function () {
+    return _xlt_token_core.StpUtil;
+  }
+});
+Object.defineProperty(exports, 'UuidStrategy', {
+  enumerable: true,
+  get: function () {
+    return _xlt_token_core.UuidStrategy;
+  }
+});
+Object.defineProperty(exports, 'XLT_STP_INTERFACE', {
+  enumerable: true,
+  get: function () {
+    return _xlt_token_core.XLT_STP_INTERFACE;
+  }
+});
+Object.defineProperty(exports, 'XLT_TOKEN_CONFIG', {
+  enumerable: true,
+  get: function () {
+    return _xlt_token_core.XLT_TOKEN_CONFIG;
+  }
+});
+Object.defineProperty(exports, 'XLT_TOKEN_HOOKS', {
+  enumerable: true,
+  get: function () {
+    return _xlt_token_core.XLT_TOKEN_HOOKS;
+  }
+});
+Object.defineProperty(exports, 'XLT_TOKEN_STORE', {
+  enumerable: true,
+  get: function () {
+    return _xlt_token_core.XLT_TOKEN_STORE;
+  }
+});
+Object.defineProperty(exports, 'XLT_TOKEN_STRATEGY', {
+  enumerable: true,
+  get: function () {
+    return _xlt_token_core.XLT_TOKEN_STRATEGY;
+  }
+});
+Object.defineProperty(exports, 'XltError', {
+  enumerable: true,
+  get: function () {
+    return _xlt_token_core.XltError;
+  }
+});
+Object.defineProperty(exports, 'XltMode', {
+  enumerable: true,
+  get: function () {
+    return _xlt_token_core.XltMode;
+  }
+});
+Object.defineProperty(exports, 'XltSession', {
+  enumerable: true,
+  get: function () {
+    return _xlt_token_core.XltSession;
+  }
+});
 exports.checkPermission = checkPermission;
 exports.checkRole = checkRole;
 exports.checkSafe = checkSafe;
 exports.createExpressContext = createExpressContext;
+Object.defineProperty(exports, 'createMockHttpContext', {
+  enumerable: true,
+  get: function () {
+    return _xlt_token_core.createMockHttpContext;
+  }
+});
+Object.defineProperty(exports, 'createXltToken', {
+  enumerable: true,
+  get: function () {
+    return _xlt_token_core.createXltToken;
+  }
+});
 exports.ignoreAuth = ignoreAuth;
+Object.defineProperty(exports, 'matchPermission', {
+  enumerable: true,
+  get: function () {
+    return _xlt_token_core.matchPermission;
+  }
+});
 exports.requireLogin = requireLogin;
 exports.resolveRouteAuthMeta = resolveRouteAuthMeta;
 exports.runAuth = runAuth;
+Object.defineProperty(exports, 'setStpLogic', {
+  enumerable: true,
+  get: function () {
+    return _xlt_token_core.setStpLogic;
+  }
+});
+Object.defineProperty(exports, 'setStpPermLogic', {
+  enumerable: true,
+  get: function () {
+    return _xlt_token_core.setStpPermLogic;
+  }
+});
 exports.shouldCheckLogin = shouldCheckLogin;
 exports.syncExpressAuthState = syncExpressAuthState;
 exports.xltErrorHandler = xltErrorHandler;

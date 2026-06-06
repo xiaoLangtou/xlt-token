@@ -35,9 +35,9 @@ xlt-token 是一个轻量级 token 认证库，提供灵活的 token 管理、�
 **推荐**（显式依赖分包）：
 
 ```bash
-pnpm add @xlt-token/nestjs @xlt-token/core
+pnpm add @xlt-token/nestjs
 # 或
-npm install @xlt-token/nestjs @xlt-token/core
+npm install @xlt-token/nestjs
 ```
 
 **兼容写法**（`xlt-token` 根包 re-export `@xlt-token/nestjs`，旧项目可继续 `import from 'xlt-token'`）：

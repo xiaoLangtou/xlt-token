@@ -1,4 +1,4 @@
-import { AuthResult, HttpContext, XltMode, XltTokenConfig, XltTokenContext } from "@xlt-token/core";
+import { AuthResult, AuthResult as AuthResult$1, CookieOptions, CreateOptions, DEFAULT_XLT_TOKEN_CONFIG, DeviceInfo, HttpContext, HttpContext as HttpContext$1, JwtConfig, MemoryStore, NotLoginException, NotLoginType, NotPermissionException, NotRoleException, NotSafeException, StpInterface, StpLogic, StpPermLogic, StpUtil, TokenStrategy, UuidStrategy, XLT_STP_INTERFACE, XLT_TOKEN_CONFIG, XLT_TOKEN_HOOKS, XLT_TOKEN_STORE, XLT_TOKEN_STRATEGY, XltError, XltHooks, XltMode, XltMode as XltMode$1, XltSession, XltTokenConfig, XltTokenConfig as XltTokenConfig$1, XltTokenContext, XltTokenContext as XltTokenContext$1, XltTokenStore, createMockHttpContext, createXltToken, matchPermission, setStpLogic, setStpPermLogic } from "@xlt-token/core";
 import * as express from "express";
 import { ErrorRequestHandler, Request, RequestHandler, Response } from "express";
 
@@ -15,7 +15,7 @@ interface ExpressLikeResponse {
  *
  * `state` 复用挂在 `req._xltState` 上的请求级共享对象，使同一请求多次调用拿到同一引用。
  */
-declare function createExpressContext(req: Request, res: Response): HttpContext;
+declare function createExpressContext(req: Request, res: Response): HttpContext$1;
 //#endregion
 //#region src/types.d.ts
 interface RouteAuthMeta {
@@ -23,11 +23,11 @@ interface RouteAuthMeta {
   requireLogin?: boolean;
   permissions?: {
     list: string[];
-    mode: XltMode;
+    mode: XltMode$1;
   };
   roles?: {
     list: string[];
-    mode: XltMode;
+    mode: XltMode$1;
   };
   safeBusiness?: string;
 }
@@ -64,7 +64,7 @@ declare global {
  * 4. `runAuth`（登录 + 权限 + 角色 + safe），成功后 `syncExpressAuthState`
  * 5. 任意异常通过 `next(err)` 交给 `xltErrorHandler`
  */
-declare function xltMiddleware(xlt: XltTokenContext, options?: XltMiddlewareOptions): RequestHandler;
+declare function xltMiddleware(xlt: XltTokenContext$1, options?: XltMiddlewareOptions): RequestHandler;
 //#endregion
 //#region src/middleware/ignore-auth.d.ts
 /**
@@ -89,7 +89,7 @@ declare function requireLogin(): RequestHandler;
  *
  * 仅写入 `req._xltRouteMeta.permissions`，必须位于 `xltMiddleware` 之前才生效。
  */
-declare function checkPermission(permission: string | string[], mode?: XltMode): RequestHandler;
+declare function checkPermission(permission: string | string[], mode?: XltMode$1): RequestHandler;
 //#endregion
 //#region src/middleware/check-role.d.ts
 /**
@@ -97,7 +97,7 @@ declare function checkPermission(permission: string | string[], mode?: XltMode):
  *
  * 仅写入 `req._xltRouteMeta.roles`，必须位于 `xltMiddleware` 之前才生效。
  */
-declare function checkRole(role: string | string[], mode?: XltMode): RequestHandler;
+declare function checkRole(role: string | string[], mode?: XltMode$1): RequestHandler;
 //#endregion
 //#region src/middleware/check-safe.d.ts
 /**
@@ -124,7 +124,7 @@ declare function xltErrorHandler(): ErrorRequestHandler;
  * 与 `XltTokenGuard.canActivate` 中的权限块逻辑等价：
  * `checkLogin` 失败时抛出 `NotLoginException`，权限/角色/safe 校验失败时分别抛出对应异常。
  */
-declare function runAuth(xlt: XltTokenContext, httpCtx: HttpContext, req: Request): Promise<AuthResult>;
+declare function runAuth(xlt: XltTokenContext$1, httpCtx: HttpContext$1, req: Request): Promise<AuthResult$1>;
 //#endregion
 //#region src/auth/should-check-login.d.ts
 /**
@@ -136,7 +136,7 @@ declare function runAuth(xlt: XltTokenContext, httpCtx: HttpContext, req: Reques
  *
  * 路由元数据由 `resolveRouteAuthMeta` 提前写入 `req._xltRouteMeta`。
  */
-declare function shouldCheckLogin(req: Request, config: XltTokenConfig): boolean;
+declare function shouldCheckLogin(req: Request, config: XltTokenConfig$1): boolean;
 //#endregion
 //#region src/auth/resolve-route-auth-meta.d.ts
 /**
@@ -157,7 +157,7 @@ declare function resolveRouteAuthMeta(req: Request, options?: XltMiddlewareOptio
  * core 在 `_resolveLoginId` 中写入 `ctx.state.stpLoginId` / `ctx.state.stpToken`，
  * 这里对应同步到 `req.stpLoginId` / `req.stpToken`（与 NestJS Guard 字段命名一致）。
  */
-declare function syncExpressAuthState(req: Request, ctx: HttpContext): void;
+declare function syncExpressAuthState(req: Request, ctx: HttpContext$1): void;
 //#endregion
-export { type AuthMatcher, type ExpressLikeRequest, type ExpressLikeResponse, type RouteAuthMeta, type RouteAuthPolicy, type XltMiddlewareOptions, checkPermission, checkRole, checkSafe, createExpressContext, ignoreAuth, requireLogin, resolveRouteAuthMeta, runAuth, shouldCheckLogin, syncExpressAuthState, xltErrorHandler, xltMiddleware };
+export { type AuthMatcher, type AuthResult, type CookieOptions, type CreateOptions, DEFAULT_XLT_TOKEN_CONFIG, type DeviceInfo, type ExpressLikeRequest, type ExpressLikeResponse, type HttpContext, type JwtConfig, MemoryStore, NotLoginException, NotLoginType, NotPermissionException, NotRoleException, NotSafeException, type RouteAuthMeta, type RouteAuthPolicy, type StpInterface, StpLogic, StpPermLogic, StpUtil, type TokenStrategy, UuidStrategy, XLT_STP_INTERFACE, XLT_TOKEN_CONFIG, XLT_TOKEN_HOOKS, XLT_TOKEN_STORE, XLT_TOKEN_STRATEGY, XltError, type XltHooks, type XltMiddlewareOptions, XltMode, XltSession, type XltTokenConfig, type XltTokenContext, type XltTokenStore, checkPermission, checkRole, checkSafe, createExpressContext, createMockHttpContext, createXltToken, ignoreAuth, matchPermission, requireLogin, resolveRouteAuthMeta, runAuth, setStpLogic, setStpPermLogic, shouldCheckLogin, syncExpressAuthState, xltErrorHandler, xltMiddleware };
 //# sourceMappingURL=index.d.mts.map

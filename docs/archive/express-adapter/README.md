@@ -1,7 +1,7 @@
 # Express 框架适配方案
 
 > **状态**：实施规划  
-> **目标包**：`@xlt-token/adapter-express`  
+> **目标包**：`@xlt-token/express`  
 > **目标版本**：`2.0.0`（Phase 3）  
 > **关联**：[12-multi-framework-architecture.md](../12-multi-framework-architecture.md) · Phase 3
 

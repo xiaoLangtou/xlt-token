@@ -146,7 +146,7 @@ try {
 `@xlt-token/nestjs` 的 `createNestHttpContext` 应改为：
 
 ```ts
-export { createExpressContext as createNestHttpContext } from '@xlt-token/adapter-express';
+export { createExpressContext as createNestHttpContext } from '@xlt-token/express';
 ```
 
 保证 Nest（Express 模式）与纯 Express **同一 HttpContext 实现**，E2E 行为一致。

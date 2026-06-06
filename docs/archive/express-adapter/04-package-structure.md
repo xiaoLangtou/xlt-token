@@ -11,7 +11,7 @@ xlt-token/
 ├── packages/
 │   ├── core/                    # @xlt-token/core
 │   ├── nestjs/                  # @xlt-token/nestjs
-│   └── adapter-express/         # @xlt-token/adapter-express  ← 新建
+│   └── adapter-express/         # @xlt-token/express  ← 新建
 ├── apps/
 │   └── playground/
 │       └── express/             # demo
@@ -25,7 +25,7 @@ xlt-token/
 
 ```json
 {
-  "name": "@xlt-token/adapter-express",
+  "name": "@xlt-token/express",
   "version": "0.0.0",
   "type": "module",
   "dependencies": {
@@ -117,7 +117,7 @@ export type { AuthMatcher, RouteAuthMeta, RouteAuthPolicy } from './types.js';
 
 `pnpm-workspace.yaml` 已包含 `packages/*`，新建目录即可。
 
-当前根 `turbo.json` 已定义通用 `build`、`test`、`test:cov` 任务。新包只需要在自己的 `package.json` 中提供同名 scripts，Turbo 会通过 workspace 依赖图让 `@xlt-token/adapter-express` 的任务依赖 `@xlt-token/core` 的构建产物。
+当前根 `turbo.json` 已定义通用 `build`、`test`、`test:cov` 任务。新包只需要在自己的 `package.json` 中提供同名 scripts，Turbo 会通过 workspace 依赖图让 `@xlt-token/express` 的任务依赖 `@xlt-token/core` 的构建产物。
 
 ---
 

@@ -6,14 +6,14 @@
 
 ## 1. 目标
 
-在 `@xlt-token/core` 与 `@xlt-token/nestjs` 已就绪的前提下，新增 **`@xlt-token/adapter-express`**，使纯 Express 应用能以 **惯用中间件** 方式接入 xlt-token，并与 NestJS 1.x 行为保持一致。
+在 `@xlt-token/core` 与 `@xlt-token/nestjs` 已就绪的前提下，新增 **`@xlt-token/express`**，使纯 Express 应用能以 **惯用中间件** 方式接入 xlt-token，并与 NestJS 1.x 行为保持一致。
 
 用户侧期望：
 
 ```ts
 import express from 'express';
 import { createXltToken } from '@xlt-token/core';
-import { xltMiddleware, xltErrorHandler } from '@xlt-token/adapter-express';
+import { xltMiddleware, xltErrorHandler } from '@xlt-token/express';
 
 const xlt = createXltToken({ config: { tokenName: 'authorization' } });
 const app = express();
@@ -34,8 +34,8 @@ app.use(xltErrorHandler());
 | 层级 | 包 | Express 侧职责 |
 | --- | --- | --- |
 | L1 | `@xlt-token/core` | `StpLogic` / `StpPermLogic` / `createXltToken` — **不改动** |
-| L2 | `@xlt-token/adapter-express` | `(req, res)` → `HttpContext`；`state` ↔ `req` 同步 |
-| L3 | `@xlt-token/adapter-express` | `xltMiddleware`、路由策略表、可选路由级 helper、`xltErrorHandler` |
+| L2 | `@xlt-token/express` | `(req, res)` → `HttpContext`；`state` ↔ `req` 同步 |
+| L3 | `@xlt-token/express` | `xltMiddleware`、路由策略表、可选路由级 helper、`xltErrorHandler` |
 
 **本包不做的事**
 

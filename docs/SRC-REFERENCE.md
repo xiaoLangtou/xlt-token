@@ -80,7 +80,7 @@ packages/nestjs/        @xlt-token/nestjs
 ### 2.1 安装
 
 ```bash
-pnpm add @xlt-token/nestjs @xlt-token/core
+pnpm add @xlt-token/nestjs
 # 可选：使用 Redis 存储
 pnpm add redis
 ```

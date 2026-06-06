@@ -14,7 +14,7 @@ const root = resolve(dir, '../..')
 // @ts-ignore
 export default defineConfig({
   title: 'xlt-token',
-  description: '框架无关 Token 鉴权库，灵感来源于 Sa-Token。核心 @xlt-token/core + NestJS 适配 @xlt-token/nestjs，轻量、可插拔。',
+  description: '框架无关 Token 鉴权库，灵感来源于 Sa-Token。核心 @xlt-token/core + NestJS / Express 适配器，轻量、可插拔。',
   lang: 'zh-CN',
   base: '/xlt-token/',
   cleanUrls: true,
@@ -49,6 +49,7 @@ export default defineConfig({
             paths: {
               '@xlt-token/nestjs': ['packages/nestjs/src/index.ts'],
               '@xlt-token/core': ['packages/core/src/index.ts'],
+              '@xlt-token/express': ['packages/express/src/index.ts'],
             },
           },
           handbookOptions: {
@@ -71,7 +72,7 @@ export default defineConfig({
     ['meta', { name: 'theme-color', content: '#4f46e5' }],
     ['meta', { name: 'og:type', content: 'website' }],
     ['meta', { name: 'og:title', content: 'xlt-token' }],
-    ['meta', { name: 'og:description', content: '框架无关 Token 鉴权库，NestJS 一行接入' }],
+    ['meta', { name: 'og:description', content: '框架无关 Token 鉴权库，NestJS 与 Express 可直接接入' }],
     // Geist 字体（fonts.loli.net 国内镜像）
     ['link', { rel: 'preconnect', href: 'https://fonts.loli.net' }],
     ['link', { rel: 'preconnect', href: 'https://gstatic.loli.net', crossorigin: '' }],
@@ -167,10 +168,10 @@ export default defineConfig({
           ],
         },
         {
-          text: 'Express（规划中）',
+          text: 'Express',
           collapsed: false,
           items: [
-            { text: '路线说明', link: '/adapters/express' },
+            { text: 'Express 适配器', link: '/adapters/express' },
           ],
         },
         {
