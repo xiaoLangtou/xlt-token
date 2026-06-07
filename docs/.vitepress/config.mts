@@ -1,5 +1,6 @@
+import { copyFileSync, mkdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { dirname, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { defineConfig } from 'vitepress';
 import { transformerTwoslash } from '@shikijs/vitepress-twoslash';
 // @ts-ignore
@@ -10,6 +11,46 @@ import { FILE_IMPORTS } from './twoslash.ts';
 // @ts-ignore
 const dir = dirname(fileURLToPath(import.meta.url))
 const root = resolve(dir, '../..')
+const docsRoot = resolve(root, 'docs')
+
+const rawPages: Record<string, string> = {
+  '/guide/getting-started': '01-getting-started.md',
+  '/guide/architecture': '02-architecture.md',
+  '/guide/migration-2-0': 'migration-2.0.md',
+  '/guide/mcp-server': '20-mcp-server.md',
+  '/guide/llms': '21-llms-txt.md',
+  '/guide/skills': '22-skills.md',
+  '/core/configuration': '03-configuration.md',
+  '/core/getting-started': '10-core-getting-started.md',
+  '/core/core-api': '04-core-api.md',
+  '/core/permissions-and-session': '11-permissions-and-session.md',
+  '/core/storage': '06-storage.md',
+  '/core/token-strategy': '07-token-strategy.md',
+  '/core/exceptions': '08-exceptions.md',
+  '/core/recipes': '09-recipes.md',
+  '/core/multi-device': '14-multi-device.md',
+  '/core/secondary-auth': '15-secondary-auth.md',
+  '/core/jwt-strategy': '16-jwt-strategy.md',
+  '/core/hooks-and-observability': '17-hooks-and-observability.md',
+  '/adapters': '13-adapters-overview.md',
+  '/adapters/nestjs/getting-started': '10-nestjs-getting-started.md',
+  '/adapters/nestjs/module-config': '12-nestjs-module-config.md',
+  '/adapters/nestjs/guards-and-decorators': '05-guards-and-decorators.md',
+  '/adapters/express': '18-express-adapter.md',
+  '/reference/changelog': 'CHANGELOG.md',
+  '/reference/src-reference': 'SRC-REFERENCE.md',
+  '/reference/llms': '19-ai-coding-agents.md',
+}
+
+function generateRawMarkdownFiles() {
+  for (const [routePath, sourceFile] of Object.entries(rawPages)) {
+    const target = join(docsRoot, 'public', 'raw', `${routePath.slice(1)}.md`)
+    mkdirSync(dirname(target), { recursive: true })
+    copyFileSync(resolve(docsRoot, sourceFile), target)
+  }
+}
+
+generateRawMarkdownFiles()
 
 // @ts-ignore
 export default defineConfig({
@@ -85,7 +126,7 @@ export default defineConfig({
     ],
   ],
 
-  srcExclude: ['README.md', 'archive/**', 'juejin/**'],
+  srcExclude: ['README.md', 'archive/**', 'juejin/**', 'public/raw/**'],
 
   themeConfig: {
     siteTitle: 'xlt-token',
@@ -97,6 +138,7 @@ export default defineConfig({
     },
 
     nav: [
+      { text: 'AI 指南', link: '/reference/llms' },
       {
         text: 'v1.0.0',
         items: [
@@ -115,6 +157,12 @@ export default defineConfig({
             { text: '选择接入方式', link: '/guide/getting-started' },
             { text: '架构设计', link: '/guide/architecture' },
             { text: '1.0 迁移指南', link: '/guide/migration-2-0' },
+          ],
+        },
+        {
+          text: 'Agents',
+          items: [
+            { text: 'LLMs.txt', link: '/guide/llms' },
           ],
         },
       ],
@@ -190,6 +238,7 @@ export default defineConfig({
         {
           text: '参考',
           items: [
+            { text: 'AI 编码代理指南', link: '/reference/llms' },
             { text: '更新日志', link: '/reference/changelog' },
             { text: '源码参考', link: '/reference/src-reference' },
           ],
@@ -252,6 +301,9 @@ export default defineConfig({
     'migration-2.0.md': 'guide/migration-2-0.md',
     '01-getting-started.md': 'guide/getting-started.md',
     '02-architecture.md': 'guide/architecture.md',
+    '20-mcp-server.md': 'guide/mcp-server.md',
+    '21-llms-txt.md': 'guide/llms.md',
+    '22-skills.md': 'guide/skills.md',
     '03-configuration.md': 'core/configuration.md',
     '10-core-getting-started.md': 'core/getting-started.md',
     '10-nestjs-getting-started.md': 'adapters/nestjs/getting-started.md',
@@ -269,6 +321,7 @@ export default defineConfig({
     '15-secondary-auth.md': 'core/secondary-auth.md',
     '16-jwt-strategy.md': 'core/jwt-strategy.md',
     '17-hooks-and-observability.md': 'core/hooks-and-observability.md',
+    '19-ai-coding-agents.md': 'reference/llms.md',
     'CHANGELOG.md': 'reference/changelog.md',
     'SRC-REFERENCE.md': 'reference/src-reference.md',
   },

@@ -5,6 +5,7 @@ import { computed } from 'vue';
 import HomePage from './Home.vue';
 import SupportProjectModal from './components/SupportProjectModal.vue';
 import SiteHeader from './components/SiteHeader.vue';
+import CopyPage from './components/CopyPage.vue';
 
 const { Layout: DefaultLayout } = DefaultTheme
 const { frontmatter, page } = useData()
@@ -21,6 +22,9 @@ const hasHeader = computed(() => frontmatter.value.layout !== false)
   <DefaultLayout>
     <template v-if="isHome" #home-hero-before>
       <HomePage />
+    </template>
+    <template #doc-before>
+      <CopyPage />
     </template>
 <!--    <template v-if="isDoc" #doc-top>-->
 <!--      <DocHeader />-->

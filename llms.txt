@@ -1,0 +1,81 @@
+# xlt-token
+
+> Framework-agnostic token authentication library for TypeScript, inspired by Sa-Token.
+
+xlt-token is a pnpm monorepo that provides token login, logout, session, permissions, roles, multi-device login, secondary authentication, JWT support, pluggable storage, token strategies, hooks, and framework adapters.
+
+## Primary Packages
+
+- `@xlt-token/core`: framework-agnostic authentication engine, store contracts, token strategies, permissions, sessions, hooks, HTTP context, and errors.
+- `@xlt-token/nestjs`: NestJS module, guards, decorators, RedisStore, JwtStrategy, and re-exports from core.
+- `@xlt-token/express`: Express middleware adapter, route helpers, request state sync, and error handler.
+- `xlt-token`: compatibility package that re-exports `@xlt-token/nestjs`.
+
+## Read First
+
+- Project overview: `README.md`
+- Documentation map: `docs/README.md`
+- Source reference: `docs/SRC-REFERENCE.md`
+- Architecture: `docs/02-architecture.md`
+- Core API: `docs/04-core-api.md`
+- NestJS guards and decorators: `docs/05-guards-and-decorators.md`
+- NestJS module config: `docs/12-nestjs-module-config.md`
+- Express adapter: `docs/18-express-adapter.md`
+- AI coding agent guide: `docs/19-ai-coding-agents.md`
+
+## Important Source Entry Points
+
+- Root compatibility export: `src/index.ts`
+- Core public export: `packages/core/src/index.ts`
+- Core factory: `packages/core/src/factory.ts`
+- Core auth engine: `packages/core/src/auth/stp-logic.ts`
+- Core permission engine: `packages/core/src/auth/stp-perm-logic.ts`
+- Core static facade: `packages/core/src/auth/stp-util.ts`
+- Core HTTP context: `packages/core/src/http/context.ts`
+- NestJS public export: `packages/nestjs/src/index.ts`
+- NestJS module: `packages/nestjs/src/xlt-token.module.ts`
+- NestJS guard: `packages/nestjs/src/guards/xlt-token.guard.ts`
+- Express public export: `packages/express/src/index.ts`
+- Express middleware: `packages/express/src/middleware/xlt-middleware.ts`
+
+## Development Rules
+
+- Use `pnpm`.
+- Do not start frontend or documentation dev servers unless explicitly requested.
+- If asked how to run the docs locally, tell the user to run `pnpm docs:dev`.
+- Keep framework-independent behavior in `@xlt-token/core`.
+- Keep NestJS DI, guards, decorators, RedisStore, and JwtStrategy in `@xlt-token/nestjs`.
+- Keep Express middleware, route helpers, and Express error handling in `@xlt-token/express`.
+- Preserve public exports in each package `src/index.ts`.
+- When changing auth semantics, update tests before or alongside implementation.
+- When changing public API, update docs, README files, package README files, and examples.
+- Prefer existing test fixtures and local patterns over new abstractions.
+
+## Commands
+
+- Install dependencies: `pnpm install`
+- Build workspace: `pnpm build:workspace`
+- Test workspace: `pnpm test:workspace`
+- Test core: `pnpm --filter @xlt-token/core test`
+- Test NestJS: `pnpm --filter @xlt-token/nestjs test`
+- Test NestJS e2e: `pnpm --filter @xlt-token/nestjs test:e2e`
+- Test Express: `pnpm --filter @xlt-token/express test`
+- Run docs locally: `pnpm docs:dev`
+- Build docs: `pnpm docs:build`
+
+## API Boundaries
+
+- `StpLogic` is the main instance API for login state and token lifecycle.
+- `StpUtil` is the static facade and must be bound by framework initialization before use.
+- `StpPermLogic` handles permission and role checks through `StpInterface`.
+- `XltTokenStore` implementations must preserve timeout semantics.
+- `TokenStrategy` implementations create and optionally verify token values.
+- `HttpContext` is the framework-neutral request abstraction.
+- NestJS decorators and Express route helpers should describe route auth metadata, not duplicate core auth logic.
+
+## Validation Expectations
+
+- Core behavior changes should run `pnpm --filter @xlt-token/core test`.
+- NestJS integration changes should run `pnpm --filter @xlt-token/nestjs test` and, when route/module behavior changes, `pnpm --filter @xlt-token/nestjs test:e2e`.
+- Express adapter changes should run `pnpm --filter @xlt-token/express test` and, when middleware behavior changes, `pnpm --filter @xlt-token/express test:e2e`.
+- Workspace-level packaging changes should run `pnpm build:workspace`.

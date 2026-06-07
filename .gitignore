@@ -5,6 +5,7 @@
 # VitePress
 docs/.vitepress/cache
 docs/.vitepress/dist
+docs/public/raw
 
 # Logs
 logs

@@ -29,6 +29,108 @@
   padding-bottom: 72px !important;
 }
 
+/* ── Copy page actions ── */
+.xlt-copy-page {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+  max-width: var(--x-read);
+  margin: -8px auto 12px;
+  padding: 0 24px;
+  position: relative;
+  z-index: 12;
+}
+
+.xlt-copy-page__actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid color-mix(in srgb, var(--x-border) 78%, transparent);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--x-surface) 58%, transparent);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.035);
+  backdrop-filter: blur(10px);
+}
+
+.xlt-copy-page__action {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 26px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: color-mix(in srgb, var(--x-text) 70%, var(--x-text-2));
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 540;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease,
+    transform 0.15s ease;
+}
+
+.xlt-copy-page__action + .xlt-copy-page__action::before {
+  content: '';
+  position: absolute;
+  left: -1px;
+  width: 1px;
+  height: 13px;
+  background: color-mix(in srgb, var(--x-border) 78%, transparent);
+}
+
+.xlt-copy-page__action:hover {
+  background: color-mix(in srgb, var(--x-brand) 8%, var(--x-surface-2));
+  color: var(--x-text);
+}
+
+.xlt-copy-page__action:focus-visible {
+  outline: none;
+  background: color-mix(in srgb, var(--x-brand) 10%, var(--x-surface-2));
+  color: var(--x-text);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--x-brand) 30%, transparent);
+}
+
+.xlt-copy-page__icon {
+  width: 1.05em;
+  height: 1.05em;
+  flex: 0 0 auto;
+  color: color-mix(in srgb, var(--x-brand) 35%, currentColor);
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+@media (max-width: 640px) {
+  .xlt-copy-page {
+    justify-content: flex-start;
+    margin-top: 0;
+  }
+
+  .xlt-copy-page__actions {
+    flex-wrap: wrap;
+    gap: 4px;
+    border-radius: 9px;
+  }
+
+  .xlt-copy-page__action {
+    min-height: 28px;
+    font-size: 0.8125rem;
+  }
+
+  .xlt-copy-page__action + .xlt-copy-page__action::before {
+    display: none;
+  }
+}
+
 /* ── Site header ── */
 .xlt-site-header {
   position: fixed;
