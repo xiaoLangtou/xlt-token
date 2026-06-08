@@ -1,6 +1,6 @@
 {
   "name": "@xlt-token/core",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Framework-agnostic core contracts and utilities for xlt-token",
   "keywords": [
     "token",
@@ -26,8 +26,14 @@
   "type": "module",
   "exports": {
     ".": {
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.cjs"
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
     },
     "./package.json": "./package.json"
   },

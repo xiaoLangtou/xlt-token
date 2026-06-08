@@ -1,6 +1,6 @@
 {
   "name": "xlt-token",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Framework-agnostic token auth library with NestJS and Express integrations, inspired by Sa-Token",
   "keywords": [
     "nestjs",
@@ -23,13 +23,20 @@
   "publishConfig": {
     "access": "public"
   },
+  "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.cts",
   "exports": {
     ".": {
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.cjs"
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
     },
     "./package.json": "./package.json"
   },
@@ -63,8 +70,8 @@
     "docs:build:workspace": "turbo run docs:build"
   },
   "peerDependencies": {
-    "@nestjs/common": "^10.0.0 || ^11.0.0",
-    "@nestjs/core": "^10.0.0 || ^11.0.0",
+    "@nestjs/common": "^10.0.0 || ^11.0.0 || ^12.0.0",
+    "@nestjs/core": "^10.0.0 || ^11.0.0 || ^12.0.0",
     "redis": "^4.0.0 || ^5.0.0",
     "reflect-metadata": "^0.1.13 || ^0.2.0",
     "rxjs": "^7.0.0"
@@ -84,8 +91,8 @@
     }
   },
   "dependencies": {
-    "@xlt-token/core": "^1.0.1",
-    "@xlt-token/nestjs": "^1.0.1"
+    "@xlt-token/core": "^1.0.2",
+    "@xlt-token/nestjs": "^1.0.2"
   },
   "devDependencies": {
     "@nestjs/common": "^10.0.0",

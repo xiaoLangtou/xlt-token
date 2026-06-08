@@ -1,6 +1,6 @@
+import { createRequire } from "node:module";
 import { ForbiddenException, Inject, Injectable, Module, Optional, SetMetadata, UnauthorizedException, createParamDecorator } from "@nestjs/common";
-import { DEFAULT_XLT_TOKEN_CONFIG, DEFAULT_XLT_TOKEN_CONFIG as DEFAULT_XLT_TOKEN_CONFIG$1, MemoryStore, MemoryStore as MemoryStore$1, NotLoginException as NotLoginException$1, NotLoginType, NotLoginType as NotLoginType$1, NotPermissionException as NotPermissionException$1, NotRoleException as NotRoleException$1, NotSafeException as NotSafeException$1, StpLogic, StpLogic as StpLogic$1, StpPermLogic, StpPermLogic as StpPermLogic$1, StpUtil, UuidStrategy, UuidStrategy as UuidStrategy$1, XLT_CHECK_LOGIN_KEY, XLT_IGNORE_KEY, XLT_PERMISSION_KEY, XLT_ROLE_KEY, XLT_STP_INTERFACE, XLT_STP_INTERFACE as XLT_STP_INTERFACE$1, XLT_TOKEN_CONFIG, XLT_TOKEN_CONFIG as XLT_TOKEN_CONFIG$1, XLT_TOKEN_HOOKS, XLT_TOKEN_HOOKS as XLT_TOKEN_HOOKS$1, XLT_TOKEN_STORE, XLT_TOKEN_STORE as XLT_TOKEN_STORE$1, XLT_TOKEN_STRATEGY, XLT_TOKEN_STRATEGY as XLT_TOKEN_STRATEGY$1, XltMode, XltMode as XltMode$1, XltSession, XltTokenConfig, createExpressContext, createExpressContext as createExpressContext$1, createMockHttpContext, createXltToken, matchPermission, setStpLogic, setStpLogic as setStpLogic$1, setStpPermLogic, setStpPermLogic as setStpPermLogic$1 } from "@xlt-token/core";
-import { sign, verify } from "jsonwebtoken";
+import { DEFAULT_XLT_TOKEN_CONFIG, DEFAULT_XLT_TOKEN_CONFIG as DEFAULT_XLT_TOKEN_CONFIG$1, MemoryStore, MemoryStore as MemoryStore$1, NotLoginException as NotLoginException$1, NotLoginType, NotLoginType as NotLoginType$1, NotPermissionException as NotPermissionException$1, NotRoleException as NotRoleException$1, NotSafeException as NotSafeException$1, StpLogic, StpLogic as StpLogic$1, StpPermLogic, StpPermLogic as StpPermLogic$1, StpUtil, UuidStrategy, UuidStrategy as UuidStrategy$1, XLT_CHECK_LOGIN_KEY, XLT_IGNORE_KEY, XLT_PERMISSION_KEY, XLT_ROLE_KEY, XLT_STP_INTERFACE, XLT_STP_INTERFACE as XLT_STP_INTERFACE$1, XLT_TOKEN_CONFIG, XLT_TOKEN_CONFIG as XLT_TOKEN_CONFIG$1, XLT_TOKEN_HOOKS, XLT_TOKEN_HOOKS as XLT_TOKEN_HOOKS$1, XLT_TOKEN_STORE, XLT_TOKEN_STORE as XLT_TOKEN_STORE$1, XLT_TOKEN_STRATEGY, XLT_TOKEN_STRATEGY as XLT_TOKEN_STRATEGY$1, XltMode, XltMode as XltMode$1, XltSession, createExpressContext, createExpressContext as createExpressContext$1, createMockHttpContext, createXltToken, matchPermission, setStpLogic, setStpLogic as setStpLogic$1, setStpPermLogic, setStpPermLogic as setStpPermLogic$1 } from "@xlt-token/core";
 import { Reflector } from "@nestjs/core";
 
 //#region \0@oxc-project+runtime@0.112.0/helpers/decorate.js
@@ -234,12 +234,23 @@ RedisStore = __decorate([
 
 //#endregion
 //#region src/token/jwt-strategy.ts
-var _ref$2;
+const require = createRequire(import.meta.url);
+let jsonwebtoken;
+function getJsonwebtoken() {
+	try {
+		jsonwebtoken ??= require("jsonwebtoken");
+		return jsonwebtoken;
+	} catch (error) {
+		if (error.code === "MODULE_NOT_FOUND") throw new Error("JwtStrategy requires the optional peer dependency \"jsonwebtoken\". Install it in your application with \"pnpm add jsonwebtoken\".");
+		throw error;
+	}
+}
 let JwtStrategy = class JwtStrategy {
 	constructor(config) {
 		this.config = config;
 	}
 	createToken(loginId, config) {
+		const { sign } = getJsonwebtoken();
 		const jwt = config.jwt;
 		return sign({
 			sub: loginId,
@@ -252,16 +263,18 @@ let JwtStrategy = class JwtStrategy {
 		});
 	}
 	generateToken(payload) {
+		const { sign } = getJsonwebtoken();
 		return sign(payload, this.config.jwt.secret);
 	}
 	verifyToken(token) {
+		const { verify } = getJsonwebtoken();
 		return verify(token, this.config.jwt.secret);
 	}
 };
 JwtStrategy = __decorate([
 	Injectable(),
 	__decorateParam(0, Inject(XLT_TOKEN_CONFIG$1)),
-	__decorateMetadata("design:paramtypes", [typeof (_ref$2 = typeof XltTokenConfig !== "undefined" && XltTokenConfig) === "function" ? _ref$2 : Object])
+	__decorateMetadata("design:paramtypes", [Object])
 ], JwtStrategy);
 
 //#endregion

@@ -1,22 +1,25 @@
-import { Module, ModuleMetadata, Provider } from '@nestjs/common';
+import { Module } from '@nestjs/common';
+import type { ModuleMetadata, Provider } from '@nestjs/common';
 import {
   DEFAULT_XLT_TOKEN_CONFIG,
   MemoryStore,
-  StpInterface,
   StpLogic,
   StpPermLogic,
-  TokenStrategy,
   UuidStrategy,
   XLT_STP_INTERFACE,
   XLT_TOKEN_CONFIG,
   XLT_TOKEN_HOOKS,
   XLT_TOKEN_STORE,
   XLT_TOKEN_STRATEGY,
+  setStpLogic,
+  setStpPermLogic,
+} from '@xlt-token/core';
+import type {
+  StpInterface,
+  TokenStrategy,
   XltHooks,
   XltTokenConfig,
   XltTokenStore,
-  setStpLogic,
-  setStpPermLogic,
 } from '@xlt-token/core';
 
 export interface XltTokenModuleOptions {

@@ -1,7 +1,7 @@
 {
   "name": "@xlt-token/example-nestjs",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Full-feature NestJS example for @xlt-token/nestjs",
   "scripts": {
     "start": "tsx src/main.ts",

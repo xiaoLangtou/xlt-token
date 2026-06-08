@@ -1,7 +1,7 @@
 Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
 let _nestjs_common = require("@nestjs/common");
 let _xlt_token_core = require("@xlt-token/core");
-let jsonwebtoken = require("jsonwebtoken");
+let node_module = require("node:module");
 let _nestjs_core = require("@nestjs/core");
 
 //#region \0@oxc-project+runtime@0.112.0/helpers/decorate.js
@@ -235,14 +235,25 @@ RedisStore = __decorate([
 
 //#endregion
 //#region src/token/jwt-strategy.ts
-var _ref$2;
+const require$1 = (0, node_module.createRequire)(require("url").pathToFileURL(__filename).href);
+let jsonwebtoken;
+function getJsonwebtoken() {
+	try {
+		jsonwebtoken ??= require$1("jsonwebtoken");
+		return jsonwebtoken;
+	} catch (error) {
+		if (error.code === "MODULE_NOT_FOUND") throw new Error("JwtStrategy requires the optional peer dependency \"jsonwebtoken\". Install it in your application with \"pnpm add jsonwebtoken\".");
+		throw error;
+	}
+}
 let JwtStrategy = class JwtStrategy {
 	constructor(config) {
 		this.config = config;
 	}
 	createToken(loginId, config) {
+		const { sign } = getJsonwebtoken();
 		const jwt = config.jwt;
-		return (0, jsonwebtoken.sign)({
+		return sign({
 			sub: loginId,
 			jti: crypto.randomUUID()
 		}, jwt.secret, {
@@ -253,16 +264,18 @@ let JwtStrategy = class JwtStrategy {
 		});
 	}
 	generateToken(payload) {
-		return (0, jsonwebtoken.sign)(payload, this.config.jwt.secret);
+		const { sign } = getJsonwebtoken();
+		return sign(payload, this.config.jwt.secret);
 	}
 	verifyToken(token) {
-		return (0, jsonwebtoken.verify)(token, this.config.jwt.secret);
+		const { verify } = getJsonwebtoken();
+		return verify(token, this.config.jwt.secret);
 	}
 };
 JwtStrategy = __decorate([
 	(0, _nestjs_common.Injectable)(),
 	__decorateParam(0, (0, _nestjs_common.Inject)(_xlt_token_core.XLT_TOKEN_CONFIG)),
-	__decorateMetadata("design:paramtypes", [typeof (_ref$2 = typeof _xlt_token_core.XltTokenConfig !== "undefined" && _xlt_token_core.XltTokenConfig) === "function" ? _ref$2 : Object])
+	__decorateMetadata("design:paramtypes", [Object])
 ], JwtStrategy);
 
 //#endregion

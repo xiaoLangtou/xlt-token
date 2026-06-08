@@ -2,7 +2,6 @@ import * as _nestjs_common0 from "@nestjs/common";
 import { CanActivate, ExecutionContext, ForbiddenException, ModuleMetadata, Provider, UnauthorizedException } from "@nestjs/common";
 import * as _xlt_token_core0 from "@xlt-token/core";
 import { AuthResult, CreateOptions, DEFAULT_XLT_TOKEN_CONFIG, DeviceInfo, HttpContext, MemoryStore, NotLoginType, NotLoginType as NotLoginType$1, StpInterface, StpInterface as StpInterface$1, StpLogic, StpLogic as StpLogic$1, StpPermLogic, StpPermLogic as StpPermLogic$1, StpUtil, TokenStrategy, TokenStrategy as TokenStrategy$1, UuidStrategy, XLT_STP_INTERFACE, XLT_TOKEN_CONFIG, XLT_TOKEN_HOOKS, XLT_TOKEN_STORE, XLT_TOKEN_STRATEGY, XltHooks, XltHooks as XltHooks$1, XltMode, XltMode as XltMode$1, XltSession, XltTokenConfig, XltTokenConfig as XltTokenConfig$1, XltTokenContext, XltTokenStore, XltTokenStore as XltTokenStore$1, createExpressContext, createMockHttpContext, createXltToken, matchPermission, setStpLogic, setStpPermLogic } from "@xlt-token/core";
-import { JwtPayload } from "jsonwebtoken";
 import { Reflector } from "@nestjs/core";
 
 //#region src/xlt-token.module.d.ts
@@ -98,15 +97,16 @@ declare class RedisStore implements XltTokenStore$1 {
 }
 //#endregion
 //#region src/token/jwt-strategy.d.ts
+type XltJwtPayload = Record<string, any> & {
+  sub: string;
+  jti: string;
+};
 declare class JwtStrategy implements TokenStrategy$1 {
   private readonly config;
   constructor(config: XltTokenConfig$1);
   createToken(loginId: string, config: XltTokenConfig$1): string;
   generateToken(payload: any): string;
-  verifyToken(token: string): JwtPayload & {
-    sub: string;
-    jti: string;
-  };
+  verifyToken(token: string): XltJwtPayload;
 }
 //#endregion
 //#region src/decorators/xlt-check-login.decorator.d.ts

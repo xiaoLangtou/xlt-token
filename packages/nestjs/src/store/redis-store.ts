@@ -1,4 +1,4 @@
-import { XltTokenStore } from '@xlt-token/core';
+import type { XltTokenStore } from '@xlt-token/core';
 import { Inject, Injectable } from '@nestjs/common';
 
 
