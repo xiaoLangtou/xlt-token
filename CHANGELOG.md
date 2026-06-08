@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.2] - 2026-06-08
+
+### Added
+
+- 支持 CJS / ESM 双入口发布。`xlt-token`、`@xlt-token/core`、`@xlt-token/express`、`@xlt-token/nestjs` 现在均提供 `dist/index.mjs`、`dist/index.cjs`、`dist/index.d.mts` 与 `dist/index.d.cts`。
+- `@xlt-token/nestjs` 与根包 peer dependency 增加 NestJS v12 支持：`@nestjs/common` / `@nestjs/core` 支持 `^10.0.0 || ^11.0.0 || ^12.0.0`。
+
+### Fixed
+
+- 修复 ESM 项目中可能出现的运行时报错：`The requested module '@xlt-token/core' does not provide an export named 'XltTokenConfig'`。
+- 将仅类型使用的导入改为 `import type`，避免 TypeScript interface 被错误打进 ESM runtime import。
+- 修复 `RedisStore` 中 `XltTokenStore` 的类型导入方式。
+
+### Changed
+
+- 新增统一的 dual package exports 生成逻辑，确保每次 `tsdown build` 后都保持正确的 CJS / ESM exports。
+- 所有发布包版本升级到 `1.0.2`，示例包版本升级到 `0.0.1`。
+- 停止跟踪 `packages/*/node_modules`，后续由 `.gitignore` 正常忽略。
+
+---
+
 ## [1.0.1] - 2026-06-06
 
 ### Fixed

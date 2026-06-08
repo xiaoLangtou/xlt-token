@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
+import v102 from '../../../../.github/releases/v1.0.2.md?raw';
 import rc1 from '../../../../.github/releases/v1.0.0-rc.1.md?raw';
 import rc2 from '../../../../.github/releases/v1.0.0-rc.2.md?raw';
 import rc3 from '../../../../.github/releases/v1.0.0-rc.3.md?raw';
@@ -33,6 +34,12 @@ interface ReleaseFile {
 }
 
 const RELEASE_FILES: ReleaseFile[] = [
+  {
+    date: 'Jun 8, 2026',
+    source: 'v1.0.2.md',
+    url: 'https://raw.githubusercontent.com/xiaoLangtou/xlt-token/master/.github/releases/v1.0.2.md',
+    fallbackRaw: v102,
+  },
   {
     date: 'May 29, 2026',
     source: 'v1.0.0-rc.3.md',
