@@ -1,47 +1,65 @@
-# Skills
+# 22 · AI Agent Skills
 
-Skills 用来让 AI 编码代理按任务加载项目知识，而不是一次性塞入所有上下文。对 `xlt-token` 来说，建议把技能拆成 Core、NestJS、Express 和维护工作四类。
+`xlt-token` 在仓库中内置了面向 AI 编码代理的 Skill，帮助使用者在 NestJS、Express 或自定义框架中正确接入鉴权能力。
 
-## 推荐 Skills
-
-| Skill | 触发场景 | 重点 |
-| --- | --- | --- |
-| `xlt-token-core-api` | 修改 `@xlt-token/core` | `StpLogic`、Store、TokenStrategy、权限、会话、Hooks |
-| `xlt-token-nestjs-adapter` | 修改 NestJS 集成 | Module、Guard、Decorator、RedisStore、JwtStrategy、E2E |
-| `xlt-token-express-adapter` | 修改 Express 集成 | middleware、route helper、错误处理器、请求状态同步 |
-| `xlt-token-maintenance` | 构建、测试、发包、文档 | pnpm、Turbo、tsdown、Vitest、文档同步 |
-
-## Skill 内容原则
-
-- `SKILL.md` 只写工作流和决策规则。
-- 详细 API 放到 `references/`，按需读取。
-- 不重复 README 和完整文档。
-- 明确修改后需要运行哪些测试。
-- 明确包边界，避免把框架逻辑写进 Core。
-
-## 建议目录
+Skill 目录：
 
 ```txt
-.codex/
-  skills/
-    xlt-token-core-api/
-      SKILL.md
-      references/core-api.md
-    xlt-token-nestjs-adapter/
-      SKILL.md
-      references/nestjs-patterns.md
-    xlt-token-express-adapter/
-      SKILL.md
-      references/express-patterns.md
-    xlt-token-maintenance/
-      SKILL.md
-      references/testing-build-release.md
+skills/
+├── index.json
+└── xlt-token/
+    ├── SKILL.md
+    └── references/
+        ├── core.md
+        ├── nestjs.md
+        ├── express.md
+        └── recipes.md
 ```
 
-## 验证建议
+## 适用场景
 
-- Core 行为变更：`pnpm --filter @xlt-token/core test`
-- NestJS 集成变更：`pnpm --filter @xlt-token/nestjs test`
-- NestJS 请求链路变更：`pnpm --filter @xlt-token/nestjs test:e2e`
-- Express 适配器变更：`pnpm --filter @xlt-token/express test`
-- 包导出或文档站变更：`pnpm docs:build`
+当你让 AI 编码代理完成以下任务时，可以使用 `xlt-token` Skill：
+
+- 在 NestJS 项目中接入 `@xlt-token/nestjs`
+- 在 Express 项目中接入 `@xlt-token/express`
+- 使用 `@xlt-token/core` 构建自定义适配器
+- 配置登录、登出、权限、角色、会话、多端登录
+- 配置 RedisStore、JwtStrategy、二级认证和 Hooks
+- 从已有手写 token 鉴权迁移到 xlt-token
+
+## 安装到 AI 工具
+
+不同 AI 工具的 Skill 目录不同。你可以把仓库内的 `skills/xlt-token` 复制到目标工具的项目级 Skill 目录。
+
+例如 Codex / Claude Code 常见项目级目录：
+
+```bash
+mkdir -p .codex/skills
+cp -r node_modules/xlt-token/skills/xlt-token .codex/skills/
+```
+
+如果你直接从 GitHub 使用源码仓库：
+
+```bash
+mkdir -p .codex/skills
+cp -r skills/xlt-token .codex/skills/
+```
+
+也可以安装到全局 Skill 目录，让多个项目共享。
+
+## Skill 内容
+
+`SKILL.md` 只保留触发说明、核心规则和路由表。更详细的内容拆到 `references/` 中，AI 会按任务选择性读取：
+
+| 文件 | 内容 |
+| --- | --- |
+| `references/core.md` | `createXltToken`、`StpLogic`、`StpUtil`、Store、Strategy、Session、Hooks |
+| `references/nestjs.md` | `XltTokenModule`、全局 Guard、装饰器、Redis、JWT、自定义 Guard |
+| `references/express.md` | `xltMiddleware`、路由策略、helper、错误处理、请求状态同步 |
+| `references/recipes.md` | 登录登出、多端登录、二级认证、临时 token、在线用户、生产检查 |
+
+## 发布说明
+
+根包 `xlt-token` 会把 `skills/` 一起发布到 npm，使用者安装根包后可以从 `node_modules/xlt-token/skills/xlt-token` 复制。
+
+如果使用者只安装分包（如 `@xlt-token/nestjs` 或 `@xlt-token/express`），也可以从 GitHub 仓库复制同一个 Skill。
