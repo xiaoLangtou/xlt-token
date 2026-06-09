@@ -290,6 +290,7 @@ export default defineConfig({
           text: 'Agents',
           items: [
             { text: 'LLMs.txt', link: '/guide/llms' },
+            { text: 'Skills 指南', link: '/guide/skills' },
           ],
         },
       ],

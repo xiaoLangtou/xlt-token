@@ -1,8 +1,138 @@
+---
+title: "AI Agent Skills"
+description: "Install the xlt-token skill to give AI coding agents deep knowledge of token auth, NestJS and Express integration, permissions, sessions, JWT, Redis, and common recipes."
+canonical_url: "https://xiaolangtou.github.io/xlt-token/guide/skills"
+last_updated: "2026-06-09"
+---
+
 # 22 · AI Agent Skills
 
-`xlt-token` 在仓库中内置了面向 AI 编码代理的 Skill，帮助使用者在 NestJS、Express 或自定义框架中正确接入鉴权能力。
+> Install the xlt-token skill to give AI coding agents deep knowledge of token auth, NestJS and Express integration, permissions, sessions, JWT, Redis, and common recipes.
 
-Skill 目录：
+## 什么是 Skills？
+
+Skills 是结构化知识文件，用来给 AI 编码代理补充某个库、框架或代码库的上下文。与 MCP server 提供实时工具访问不同，Skill 会被加载进代理上下文，让代理在对话中持续参考这些使用规则和示例。
+
+`xlt-token` 提供一个 **usage skill**：它教 AI 代理如何在 TypeScript 后端项目中正确接入 xlt-token，包括 NestJS、Express、Core API、权限、角色、会话、多端登录、JWT、Redis、Hooks 和二级认证。
+
+## Usage
+
+`xlt-token` Skill 覆盖：
+
+- `@xlt-token/nestjs` 的模块注册、全局 Guard、装饰器和异常处理
+- `@xlt-token/express` 的中间件、路由策略、helper 和错误处理器
+- `@xlt-token/core` 的框架无关用法和自定义适配器
+- 登录、登出、踢人、顶号、多端登录和在线用户查询
+- 权限、角色、会话、二级认证和临时 token
+- RedisStore、JwtStrategy、Hooks 和生产建议
+
+Skill 内部包含 `references/`，AI 代理会按任务选择性读取，避免一次性加载过多上下文。
+
+> [!NOTE]
+>
+> 安装后，你可以在支持 Skill 调用的代理里输入 `/xlt-token` 来显式唤起这个 Skill。
+
+## Skills CLI
+
+[`skills`](https://skills.sh) CLI 是最简单的安装方式，支持 Cursor、Claude Code、Codex、Windsurf、Cline 等多种 AI 编码代理。
+
+从 GitHub 仓库安装：
+
+```bash
+npx skills add xiaoLangtou/xlt-token --skill xlt-token
+```
+
+也可以直接指向 Skill 子目录：
+
+```bash
+npx skills add https://github.com/xiaoLangtou/xlt-token/tree/master/skills/xlt-token
+```
+
+指定目标代理：
+
+```bash
+npx skills add xiaoLangtou/xlt-token --skill xlt-token --agent cursor
+npx skills add xiaoLangtou/xlt-token --skill xlt-token --agent claude-code
+npx skills add xiaoLangtou/xlt-token --skill xlt-token --agent codex
+```
+
+安装到全局目录，让所有项目可用：
+
+```bash
+npx skills add xiaoLangtou/xlt-token --skill xlt-token --global
+```
+
+只列出仓库内可安装的 Skill：
+
+```bash
+npx skills add xiaoLangtou/xlt-token --list
+```
+
+如果你在本地源码仓库中调试：
+
+```bash
+npx skills add ./ --skill xlt-token
+```
+
+## Cursor
+
+### Quick Install
+
+点击下面链接可在 Cursor 中安装：
+
+[Install Skill](cursor://anysphere.cursor-deeplink/install-skill?url=https://github.com/xiaoLangtou/xlt-token/tree/master/skills/xlt-token)
+
+### Manual Setup
+
+1. 打开 Cursor，进入 "Settings" > "Skills"
+2. 点击 "Add skill"
+3. 输入以下 URL：
+
+```text
+https://github.com/xiaoLangtou/xlt-token/tree/master/skills/xlt-token
+```
+
+## Claude Code
+
+> [!NOTE]
+>
+> 请先确认已安装 Claude Code。
+
+使用 Claude Code CLI 添加：
+
+```bash
+claude skill add https://github.com/xiaoLangtou/xlt-token/tree/master/skills/xlt-token
+```
+
+或者使用通用 Skills CLI：
+
+```bash
+npx skills add xiaoLangtou/xlt-token --skill xlt-token --agent claude-code
+```
+
+## Codex
+
+使用 Skills CLI 安装到 Codex 项目级目录：
+
+```bash
+npx skills add xiaoLangtou/xlt-token --skill xlt-token --agent codex
+```
+
+也可以手动复制：
+
+```bash
+mkdir -p .codex/skills
+cp -r node_modules/xlt-token/skills/xlt-token .codex/skills/
+```
+
+## Other AI Tools
+
+Skill 文件公开托管在 GitHub，可以在任意支持自定义上下文、规则或 Skill 的 AI 工具中引用：
+
+- Skill entry point: [`skills/xlt-token/SKILL.md`](https://github.com/xiaoLangtou/xlt-token/blob/master/skills/xlt-token/SKILL.md)
+- Full skill directory: [`skills/xlt-token/`](https://github.com/xiaoLangtou/xlt-token/tree/master/skills/xlt-token)
+
+## 仓库结构
 
 ```txt
 skills/
@@ -16,50 +146,4 @@ skills/
         └── recipes.md
 ```
 
-## 适用场景
-
-当你让 AI 编码代理完成以下任务时，可以使用 `xlt-token` Skill：
-
-- 在 NestJS 项目中接入 `@xlt-token/nestjs`
-- 在 Express 项目中接入 `@xlt-token/express`
-- 使用 `@xlt-token/core` 构建自定义适配器
-- 配置登录、登出、权限、角色、会话、多端登录
-- 配置 RedisStore、JwtStrategy、二级认证和 Hooks
-- 从已有手写 token 鉴权迁移到 xlt-token
-
-## 安装到 AI 工具
-
-不同 AI 工具的 Skill 目录不同。你可以把仓库内的 `skills/xlt-token` 复制到目标工具的项目级 Skill 目录。
-
-例如 Codex / Claude Code 常见项目级目录：
-
-```bash
-mkdir -p .codex/skills
-cp -r node_modules/xlt-token/skills/xlt-token .codex/skills/
-```
-
-如果你直接从 GitHub 使用源码仓库：
-
-```bash
-mkdir -p .codex/skills
-cp -r skills/xlt-token .codex/skills/
-```
-
-也可以安装到全局 Skill 目录，让多个项目共享。
-
-## Skill 内容
-
-`SKILL.md` 只保留触发说明、核心规则和路由表。更详细的内容拆到 `references/` 中，AI 会按任务选择性读取：
-
-| 文件 | 内容 |
-| --- | --- |
-| `references/core.md` | `createXltToken`、`StpLogic`、`StpUtil`、Store、Strategy、Session、Hooks |
-| `references/nestjs.md` | `XltTokenModule`、全局 Guard、装饰器、Redis、JWT、自定义 Guard |
-| `references/express.md` | `xltMiddleware`、路由策略、helper、错误处理、请求状态同步 |
-| `references/recipes.md` | 登录登出、多端登录、二级认证、临时 token、在线用户、生产检查 |
-
-## 发布说明
-
-根包 `xlt-token` 会把 `skills/` 一起发布到 npm，使用者安装根包后可以从 `node_modules/xlt-token/skills/xlt-token` 复制。
-
-如果使用者只安装分包（如 `@xlt-token/nestjs` 或 `@xlt-token/express`），也可以从 GitHub 仓库复制同一个 Skill。
+根包 `xlt-token` 会把 `skills/` 一起发布到 npm。安装根包后，使用者也可以从 `node_modules/xlt-token/skills/xlt-token` 手动复制。
