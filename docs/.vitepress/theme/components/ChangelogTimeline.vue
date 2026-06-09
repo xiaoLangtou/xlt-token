@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
+import releaseCodeHtml from 'virtual:xlt-release-code-html';
 import v102 from '../../../../.github/releases/v1.0.2.md?raw';
 import rc1 from '../../../../.github/releases/v1.0.0-rc.1.md?raw';
 import rc2 from '../../../../.github/releases/v1.0.0-rc.2.md?raw';
@@ -224,6 +225,20 @@ function escapeHtml(value: string) {
     .replace(/>/g, '&gt;')
 }
 
+function codeBlockKey(version: string, sectionIndex: number, blockIndex: number) {
+  return `${version}:${sectionIndex}:${blockIndex}`
+}
+
+function codeBlockHtml(block: Extract<Block, { type: 'code' }>, version: string, sectionIndex: number, blockIndex: number) {
+  return releaseCodeHtml[codeBlockKey(version, sectionIndex, blockIndex)] ?? fallbackCodeHtml(block)
+}
+
+function fallbackCodeHtml(block: Extract<Block, { type: 'code' }>) {
+  const langClass = block.lang ? ` class="language-${escapeHtml(block.lang)}"` : ''
+
+  return `<pre><code${langClass}>${escapeHtml(block.code.trim())}</code></pre>`
+}
+
 function sectionClass(title: string) {
   if (title.includes('Highlights')) return 'is-highlight'
   if (title.includes('Breaking')) return 'is-breaking'
@@ -293,7 +308,7 @@ function sectionClass(title: string) {
 
           <div class="xlt-release__sections">
             <section
-              v-for="section in release.sections"
+              v-for="(section, sectionIndex) in release.sections"
               :key="section.title"
               class="xlt-release-section"
               :class="sectionClass(section.title)"
@@ -311,7 +326,11 @@ function sectionClass(title: string) {
                   <li v-for="item in block.items" :key="item" v-html="item" />
                 </ul>
 
-                <pre v-else-if="block.type === 'code'"><code>{{ block.code.trim() }}</code></pre>
+                <div
+                  v-else-if="block.type === 'code'"
+                  class="xlt-release-code"
+                  v-html="codeBlockHtml(block, release.version, sectionIndex, index)"
+                />
 
                 <table v-else-if="block.type === 'table'">
                   <thead>
@@ -623,7 +642,7 @@ function sectionClass(title: string) {
   background: var(--x-text-3);
 }
 
-.xlt-release-section :deep(code) {
+.xlt-release-section :deep(:not(pre) > code) {
   border: 1px solid var(--x-border-soft);
   border-radius: 5px;
   padding: 0.08em 0.38em;
@@ -638,17 +657,28 @@ function sectionClass(title: string) {
   text-decoration: none !important;
 }
 
-.xlt-release-section pre {
-  overflow: auto;
+.xlt-release-code {
   margin: 14px 0 0;
+}
+
+.xlt-release-code :deep(pre) {
+  overflow: auto;
+  margin: 0;
   padding: 14px 16px;
   border: 1px solid var(--x-code-border);
   border-radius: 8px;
-  background: var(--x-code-bg);
+  background: var(--x-code-bg) !important;
   color: var(--x-text);
   font-family: var(--vp-font-family-mono);
   font-size: 0.8125rem;
   line-height: 1.7;
+}
+
+.xlt-release-code :deep(code) {
+  display: block;
+  width: max-content;
+  min-width: 100%;
+  font-family: var(--vp-font-family-mono);
 }
 
 .xlt-release-section table {

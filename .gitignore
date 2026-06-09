@@ -52,3 +52,4 @@ packages/*/coverage
 # examples workspace packages
 examples/**/node_modules
 **/.vite
+.vscode/gitcharm-changelists.json

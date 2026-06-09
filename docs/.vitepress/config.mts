@@ -1,7 +1,7 @@
-import { copyFileSync, mkdirSync } from 'node:fs';
+import { copyFileSync, mkdirSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join, resolve } from 'node:path';
-import { defineConfig } from 'vitepress';
+import { createMarkdownRenderer, defineConfig } from 'vitepress';
 import { transformerTwoslash } from '@shikijs/vitepress-twoslash';
 // @ts-ignore
 import { createFileSystemTypesCache } from '@shikijs/vitepress-twoslash/cache-fs';
@@ -52,6 +52,167 @@ function generateRawMarkdownFiles() {
 
 generateRawMarkdownFiles()
 
+const markdown = {
+  theme: {
+    // 浅色：柔和白底
+    light: 'vitesse-light',
+    // 深色：高对比暗色
+    dark: 'vitesse-dark',
+  },
+  lineNumbers: true,
+  codeTransformers: [
+    transformerTwoslash({
+      twoslashOptions: {
+        compilerOptions: {
+          ignoreDeprecations: '5.0',
+          experimentalDecorators: true,
+          emitDecoratorMetadata: true,
+          baseUrl: root,
+          paths: {
+            '@xlt-token/nestjs': ['packages/nestjs/src/index.ts'],
+            '@xlt-token/core': ['packages/core/src/index.ts'],
+            '@xlt-token/express': ['packages/express/src/index.ts'],
+          },
+        },
+        handbookOptions: {
+          noErrors: true,
+        },
+      },
+      // @ts-ignore
+      includesMap: new Map([['imports', `// ---cut-start---\n${FILE_IMPORTS}\n// ---cut-end---`]]),
+      typesCache: createFileSystemTypesCache({
+        dir: resolve(dir, 'cache/twoslash'),
+      }),
+    }),
+  ],
+  // @ts-ignore
+  languages: ['js', 'jsx', 'ts', 'tsx'],
+}
+
+const virtualReleaseCodeHtmlId = 'virtual:xlt-release-code-html'
+const resolvedVirtualReleaseCodeHtmlId = `\0${virtualReleaseCodeHtmlId}`
+const releaseSources = [
+  'v1.0.2.md',
+  'v1.0.0-rc.3.md',
+  'v1.0.0-rc.2.md',
+  'v1.0.0-rc.1.md',
+]
+
+function releaseCodeHtmlPlugin() {
+  let codeHtml: Record<string, string> | undefined
+
+  return {
+    name: 'xlt-release-code-html',
+    resolveId(id: string) {
+      if (id === virtualReleaseCodeHtmlId) {
+        return resolvedVirtualReleaseCodeHtmlId
+      }
+    },
+    async load(id: string) {
+      if (id !== resolvedVirtualReleaseCodeHtmlId) return
+
+      codeHtml ??= await renderReleaseCodeHtml()
+
+      return `export default ${JSON.stringify(codeHtml)}`
+    },
+  }
+}
+
+async function renderReleaseCodeHtml() {
+  const renderer = await createMarkdownRenderer(docsRoot, markdown, '/xlt-token/')
+  const codeHtml: Record<string, string> = {}
+
+  for (const source of releaseSources) {
+    const raw = readFileSync(resolve(root, '.github/releases', source), 'utf8')
+    const release = parseReleaseCodeBlocks(raw)
+
+    release.codeBlocks.forEach((block) => {
+      const fence = `\`\`\`${block.lang}\n${block.code.trim()}\n\`\`\``
+      codeHtml[codeBlockKey(release.version, block.sectionIndex, block.blockIndex)] = renderer.render(fence).trim()
+    })
+  }
+
+  return codeHtml
+}
+
+function parseReleaseCodeBlocks(raw: string) {
+  const lines = raw.split(/\r?\n/)
+  const title = lines.find(line => line.startsWith('# ')) ?? ''
+  const version = title.match(/`([^`]+)`/)?.[1] ?? title.replace(/^#\s+Release\s+/, '').trim()
+  const codeBlocks: Array<{ sectionIndex: number; blockIndex: number; lang: string; code: string }> = []
+  let sectionIndex = -1
+  let blockIndex = -1
+  let lastBlockType: 'list' | 'table' | 'code' | 'paragraph' | 'subheading' | undefined
+  let currentBlock: { sectionIndex: number; blockIndex: number; lang: string; code: string } | undefined
+
+  for (const line of lines) {
+    const trimmed = line.trim()
+
+    if (line.startsWith('## ')) {
+      sectionIndex += 1
+      blockIndex = -1
+      lastBlockType = undefined
+      currentBlock = undefined
+      continue
+    }
+
+    if (sectionIndex < 0 || !trimmed || trimmed === '---' || trimmed.startsWith('**Full Changelog**')) {
+      continue
+    }
+
+    if (trimmed.startsWith('```')) {
+      if (currentBlock) {
+        codeBlocks.push(currentBlock)
+        currentBlock = undefined
+        lastBlockType = 'code'
+      }
+      else {
+        blockIndex += 1
+        currentBlock = {
+          sectionIndex,
+          blockIndex,
+          lang: trimmed.replace(/^```/, '').trim(),
+          code: '',
+        }
+      }
+      continue
+    }
+
+    if (currentBlock) {
+      currentBlock.code += `${line}\n`
+      continue
+    }
+
+    if (trimmed.startsWith('### ')) {
+      blockIndex += 1
+      lastBlockType = 'subheading'
+      continue
+    }
+
+    if (trimmed.startsWith('|')) {
+      if (trimmed.includes('---')) continue
+      if (lastBlockType !== 'table') blockIndex += 1
+      lastBlockType = 'table'
+      continue
+    }
+
+    if (trimmed.startsWith('- ')) {
+      if (lastBlockType !== 'list') blockIndex += 1
+      lastBlockType = 'list'
+      continue
+    }
+
+    blockIndex += 1
+    lastBlockType = 'paragraph'
+  }
+
+  return { version, codeBlocks }
+}
+
+function codeBlockKey(version: string, sectionIndex: number, blockIndex: number) {
+  return `${version}:${sectionIndex}:${blockIndex}`
+}
+
 // @ts-ignore
 export default defineConfig({
   title: 'xlt-token',
@@ -64,6 +225,7 @@ export default defineConfig({
   appearance: true,
 
   vite: {
+    plugins: [releaseCodeHtmlPlugin()],
     server: {
       fs: {
         allow: [root],
@@ -71,42 +233,7 @@ export default defineConfig({
     },
   },
 
-  markdown: {
-    theme: {
-      // 浅色：柔和白底
-      light: 'vitesse-light',
-      // 深色：高对比暗色
-      dark: 'vitesse-dark',
-    },
-    lineNumbers: true,
-    codeTransformers: [
-      transformerTwoslash({
-        twoslashOptions: {
-          compilerOptions: {
-            ignoreDeprecations: '5.0',
-            experimentalDecorators: true,
-            emitDecoratorMetadata: true,
-            baseUrl: root,
-            paths: {
-              '@xlt-token/nestjs': ['packages/nestjs/src/index.ts'],
-              '@xlt-token/core': ['packages/core/src/index.ts'],
-              '@xlt-token/express': ['packages/express/src/index.ts'],
-            },
-          },
-          handbookOptions: {
-            noErrors: true,
-          },
-        },
-        // @ts-ignore
-        includesMap: new Map([['imports', `// ---cut-start---\n${FILE_IMPORTS}\n// ---cut-end---`]]),
-        typesCache: createFileSystemTypesCache({
-          dir: resolve(dir, 'cache/twoslash'),
-        }),
-      }),
-    ],
-    // @ts-ignore
-    languages: ['js', 'jsx', 'ts', 'tsx'],
-  },
+  markdown,
 
   head: [
     ['link', { rel: 'icon', href: '/xlt-token/favicon.ico' }],
