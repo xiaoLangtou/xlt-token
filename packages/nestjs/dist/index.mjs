@@ -1,6 +1,6 @@
 import { createRequire } from "node:module";
 import { ForbiddenException, Inject, Injectable, Module, Optional, SetMetadata, UnauthorizedException, createParamDecorator } from "@nestjs/common";
-import { DEFAULT_XLT_TOKEN_CONFIG, DEFAULT_XLT_TOKEN_CONFIG as DEFAULT_XLT_TOKEN_CONFIG$1, MemoryStore, MemoryStore as MemoryStore$1, NotLoginException as NotLoginException$1, NotLoginType, NotLoginType as NotLoginType$1, NotPermissionException as NotPermissionException$1, NotRoleException as NotRoleException$1, NotSafeException as NotSafeException$1, StpLogic, StpLogic as StpLogic$1, StpPermLogic, StpPermLogic as StpPermLogic$1, StpUtil, UuidStrategy, UuidStrategy as UuidStrategy$1, XLT_CHECK_LOGIN_KEY, XLT_IGNORE_KEY, XLT_PERMISSION_KEY, XLT_ROLE_KEY, XLT_STP_INTERFACE, XLT_STP_INTERFACE as XLT_STP_INTERFACE$1, XLT_TOKEN_CONFIG, XLT_TOKEN_CONFIG as XLT_TOKEN_CONFIG$1, XLT_TOKEN_HOOKS, XLT_TOKEN_HOOKS as XLT_TOKEN_HOOKS$1, XLT_TOKEN_STORE, XLT_TOKEN_STORE as XLT_TOKEN_STORE$1, XLT_TOKEN_STRATEGY, XLT_TOKEN_STRATEGY as XLT_TOKEN_STRATEGY$1, XltMode, XltMode as XltMode$1, XltSession, createExpressContext, createExpressContext as createExpressContext$1, createMockHttpContext, createXltToken, matchPermission, normalizeXltTokenConfig, setStpLogic, setStpLogic as setStpLogic$1, setStpPermLogic, setStpPermLogic as setStpPermLogic$1 } from "@xlt-token/core";
+import { DEFAULT_XLT_TOKEN_CONFIG, MemoryStore, MemoryStore as MemoryStore$1, NotLoginException as NotLoginException$1, NotLoginType, NotLoginType as NotLoginType$1, NotPermissionException as NotPermissionException$1, NotRoleException as NotRoleException$1, NotSafeException as NotSafeException$1, StpLogic, StpLogic as StpLogic$1, StpPermLogic, StpPermLogic as StpPermLogic$1, StpUtil, UuidStrategy, UuidStrategy as UuidStrategy$1, XLT_CHECK_LOGIN_KEY, XLT_IGNORE_KEY, XLT_PERMISSION_KEY, XLT_ROLE_KEY, XLT_STP_INTERFACE, XLT_STP_INTERFACE as XLT_STP_INTERFACE$1, XLT_TOKEN_CONFIG, XLT_TOKEN_CONFIG as XLT_TOKEN_CONFIG$1, XLT_TOKEN_HOOKS, XLT_TOKEN_HOOKS as XLT_TOKEN_HOOKS$1, XLT_TOKEN_STORE, XLT_TOKEN_STORE as XLT_TOKEN_STORE$1, XLT_TOKEN_STRATEGY, XLT_TOKEN_STRATEGY as XLT_TOKEN_STRATEGY$1, XltMode, XltMode as XltMode$1, XltSession, createExpressContext, createExpressContext as createExpressContext$1, createMockHttpContext, createXltToken, matchPermission, normalizeXltTokenConfig, setStpLogic, setStpLogic as setStpLogic$1, setStpPermLogic, setStpPermLogic as setStpPermLogic$1 } from "@xlt-token/core";
 import { randomUUID } from "node:crypto";
 import { Reflector } from "@nestjs/core";
 
@@ -69,10 +69,7 @@ let XltTokenModule = class XltTokenModule {
 			providers: [
 				{
 					provide: XLT_TOKEN_CONFIG$1,
-					useValue: normalizeXltTokenConfig({
-						...DEFAULT_XLT_TOKEN_CONFIG$1,
-						...userConfig
-					})
+					useValue: normalizeXltTokenConfig(userConfig)
 				},
 				_XltTokenModule.createStoreProvider(store),
 				_XltTokenModule.createStrategyProvider(strategy),
@@ -97,10 +94,7 @@ let XltTokenModule = class XltTokenModule {
 					provide: XLT_TOKEN_CONFIG$1,
 					useFactory: async (...args) => {
 						const { config = {} } = await useFactory(...args);
-						return normalizeXltTokenConfig({
-							...DEFAULT_XLT_TOKEN_CONFIG$1,
-							...config
-						});
+						return normalizeXltTokenConfig(config);
 					},
 					inject
 				},
@@ -250,11 +244,17 @@ let JwtStrategy = class JwtStrategy {
 	constructor(config) {
 		this.config = config;
 	}
+	ensureJwtConfig(config) {
+		const jwt = (config ?? this.config).jwt;
+		if (!jwt || !jwt.secret) throw new Error("JwtStrategy requires jwt config with a secret. Provide { jwt: { secret: \"your-secret\" } } in the module config.");
+		return jwt;
+	}
 	createToken(loginId, config, options) {
 		const { sign } = getJsonwebtoken();
-		const jwt = config.jwt;
+		const jwt = this.ensureJwtConfig(config);
 		const jti = randomUUID();
 		const resolvedTimeout = options?.timeout ?? config.timeout;
+		const hasExpiry = typeof resolvedTimeout === "number" ? resolvedTimeout > 0 : true;
 		return sign({
 			sub: loginId,
 			jti
@@ -262,16 +262,16 @@ let JwtStrategy = class JwtStrategy {
 			algorithm: jwt.algorithm ?? "HS256",
 			...jwt.issuer && { issuer: jwt.issuer },
 			...jwt.audience && { audience: jwt.audience },
-			...resolvedTimeout > 0 && { expiresIn: resolvedTimeout }
+			...hasExpiry && { expiresIn: resolvedTimeout }
 		});
 	}
 	generateToken(payload) {
 		const { sign } = getJsonwebtoken();
-		return sign(payload, this.config.jwt.secret);
+		return sign(payload, this.ensureJwtConfig().secret);
 	}
 	verifyToken(token) {
 		const { verify } = getJsonwebtoken();
-		return verify(token, this.config.jwt.secret);
+		return verify(token, this.ensureJwtConfig().secret);
 	}
 };
 JwtStrategy = __decorate([

@@ -67,4 +67,5 @@ export { StpUtil, setStpLogic, setStpPermLogic } from './auth/stp-util.js';
 export { createXltToken, type CreateOptions, type XltTokenContext } from './factory.js';
 
 
-export { normalizeDuration, normalizeXltTokenConfig,NormalizeDurationOptions} from "./time/duration.js"
+export { normalizeDuration, normalizeXltTokenConfig } from "./time/duration.js"
+export type { NormalizeDurationOptions } from "./time/duration.js"

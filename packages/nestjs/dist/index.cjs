@@ -70,10 +70,7 @@ let XltTokenModule = class XltTokenModule {
 			providers: [
 				{
 					provide: _xlt_token_core.XLT_TOKEN_CONFIG,
-					useValue: (0, _xlt_token_core.normalizeXltTokenConfig)({
-						..._xlt_token_core.DEFAULT_XLT_TOKEN_CONFIG,
-						...userConfig
-					})
+					useValue: (0, _xlt_token_core.normalizeXltTokenConfig)(userConfig)
 				},
 				_XltTokenModule.createStoreProvider(store),
 				_XltTokenModule.createStrategyProvider(strategy),
@@ -98,10 +95,7 @@ let XltTokenModule = class XltTokenModule {
 					provide: _xlt_token_core.XLT_TOKEN_CONFIG,
 					useFactory: async (...args) => {
 						const { config = {} } = await useFactory(...args);
-						return (0, _xlt_token_core.normalizeXltTokenConfig)({
-							..._xlt_token_core.DEFAULT_XLT_TOKEN_CONFIG,
-							...config
-						});
+						return (0, _xlt_token_core.normalizeXltTokenConfig)(config);
 					},
 					inject
 				},
@@ -251,11 +245,17 @@ let JwtStrategy = class JwtStrategy {
 	constructor(config) {
 		this.config = config;
 	}
+	ensureJwtConfig(config) {
+		const jwt = (config ?? this.config).jwt;
+		if (!jwt || !jwt.secret) throw new Error("JwtStrategy requires jwt config with a secret. Provide { jwt: { secret: \"your-secret\" } } in the module config.");
+		return jwt;
+	}
 	createToken(loginId, config, options) {
 		const { sign } = getJsonwebtoken();
-		const jwt = config.jwt;
+		const jwt = this.ensureJwtConfig(config);
 		const jti = (0, node_crypto.randomUUID)();
 		const resolvedTimeout = options?.timeout ?? config.timeout;
+		const hasExpiry = typeof resolvedTimeout === "number" ? resolvedTimeout > 0 : true;
 		return sign({
 			sub: loginId,
 			jti
@@ -263,16 +263,16 @@ let JwtStrategy = class JwtStrategy {
 			algorithm: jwt.algorithm ?? "HS256",
 			...jwt.issuer && { issuer: jwt.issuer },
 			...jwt.audience && { audience: jwt.audience },
-			...resolvedTimeout > 0 && { expiresIn: resolvedTimeout }
+			...hasExpiry && { expiresIn: resolvedTimeout }
 		});
 	}
 	generateToken(payload) {
 		const { sign } = getJsonwebtoken();
-		return sign(payload, this.config.jwt.secret);
+		return sign(payload, this.ensureJwtConfig().secret);
 	}
 	verifyToken(token) {
 		const { verify } = getJsonwebtoken();
-		return verify(token, this.config.jwt.secret);
+		return verify(token, this.ensureJwtConfig().secret);
 	}
 };
 JwtStrategy = __decorate([

@@ -57,7 +57,7 @@ const XLT_ROLE_KEY = "xltCheckRole";
 
 //#endregion
 //#region src/config/xlt-token-config.ts
-const DEFAULT_XLT_TOKEN_CONFIG = {
+const DEFAULT_XLT_TOKEN_CONFIG = Object.freeze({
 	tokenName: "authorization",
 	timeout: 2592e3,
 	activeTimeout: -1,
@@ -73,7 +73,7 @@ const DEFAULT_XLT_TOKEN_CONFIG = {
 	offlineRecordEnabled: false,
 	offlineRecordTimeout: 3600,
 	deviceConcurrent: true
-};
+});
 const XLT_TOKEN_CONFIG = "XLT_TOKEN_CONFIG";
 const XLT_TOKEN_STORE = "XLT_TOKEN_STORE";
 const XLT_TOKEN_STRATEGY = "XLT_TOKEN_STRATEGY";
@@ -225,7 +225,10 @@ var MemoryStore = class MemoryStore {
 	scheduleExpire(key, entry, timeoutSec) {
 		if (timeoutSec === -1) return;
 		const delayMs = timeoutSec * 1e3;
-		if (delayMs > MemoryStore.MAX_TIMER_DELAY_MS) return;
+		if (delayMs > MemoryStore.MAX_TIMER_DELAY_MS) {
+			console.warn(`[MemoryStore] timeout ${timeoutSec}s exceeds max timer delay (${MemoryStore.MAX_TIMER_DELAY_MS}ms). Entry will be cleaned on next access.`);
+			return;
+		}
 		entry.timer = setTimeout(() => {
 			this.store.delete(key);
 		}, delayMs);
@@ -994,11 +997,12 @@ var StpLogic = class {
 				token
 			};
 		} catch (error) {
-			return {
+			if (error instanceof Error && (error.name === "JsonWebTokenError" || error.name === "TokenExpiredError" || error.name === "NotBeforeError")) return {
 				ok: false,
 				reason: NotLoginType.INVALID_TOKEN,
 				token
 			};
+			throw error;
 		}
 	}
 	/**
@@ -1099,9 +1103,8 @@ var StpPermLogic = class {
 	}
 	async checkPermission(loginId, permissions, mode) {
 		if (!loginId || !permissions) throw new NotPermissionException(permissions, mode);
-		if (mode === XltMode.AND) {
-			if (!(await Promise.all(permissions.map(async (p) => await this.hasPermission(loginId, p)))).every((p) => p)) throw new NotPermissionException(permissions, mode);
-		} else if (!(await Promise.all(permissions.map(async (p) => await this.hasPermission(loginId, p)))).some((p) => p)) throw new NotPermissionException(permissions, mode);
+		const results = await Promise.all(permissions.map((p) => this.hasPermission(loginId, p)));
+		if (!(mode === XltMode.AND ? results.every(Boolean) : results.some(Boolean))) throw new NotPermissionException(permissions, mode);
 	}
 	async hasRole(loginId, role) {
 		if (!loginId || !role) return false;
@@ -1111,9 +1114,8 @@ var StpPermLogic = class {
 	}
 	async checkRole(loginId, role, mode) {
 		if (!loginId || !role) throw new NotRoleException(role, mode);
-		if (mode === XltMode.AND) {
-			if (!(await Promise.all(role.map(async (r) => await this.hasRole(loginId, r)))).every((r) => r)) throw new NotRoleException(role, mode);
-		} else if (!(await Promise.all(role.map(async (r) => await this.hasRole(loginId, r)))).some((r) => r)) throw new NotRoleException(role, mode);
+		const results = await Promise.all(role.map((r) => this.hasRole(loginId, r)));
+		if (!(mode === XltMode.AND ? results.every(Boolean) : results.some(Boolean))) throw new NotRoleException(role, mode);
 	}
 };
 
@@ -1229,19 +1231,18 @@ var StpUtil = class {
 
 //#endregion
 //#region src/factory.ts
-const defaultStpInterface = {
-	getPermissionList: () => {
-		throw new Error("StpInterface not registered: getPermissionList");
-	},
-	getRoleList: () => {
-		throw new Error("StpInterface not registered: getRoleList");
-	}
-};
 function createXltToken(options = {}) {
 	const config = normalizeXltTokenConfig(options.config);
 	const store = options.store ?? new MemoryStore();
 	const strategy = options.strategy ?? new UuidStrategy();
-	const stpInterface = options.stpInterface ?? defaultStpInterface;
+	const stpInterface = options.stpInterface ?? {
+		getPermissionList: () => {
+			throw new Error("StpInterface not registered: getPermissionList");
+		},
+		getRoleList: () => {
+			throw new Error("StpInterface not registered: getRoleList");
+		}
+	};
 	const stpLogic = new StpLogic(config, store, strategy, options.hooks ?? {});
 	const stpPermLogic = new StpPermLogic(stpInterface, store, config);
 	setStpLogic(stpLogic);
@@ -1259,12 +1260,6 @@ function createXltToken(options = {}) {
 //#endregion
 exports.DEFAULT_XLT_TOKEN_CONFIG = DEFAULT_XLT_TOKEN_CONFIG;
 exports.MemoryStore = MemoryStore;
-Object.defineProperty(exports, 'NormalizeDurationOptions', {
-  enumerable: true,
-  get: function () {
-    return NormalizeDurationOptions;
-  }
-});
 exports.NotLoginException = NotLoginException;
 exports.NotLoginType = NotLoginType;
 exports.NotPermissionException = NotPermissionException;

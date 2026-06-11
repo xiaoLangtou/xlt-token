@@ -1,6 +1,6 @@
 import type { ModuleMetadata, Provider } from '@nestjs/common';
 import { Module } from '@nestjs/common';
-import type { StpInterface, TokenStrategy, XltHooks, XltTokenConfig, XltTokenStore, } from '@xlt-token/core';
+import type { StpInterface, TokenStrategy, XltHooks, XltTokenConfig, XltTokenConfigInput, XltTokenStore, } from '@xlt-token/core';
 import {
     DEFAULT_XLT_TOKEN_CONFIG,
     MemoryStore,
@@ -18,7 +18,7 @@ import {
 } from '@xlt-token/core';
 
 export interface XltTokenModuleOptions {
-    config?: Partial<XltTokenConfig>;
+    config?: Partial<XltTokenConfigInput>;
     store?: { useClass: new (...args: any[]) => XltTokenStore } | { useValue: XltTokenStore };
     strategy?: { useClass: new (...args: any[]) => TokenStrategy };
     isGlobal?: boolean;
@@ -76,7 +76,7 @@ export class XltTokenModule {
         return {
             module: XltTokenModule,
             providers: [
-                {provide: XLT_TOKEN_CONFIG, useValue: normalizeXltTokenConfig({...DEFAULT_XLT_TOKEN_CONFIG, ...userConfig})},
+                {provide: XLT_TOKEN_CONFIG, useValue: normalizeXltTokenConfig(userConfig)},
                 XltTokenModule.createStoreProvider(store),
                 XltTokenModule.createStrategyProvider(strategy),
                 XltTokenModule.createStpInterfaceProvider(stpInterface),
@@ -111,7 +111,7 @@ export class XltTokenModule {
                     provide: XLT_TOKEN_CONFIG,
                     useFactory: async (...args: any[]) => {
                         const {config = {}} = await useFactory(...args);
-                        return normalizeXltTokenConfig({...DEFAULT_XLT_TOKEN_CONFIG, ...config})
+                        return normalizeXltTokenConfig(config)
                     },
                     inject,
                 },

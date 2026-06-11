@@ -94,7 +94,10 @@ export class MemoryStore implements XltTokenStore {
   private scheduleExpire(key: string, entry: MemoryEntry, timeoutSec: number): void {
     if (timeoutSec === -1) return;
     const delayMs = timeoutSec * 1000;
-    if (delayMs > MemoryStore.MAX_TIMER_DELAY_MS) return;
+    if (delayMs > MemoryStore.MAX_TIMER_DELAY_MS) {
+      console.warn(`[MemoryStore] timeout ${timeoutSec}s exceeds max timer delay (${MemoryStore.MAX_TIMER_DELAY_MS}ms). Entry will be cleaned on next access.`);
+      return;
+    }
     entry.timer = setTimeout(() => {
       this.store.delete(key);
     }, delayMs);

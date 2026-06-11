@@ -3,8 +3,6 @@ export type DurationString = `${ number }${ DurationUnit }`
 export type DurationInput = number | DurationString;
 
 
-
-
 export interface JwtConfig {
     secret: string;
     algorithm?: 'HS256' | 'HS384' | 'HS512' | 'RS256' | 'RS384' | 'RS512';
@@ -45,7 +43,7 @@ export interface XltTokenConfigInput extends Omit<XltTokenConfig, 'timeout' | 'a
 }
 
 
-export const DEFAULT_XLT_TOKEN_CONFIG: XltTokenConfig = {
+export const DEFAULT_XLT_TOKEN_CONFIG: XltTokenConfig = Object.freeze({
     tokenName: 'authorization',
     timeout: 2592000,
     activeTimeout: -1,
@@ -61,7 +59,7 @@ export const DEFAULT_XLT_TOKEN_CONFIG: XltTokenConfig = {
     offlineRecordEnabled: false,
     offlineRecordTimeout: 3600,
     deviceConcurrent: true,
-};
+});
 
 export const XLT_TOKEN_CONFIG = 'XLT_TOKEN_CONFIG';
 export const XLT_TOKEN_STORE = 'XLT_TOKEN_STORE';

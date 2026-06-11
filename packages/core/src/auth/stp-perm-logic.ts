@@ -61,19 +61,9 @@ export class StpPermLogic {
 
   async checkPermission(loginId: string, permissions: string[], mode: XltMode): Promise<void> {
     if (!loginId || !permissions) throw new NotPermissionException(permissions, mode);
-    if (mode === XltMode.AND) {
-      const hasPermissions = await Promise.all(permissions.map(async (p) => await this.hasPermission(loginId, p)));
-      const result = hasPermissions.every((p) => p);
-      if (!result) {
-        throw new NotPermissionException(permissions, mode);
-      }
-    } else {
-      const hasPermissions = await Promise.all(permissions.map(async (p) => await this.hasPermission(loginId, p)));
-      const result = hasPermissions.some((p) => p);
-      if (!result) {
-        throw new NotPermissionException(permissions, mode);
-      }
-    }
+    const results = await Promise.all(permissions.map(p => this.hasPermission(loginId, p)));
+    const passed = mode === XltMode.AND ? results.every(Boolean) : results.some(Boolean);
+    if (!passed) throw new NotPermissionException(permissions, mode);
   }
 
   async hasRole(loginId: string, role: string): Promise<boolean> {
@@ -86,18 +76,8 @@ export class StpPermLogic {
 
   async checkRole(loginId: string, role: string[], mode: XltMode): Promise<void> {
     if (!loginId || !role) throw new NotRoleException(role, mode);
-    if (mode === XltMode.AND) {
-      const hasRoles = await Promise.all(role.map(async (r) => await this.hasRole(loginId, r)));
-      const result = hasRoles.every((r) => r);
-      if (!result) {
-        throw new NotRoleException(role, mode);
-      }
-    } else {
-      const hasRoles = await Promise.all(role.map(async (r) => await this.hasRole(loginId, r)));
-      const result = hasRoles.some((r) => r);
-      if (!result) {
-        throw new NotRoleException(role, mode);
-      }
-    }
+    const results = await Promise.all(role.map(r => this.hasRole(loginId, r)));
+    const passed = mode === XltMode.AND ? results.every(Boolean) : results.some(Boolean);
+    if (!passed) throw new NotRoleException(role, mode);
   }
 }

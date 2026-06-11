@@ -27,17 +27,29 @@ function getJsonwebtoken(): typeof import('jsonwebtoken') {
 }
 
 @Injectable()
-export class JwtStrategy implements TokenStrategy {
+export class JwtStrategy implements TokenStrategy<XltJwtPayload> {
   constructor(
     @Inject(XLT_TOKEN_CONFIG) private readonly config: XltTokenConfig
   ) { }
 
+  private ensureJwtConfig(config?: XltTokenConfig): NonNullable<XltTokenConfig['jwt']> {
+    const jwt = (config ?? this.config).jwt;
+    if (!jwt || !jwt.secret) {
+      throw new Error(
+        'JwtStrategy requires jwt config with a secret. '
+        + 'Provide { jwt: { secret: "your-secret" } } in the module config.',
+      );
+    }
+    return jwt;
+  }
+
   createToken(loginId: string, config: XltTokenConfig, options?: { timeout?: DurationInput }): string {
     const { sign } = getJsonwebtoken();
-    const jwt = config.jwt!;
+    const jwt = this.ensureJwtConfig(config);
     const jti = randomUUID();
 
     const resolvedTimeout = options?.timeout ?? config.timeout;
+    const hasExpiry = typeof resolvedTimeout === 'number' ? resolvedTimeout > 0 : true;
 
     return sign({
       sub: loginId, jti
@@ -45,18 +57,20 @@ export class JwtStrategy implements TokenStrategy {
       algorithm: jwt.algorithm ?? 'HS256',
       ...(jwt.issuer && { issuer: jwt.issuer }),
       ...(jwt.audience && { audience: jwt.audience }),
-      ...(resolvedTimeout > 0 && { expiresIn: resolvedTimeout }),
+      ...(hasExpiry && { expiresIn: resolvedTimeout }),
     })
   }
 
   generateToken(payload: any): string {
     const { sign } = getJsonwebtoken();
-    return sign(payload, this.config.jwt!.secret);
+    const jwt = this.ensureJwtConfig();
+    return sign(payload, jwt.secret);
   }
 
   verifyToken(token: string): XltJwtPayload {
     const { verify } = getJsonwebtoken();
-    return verify(token, this.config.jwt!.secret) as XltJwtPayload;
+    const jwt = this.ensureJwtConfig();
+    return verify(token, jwt.secret) as XltJwtPayload;
   }
 
 }

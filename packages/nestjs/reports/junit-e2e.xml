@@ -1,0 +1,430 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="72" failures="0" errors="0" time="3.093">
+    <testsuite name="test/app-guard.e2e-spec.ts" timestamp="2026-06-11T09:41:04.808Z" hostname="weipengchengdeMacBook-Air.local" tests="7" failures="0" errors="0" skipped="0" time="0.114750333">
+        <testcase classname="test/app-guard.e2e-spec.ts" name="XltTokenGuard 黑名单模式 (e2e) &gt; @XltIgnore 路由无 token 放行" time="0.010446708">
+        </testcase>
+        <testcase classname="test/app-guard.e2e-spec.ts" name="XltTokenGuard 黑名单模式 (e2e) &gt; 默认校验：无 token → 401 + NOT_TOKEN" time="0.006681292">
+        </testcase>
+        <testcase classname="test/app-guard.e2e-spec.ts" name="XltTokenGuard 黑名单模式 (e2e) &gt; 有效 token → 200 且 @LoginId/@TokenValue 注入" time="0.005747541">
+        </testcase>
+        <testcase classname="test/app-guard.e2e-spec.ts" name="XltTokenGuard 黑名单模式 (e2e) &gt; 无效 token → 401 + INVALID_TOKEN" time="0.003736083">
+        </testcase>
+        <testcase classname="test/app-guard.e2e-spec.ts" name="XltTokenGuard 白名单模式 (e2e) &gt; 默认不校验：/api/me 无 token 放行" time="0.002188875">
+        </testcase>
+        <testcase classname="test/app-guard.e2e-spec.ts" name="XltTokenGuard 白名单模式 (e2e) &gt; @XltCheckLogin 强制校验：无 token → 401" time="0.003083292">
+        </testcase>
+        <testcase classname="test/app-guard.e2e-spec.ts" name="XltTokenGuard 白名单模式 (e2e) &gt; @XltCheckLogin + token → 200" time="0.001976583">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/custom-guard.e2e-spec.ts" timestamp="2026-06-11T09:41:04.810Z" hostname="weipengchengdeMacBook-Air.local" tests="3" failures="0" errors="0" skipped="0" time="0.054102875">
+        <testcase classname="test/custom-guard.e2e-spec.ts" name="XltAbstractLoginGuard 钩子 (e2e) &gt; onAuthSuccess 在校验通过时触发" time="0.045881875">
+            <system-err>
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+
+            </system-err>
+        </testcase>
+        <testcase classname="test/custom-guard.e2e-spec.ts" name="XltAbstractLoginGuard 钩子 (e2e) &gt; 白名单模式：无 @XltCheckLogin 装饰器 → 直接放行（不调钩子）" time="0.003734583">
+        </testcase>
+        <testcase classname="test/custom-guard.e2e-spec.ts" name="XltAbstractLoginGuard 钩子 (e2e) &gt; onAuthFail 在校验失败时触发（抛异常前）" time="0.004108791">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/duration.e2e-spec.ts" timestamp="2026-06-11T09:41:04.810Z" hostname="weipengchengdeMacBook-Air.local" tests="4" failures="0" errors="0" skipped="0" time="0.076760125">
+        <testcase classname="test/duration.e2e-spec.ts" name="相对时间 DurationInput (e2e) &gt; options.timeout 为 DurationInput 字符串时正确设置 TTL" time="0.00097375">
+        </testcase>
+        <testcase classname="test/duration.e2e-spec.ts" name="相对时间 DurationInput (e2e) &gt; options.timeout 为 -1 时永不过期" time="0.008152875">
+        </testcase>
+        <testcase classname="test/duration.e2e-spec.ts" name="相对时间 DurationInput (e2e) &gt; options.timeout 为 0 时 Store 立即过期" time="0.000138791">
+        </testcase>
+        <testcase classname="test/duration.e2e-spec.ts" name="相对时间 DurationInput (e2e) &gt; 不同 DurationInput 单位均正确解析" time="0.000321583">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/fastify.e2e-spec.ts" timestamp="2026-06-11T09:41:04.811Z" hostname="weipengchengdeMacBook-Air.local" tests="5" failures="0" errors="0" skipped="0" time="0.048579167">
+        <testcase classname="test/fastify.e2e-spec.ts" name="Fastify 适配 (e2e) &gt; 忽略路由无需 token" time="0.025652416">
+        </testcase>
+        <testcase classname="test/fastify.e2e-spec.ts" name="Fastify 适配 (e2e) &gt; Header 模式：携带 token 通过守卫" time="0.00680125">
+            <system-err>
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+
+            </system-err>
+        </testcase>
+        <testcase classname="test/fastify.e2e-spec.ts" name="Fastify 适配 (e2e) &gt; Header 模式：缺少 token → 401" time="0.00402">
+        </testcase>
+        <testcase classname="test/fastify.e2e-spec.ts" name="Fastify 适配 (e2e) &gt; Cookie 模式：注册 @fastify/cookie 后从 cookie 读取 token" time="0.007497125">
+            <system-err>
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+
+            </system-err>
+        </testcase>
+        <testcase classname="test/fastify.e2e-spec.ts" name="Fastify 适配 (e2e) &gt; Query 模式：从 query 读取 token" time="0.004059208">
+            <system-err>
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+
+            </system-err>
+        </testcase>
+    </testsuite>
+    <testsuite name="test/forroot-async.e2e-spec.ts" timestamp="2026-06-11T09:41:04.811Z" hostname="weipengchengdeMacBook-Air.local" tests="2" failures="0" errors="0" skipped="0" time="0.114046667">
+        <testcase classname="test/forroot-async.e2e-spec.ts" name="XltTokenModule.forRootAsync (e2e) &gt; 通过 useFactory + inject 异步加载配置" time="0.096416375">
+        </testcase>
+        <testcase classname="test/forroot-async.e2e-spec.ts" name="XltTokenModule.forRootAsync (e2e) &gt; useFactory 返回 Promise 也能正确解析" time="0.01639275">
+            <system-err>
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+
+            </system-err>
+        </testcase>
+    </testsuite>
+    <testsuite name="test/jwt.e2e-spec.ts" timestamp="2026-06-11T09:41:04.811Z" hostname="weipengchengdeMacBook-Air.local" tests="6" failures="0" errors="0" skipped="0" time="0.135139">
+        <testcase classname="test/jwt.e2e-spec.ts" name="JWT Strategy (e2e) &gt; 登录后 JWT 可访问受保护路由" time="0.097502917">
+        </testcase>
+        <testcase classname="test/jwt.e2e-spec.ts" name="JWT Strategy (e2e) &gt; kickout 后旧 JWT → 401 KICK_OUT" time="0.011717125">
+        </testcase>
+        <testcase classname="test/jwt.e2e-spec.ts" name="JWT Strategy (e2e) &gt; 被顶号后旧 JWT → 401 BE_REPLACED" time="0.004704417">
+        </testcase>
+        <testcase classname="test/jwt.e2e-spec.ts" name="JWT Strategy (e2e) &gt; 签名错误的 JWT → 401 INVALID_TOKEN" time="0.005792458">
+        </testcase>
+        <testcase classname="test/jwt.e2e-spec.ts" name="JWT Strategy (e2e) &gt; 过期 JWT → 401 INVALID_TOKEN" time="0.00648125">
+        </testcase>
+        <testcase classname="test/jwt.e2e-spec.ts" name="JWT Strategy (e2e) &gt; kickoutByToken 后 JWT 失效" time="0.008206833">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/lifecycle.e2e-spec.ts" timestamp="2026-06-11T09:41:04.812Z" hostname="weipengchengdeMacBook-Air.local" tests="3" failures="0" errors="0" skipped="0" time="0.053216958">
+        <testcase classname="test/lifecycle.e2e-spec.ts" name="Token 生命周期 (e2e) &gt; logout 后旧 token → 401 INVALID_TOKEN" time="0.011773209">
+            <system-err>
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+
+            </system-err>
+        </testcase>
+        <testcase classname="test/lifecycle.e2e-spec.ts" name="Token 生命周期 (e2e) &gt; kickout 后旧 token → 401 KICK_OUT" time="0.001782333">
+            <system-err>
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+
+            </system-err>
+        </testcase>
+        <testcase classname="test/lifecycle.e2e-spec.ts" name="Token 生命周期 (e2e) &gt; 被顶号后旧 token → 401 BE_REPLACED（真实顶号路径）" time="0.004232583">
+            <system-err>
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+
+            </system-err>
+        </testcase>
+    </testsuite>
+    <testsuite name="test/module-options.e2e-spec.ts" timestamp="2026-06-11T09:41:04.812Z" hostname="weipengchengdeMacBook-Air.local" tests="4" failures="0" errors="0" skipped="0" time="0.100370917">
+        <testcase classname="test/module-options.e2e-spec.ts" name="XltTokenModule 配置分支 (e2e) &gt; store 用 useValue 提供单例" time="0.089769375">
+            <system-err>
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+
+            </system-err>
+        </testcase>
+        <testcase classname="test/module-options.e2e-spec.ts" name="XltTokenModule 配置分支 (e2e) &gt; strategy 用 useClass 自定义 token 生成" time="0.002302666">
+            <system-err>
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+
+            </system-err>
+        </testcase>
+        <testcase classname="test/module-options.e2e-spec.ts" name="XltTokenModule 配置分支 (e2e) &gt; 未传 stpInterface → 调用权限/角色方法时抛错" time="0.004009959">
+        </testcase>
+        <testcase classname="test/module-options.e2e-spec.ts" name="XltTokenModule 配置分支 (e2e) &gt; forRootAsync 也支持 useValue store + 不传 stpInterface" time="0.003370167">
+            <system-err>
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+
+            </system-err>
+        </testcase>
+    </testsuite>
+    <testsuite name="test/multi-device.e2e-spec.ts" timestamp="2026-06-11T09:41:04.813Z" hostname="weipengchengdeMacBook-Air.local" tests="13" failures="0" errors="0" skipped="0" time="0.155466834">
+        <testcase classname="test/multi-device.e2e-spec.ts" name="多端登录 (e2e) &gt; 不同设备 token 均可通过 Guard 访问" time="0.081268875">
+            <system-err>
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+
+            </system-err>
+        </testcase>
+        <testcase classname="test/multi-device.e2e-spec.ts" name="多端登录 (e2e) &gt; kickoutByDevice 只使被踢设备 token 失效" time="0.018544917">
+            <system-err>
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+
+            </system-err>
+        </testcase>
+        <testcase classname="test/multi-device.e2e-spec.ts" name="多端登录 (e2e) &gt; kickoutByToken 精确踢下线" time="0.006358">
+            <system-err>
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+
+            </system-err>
+        </testcase>
+        <testcase classname="test/multi-device.e2e-spec.ts" name="多端登录 (e2e) &gt; isConcurrent=false 同设备顶号后旧 token → 401 BE_REPLACED" time="0.00811125">
+            <system-err>
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+
+            </system-err>
+        </testcase>
+        <testcase classname="test/multi-device.e2e-spec.ts" name="多端登录 (e2e) &gt; isConcurrent=false 不同设备不受影响" time="0.010364959">
+            <system-err>
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+
+            </system-err>
+        </testcase>
+        <testcase classname="test/multi-device.e2e-spec.ts" name="多端登录 (e2e) &gt; deviceConcurrent=false 新登录踢掉所有设备" time="0.006308125">
+            <system-err>
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+
+            </system-err>
+        </testcase>
+        <testcase classname="test/multi-device.e2e-spec.ts" name="多端登录 (e2e) &gt; getDeviceList 在 Nest 上下文中返回正确列表" time="0.002985958">
+            <system-err>
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+
+            </system-err>
+        </testcase>
+        <testcase classname="test/multi-device.e2e-spec.ts" name="观测性 API (e2e) &gt; getOnlineCount / getOnlineLoginIds 统计在线用户" time="0.001489333">
+            <system-err>
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+
+            </system-err>
+        </testcase>
+        <testcase classname="test/multi-device.e2e-spec.ts" name="观测性 API (e2e) &gt; logout 后用户不在在线列表" time="0.002264666">
+            <system-err>
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+
+            </system-err>
+        </testcase>
+        <testcase classname="test/multi-device.e2e-spec.ts" name="观测性 API (e2e) &gt; forceLogout 清空所有设备且 HTTP 请求全部 401" time="0.008691375">
+            <system-err>
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+
+            </system-err>
+        </testcase>
+        <testcase classname="test/multi-device.e2e-spec.ts" name="Hooks (e2e) &gt; forRoot hooks.onLogin 在登录时触发" time="0.001800209">
+            <system-err>
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+
+            </system-err>
+        </testcase>
+        <testcase classname="test/multi-device.e2e-spec.ts" name="Hooks (e2e) &gt; forRoot hooks.onKickout 在 kickoutByDevice 时触发" time="0.001448959">
+            <system-err>
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+
+            </system-err>
+        </testcase>
+        <testcase classname="test/multi-device.e2e-spec.ts" name="Hooks (e2e) &gt; 钩子异常不影响登录主流程" time="0.004419291">
+            <system-err>
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+
+            </system-err>
+        </testcase>
+    </testsuite>
+    <testsuite name="test/permission.e2e-spec.ts" timestamp="2026-06-11T09:41:04.814Z" hostname="weipengchengdeMacBook-Air.local" tests="8" failures="0" errors="0" skipped="0" time="0.109863416">
+        <testcase classname="test/permission.e2e-spec.ts" name="Permission &amp; Role (e2e) &gt; @XltCheckPermission &gt; admin 访问 read → 200" time="0.012060833">
+        </testcase>
+        <testcase classname="test/permission.e2e-spec.ts" name="Permission &amp; Role (e2e) &gt; @XltCheckPermission &gt; user 访问 read → 200（拥有 user:read）" time="0.002128959">
+        </testcase>
+        <testcase classname="test/permission.e2e-spec.ts" name="Permission &amp; Role (e2e) &gt; @XltCheckPermission &gt; AND 模式：user 缺 user:delete → 403" time="0.003737417">
+        </testcase>
+        <testcase classname="test/permission.e2e-spec.ts" name="Permission &amp; Role (e2e) &gt; @XltCheckPermission &gt; AND 模式：admin 齐全 → 200" time="0.003848">
+        </testcase>
+        <testcase classname="test/permission.e2e-spec.ts" name="Permission &amp; Role (e2e) &gt; @XltCheckPermission &gt; 通配符匹配：admin 的 order:* 覆盖 order:create" time="0.007326583">
+        </testcase>
+        <testcase classname="test/permission.e2e-spec.ts" name="Permission &amp; Role (e2e) &gt; @XltCheckRole &gt; admin 角色 → 200" time="0.002141791">
+        </testcase>
+        <testcase classname="test/permission.e2e-spec.ts" name="Permission &amp; Role (e2e) &gt; @XltCheckRole &gt; user 角色 → 403" time="0.002604708">
+        </testcase>
+        <testcase classname="test/permission.e2e-spec.ts" name="Permission &amp; Role (e2e) &gt; @XltCheckRole &gt; 数组形式 + OR 模式：admin 命中其一 → 200" time="0.001500209">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/secondary-auth.e2e-spec.ts" timestamp="2026-06-11T09:41:04.815Z" hostname="weipengchengdeMacBook-Air.local" tests="7" failures="0" errors="0" skipped="0" time="2.3224125">
+        <testcase classname="test/secondary-auth.e2e-spec.ts" name="二级认证 (e2e) &gt; @XltCheckSafe 未开启时 → 403 + NOT_SAFE" time="0.082471834">
+            <system-err>
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+
+            </system-err>
+        </testcase>
+        <testcase classname="test/secondary-auth.e2e-spec.ts" name="二级认证 (e2e) &gt; openSafe 后 @XltCheckSafe 路由放行" time="0.004841958">
+            <system-err>
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+
+            </system-err>
+        </testcase>
+        <testcase classname="test/secondary-auth.e2e-spec.ts" name="二级认证 (e2e) &gt; closeSafe 后 @XltCheckSafe 路由再次 403" time="0.005689875">
+            <system-err>
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+
+            </system-err>
+        </testcase>
+        <testcase classname="test/secondary-auth.e2e-spec.ts" name="二级认证 (e2e) &gt; openSafe 超时后 @XltCheckSafe 路由 403" time="1.114572333">
+            <system-err>
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+
+            </system-err>
+        </testcase>
+        <testcase classname="test/secondary-auth.e2e-spec.ts" name="临时 Token (e2e) &gt; createTempToken / parseTempToken 在 Nest 上下文中可用" time="0.005232584">
+        </testcase>
+        <testcase classname="test/secondary-auth.e2e-spec.ts" name="临时 Token (e2e) &gt; deleteTempToken 后 parseTempToken 返回 null" time="0.00331175">
+        </testcase>
+        <testcase classname="test/secondary-auth.e2e-spec.ts" name="临时 Token (e2e) &gt; 超时后 parseTempToken 返回 null" time="1.104864">
+        </testcase>
+    </testsuite>
+    <testsuite name="test/session.e2e-spec.ts" timestamp="2026-06-11T09:41:04.815Z" hostname="weipengchengdeMacBook-Air.local" tests="2" failures="0" errors="0" skipped="0" time="0.049349792">
+        <testcase classname="test/session.e2e-spec.ts" name="XltSession (e2e) &gt; 跨请求保持会话数据" time="0.046464292">
+            <system-err>
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+
+            </system-err>
+        </testcase>
+        <testcase classname="test/session.e2e-spec.ts" name="XltSession (e2e) &gt; logout 后 session 数据被清理" time="0.002481542">
+            <system-err>
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+
+            </system-err>
+        </testcase>
+    </testsuite>
+    <testsuite name="test/static-facade.e2e-spec.ts" timestamp="2026-06-11T09:41:04.816Z" hostname="weipengchengdeMacBook-Air.local" tests="8" failures="0" errors="0" skipped="0" time="0.150891042">
+        <testcase classname="test/static-facade.e2e-spec.ts" name="StpUtil 静态门面 (e2e) &gt; login → token" time="0.019549833">
+            <system-err>
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+
+            </system-err>
+        </testcase>
+        <testcase classname="test/static-facade.e2e-spec.ts" name="StpUtil 静态门面 (e2e) &gt; isLogin / checkLogin / getLoginId / getTokenValue" time="0.010455375">
+            <system-err>
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+
+            </system-err>
+        </testcase>
+        <testcase classname="test/static-facade.e2e-spec.ts" name="StpUtil 静态门面 (e2e) &gt; logout / logoutByLoginId" time="0.0098615">
+            <system-err>
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+
+            </system-err>
+        </testcase>
+        <testcase classname="test/static-facade.e2e-spec.ts" name="StpUtil 静态门面 (e2e) &gt; kickout / renewTimeout" time="0.007176792">
+            <system-err>
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+
+            </system-err>
+        </testcase>
+        <testcase classname="test/static-facade.e2e-spec.ts" name="StpUtil 静态门面 (e2e) &gt; hasPermission / checkPermission" time="0.008254791">
+        </testcase>
+        <testcase classname="test/static-facade.e2e-spec.ts" name="StpUtil 静态门面 (e2e) &gt; hasRole / checkRole" time="0.006135792">
+        </testcase>
+        <testcase classname="test/static-facade.e2e-spec.ts" name="StpUtil 静态门面 (e2e) &gt; getSession 跨请求保持" time="0.003173291">
+            <system-err>
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+
+            </system-err>
+        </testcase>
+        <testcase classname="test/static-facade.e2e-spec.ts" name="StpUtil 静态门面 (e2e) &gt; getOfflineReason 在踢人后能查到" time="0.006011208">
+            <system-err>
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+[MemoryStore] timeout 2592000s exceeds max timer delay (2147483647ms). Entry will be cleaned on next access.
+
+            </system-err>
+        </testcase>
+    </testsuite>
+</testsuites>

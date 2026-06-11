@@ -55,6 +55,7 @@ const markdown = {
 const virtualReleaseCodeHtmlId = 'virtual:xlt-release-code-html'
 const resolvedVirtualReleaseCodeHtmlId = `\0${virtualReleaseCodeHtmlId}`
 const releaseSources = [
+  'v1.1.0.md',
   'v1.0.2.md',
   'v1.0.0-rc.3.md',
   'v1.0.0-rc.2.md',

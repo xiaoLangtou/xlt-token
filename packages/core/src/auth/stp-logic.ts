@@ -579,9 +579,12 @@ export class StpLogic {
 
       return { ok: true, loginId, token };
 
-
-    } catch (error) {
-      return { ok: false, reason: NotLoginType.INVALID_TOKEN, token };
+    } catch (error: unknown) {
+      // 只捕获 JWT 校验相关异常，意外错误往上抛
+      if (error instanceof Error && (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError' || error.name === 'NotBeforeError')) {
+        return { ok: false, reason: NotLoginType.INVALID_TOKEN, token };
+      }
+      throw error;
     }
   }
 
