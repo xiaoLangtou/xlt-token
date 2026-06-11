@@ -27,6 +27,9 @@ declare const XLT_PERMISSION_KEY = "XltCheckPermission";
 declare const XLT_ROLE_KEY = "xltCheckRole";
 //#endregion
 //#region src/config/xlt-token-config.d.ts
+type DurationUnit = 's' | 'm' | 'h' | 'd' | 'w';
+type DurationString = `${number}${DurationUnit}`;
+type DurationInput = number | DurationString;
 interface JwtConfig {
   secret: string;
   algorithm?: 'HS256' | 'HS384' | 'HS512' | 'RS256' | 'RS384' | 'RS512';
@@ -55,6 +58,12 @@ interface XltTokenConfig {
   offlineRecordTimeout?: number;
   deviceConcurrent?: boolean;
   jwt?: JwtConfig;
+}
+interface XltTokenConfigInput extends Omit<XltTokenConfig, 'timeout' | 'activeTimeout' | 'permCacheTimeout' | 'offlineRecordTimeout'> {
+  timeout: DurationInput;
+  activeTimeout: DurationInput;
+  permCacheTimeout?: DurationInput;
+  offlineRecordTimeout?: DurationInput;
 }
 declare const DEFAULT_XLT_TOKEN_CONFIG: XltTokenConfig;
 declare const XLT_TOKEN_CONFIG = "XLT_TOKEN_CONFIG";
@@ -142,14 +151,18 @@ declare class MemoryStore implements XltTokenStore {
 interface TokenStrategy {
   generateToken(payload: any): string;
   verifyToken(token: string): any;
-  createToken(loginId: string, config: XltTokenConfig): string;
+  createToken(loginId: string, config: XltTokenConfig, options?: {
+    timeout?: DurationInput;
+  }): string;
 }
 //#endregion
 //#region src/token/uuid-strategy.d.ts
 declare class UuidStrategy implements TokenStrategy {
   generateToken(_payload: unknown): string;
   verifyToken(token: string): unknown;
-  createToken(_loginId: string, config: XltTokenConfig): string;
+  createToken(_loginId: string, config: XltTokenConfig, _options?: {
+    timeout?: DurationInput;
+  }): string;
   private buildRaw;
 }
 //#endregion
@@ -377,7 +390,7 @@ declare class StpLogic {
    * @param options
    */
   login(loginId: string | number, options?: {
-    timeout?: number;
+    timeout?: DurationInput;
     device?: string;
     token?: string;
   }): Promise<string>;
@@ -387,7 +400,7 @@ declare class StpLogic {
    * @param info
    * @param timeout
    */
-  _addToSessionList(loginId: string, info: DeviceInfo, timeout: number): Promise<void>;
+  _addToSessionList(loginId: string, info: DeviceInfo, timeout: DurationInput): Promise<void>;
   /**
    * 踢掉所有设备
    * @param loginId
@@ -406,7 +419,7 @@ declare class StpLogic {
    * @param business  业务标识
    * @param timeout 有效期（秒）
    */
-  openSafe(token: string, business: string, timeout: number): Promise<void>;
+  openSafe(token: string, business: string, timeout: DurationInput): Promise<void>;
   /**
    * 检查二级认证是否有效
    * @param token 用户token
@@ -426,7 +439,7 @@ declare class StpLogic {
    * @param timeout 有效期（秒）
    * @returns 临时token字符串
    */
-  createTempToken(value: string, timeout: number): Promise<string>;
+  createTempToken(value: string, timeout: DurationInput): Promise<string>;
   /**
    * 解析临时token
    * @param tempToken  临时token字符串
@@ -473,7 +486,7 @@ declare class StpLogic {
    * @param token
    * @param timeout
    */
-  renewTimeout(token: string, timeout: number): Promise<boolean | null>;
+  renewTimeout(token: string, timeout: DurationInput): Promise<boolean | null>;
   /**
    * 获取 session
    * @param loginId
@@ -602,7 +615,7 @@ declare class StpUtil {
 //#endregion
 //#region src/factory.d.ts
 interface CreateOptions {
-  config?: Partial<XltTokenConfig>;
+  config?: Partial<XltTokenConfigInput>;
   store?: XltTokenStore;
   strategy?: TokenStrategy;
   stpInterface?: StpInterface;
@@ -618,5 +631,20 @@ interface XltTokenContext {
 }
 declare function createXltToken(options?: CreateOptions): XltTokenContext;
 //#endregion
-export { type AuthResult, type CookieOptions, type CreateOptions, DEFAULT_XLT_TOKEN_CONFIG, type DeviceInfo, type ExpressLikeRequest, type ExpressLikeResponse, type HttpContext, type HttpCookies, type HttpHeaders, type HttpQuery, type JwtConfig, MemoryStore, type MockHttpContextOptions, NotLoginException, NotLoginType, NotPermissionException, NotRoleException, NotSafeException, type StpInterface, StpLogic, StpPermLogic, StpUtil, type TokenStrategy, UuidStrategy, XLT_CHECK_LOGIN_KEY, XLT_IGNORE_KEY, XLT_PERMISSION_KEY, XLT_ROLE_KEY, XLT_STP_INTERFACE, XLT_TOKEN_CONFIG, XLT_TOKEN_HOOKS, XLT_TOKEN_STORE, XLT_TOKEN_STRATEGY, XltError, type XltHooks, XltMode, XltSession, type XltTokenConfig, type XltTokenContext, XltTokenKeys, type XltTokenStore, createExpressContext, createMockHttpContext, createXltToken, matchPermission, setStpLogic, setStpPermLogic };
+//#region src/time/duration.d.ts
+/**
+ * 规范化时长选项
+ */
+interface NormalizeDurationOptions {
+  field: string;
+  allowZero?: boolean;
+  allowNever?: boolean;
+}
+declare function normalizeDuration(value: DurationInput, options: NormalizeDurationOptions): number;
+/**
+ * 规范化 XltToken 配置
+ */
+declare function normalizeXltTokenConfig(input?: Partial<XltTokenConfigInput>): XltTokenConfig;
+//#endregion
+export { type AuthResult, type CookieOptions, type CreateOptions, DEFAULT_XLT_TOKEN_CONFIG, type DeviceInfo, type DurationInput, type DurationString, type DurationUnit, type ExpressLikeRequest, type ExpressLikeResponse, type HttpContext, type HttpCookies, type HttpHeaders, type HttpQuery, type JwtConfig, MemoryStore, type MockHttpContextOptions, NormalizeDurationOptions, NotLoginException, NotLoginType, NotPermissionException, NotRoleException, NotSafeException, type StpInterface, StpLogic, StpPermLogic, StpUtil, type TokenStrategy, UuidStrategy, XLT_CHECK_LOGIN_KEY, XLT_IGNORE_KEY, XLT_PERMISSION_KEY, XLT_ROLE_KEY, XLT_STP_INTERFACE, XLT_TOKEN_CONFIG, XLT_TOKEN_HOOKS, XLT_TOKEN_STORE, XLT_TOKEN_STRATEGY, XltError, type XltHooks, XltMode, XltSession, type XltTokenConfig, type XltTokenConfigInput, type XltTokenContext, XltTokenKeys, type XltTokenStore, createExpressContext, createMockHttpContext, createXltToken, matchPermission, normalizeDuration, normalizeXltTokenConfig, setStpLogic, setStpPermLogic };
 //# sourceMappingURL=index.d.mts.map

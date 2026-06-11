@@ -1,22 +1,26 @@
 export {
-  NotLoginType,
-  XLT_IGNORE_KEY,
-  XLT_CHECK_LOGIN_KEY,
-  XltMode,
-  XLT_PERMISSION_KEY,
-  XLT_ROLE_KEY,
+    NotLoginType,
+    XLT_IGNORE_KEY,
+    XLT_CHECK_LOGIN_KEY,
+    XltMode,
+    XLT_PERMISSION_KEY,
+    XLT_ROLE_KEY,
 } from './const/index.js';
 
 export type {
-  JwtConfig,
-  DeviceInfo,
-  XltTokenConfig,
+    JwtConfig,
+    DeviceInfo,
+    XltTokenConfig,
+    DurationUnit,
+    DurationString,
+    DurationInput,
+    XltTokenConfigInput
 } from './config/xlt-token-config.js';
 export {
-  DEFAULT_XLT_TOKEN_CONFIG,
-  XLT_TOKEN_CONFIG,
-  XLT_TOKEN_STORE,
-  XLT_TOKEN_STRATEGY,
+    DEFAULT_XLT_TOKEN_CONFIG,
+    XLT_TOKEN_CONFIG,
+    XLT_TOKEN_STORE,
+    XLT_TOKEN_STRATEGY,
 } from './config/xlt-token-config.js';
 
 export { XltTokenKeys } from './config/xlt-token-keys.js';
@@ -35,16 +39,16 @@ export { XLT_STP_INTERFACE } from './perm/stp-interface.js';
 export { matchPermission } from './perm/perm-pattern-match.js';
 
 export type {
-  CookieOptions,
-  HttpContext,
-  HttpCookies,
-  HttpHeaders,
-  HttpQuery,
+    CookieOptions,
+    HttpContext,
+    HttpCookies,
+    HttpHeaders,
+    HttpQuery,
 } from './http/context.js';
 export {
-  createExpressContext,
-  type ExpressLikeRequest,
-  type ExpressLikeResponse,
+    createExpressContext,
+    type ExpressLikeRequest,
+    type ExpressLikeResponse,
 } from './http/express.js';
 export { createMockHttpContext, type MockHttpContextOptions } from './http/testing.js';
 
@@ -61,3 +65,6 @@ export { StpPermLogic } from './auth/stp-perm-logic.js';
 export { StpUtil, setStpLogic, setStpPermLogic } from './auth/stp-util.js';
 
 export { createXltToken, type CreateOptions, type XltTokenContext } from './factory.js';
+
+
+export { normalizeDuration, normalizeXltTokenConfig,NormalizeDurationOptions} from "./time/duration.js"

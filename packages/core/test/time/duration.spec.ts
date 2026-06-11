@@ -54,6 +54,17 @@ describe('normalizeDuration', () => {
       'Invalid duration for "activeTimeout": expected integer seconds or a duration such as "30m", received "soon"',
     );
   });
+
+  it('空字符串拒绝', () => {
+    expect(() =>
+      normalizeDuration('' as DurationInput, { field: 'timeout' }),
+    ).toThrow(TypeError);
+  });
+
+  it('allowZero + allowNever 同时启用时接受 0 和 -1', () => {
+    expect(normalizeDuration(0, { field: 't', allowZero: true, allowNever: true })).toBe(0);
+    expect(normalizeDuration(-1, { field: 't', allowZero: true, allowNever: true })).toBe(-1);
+  });
 });
 
 describe('normalizeXltTokenConfig', () => {
@@ -107,5 +118,48 @@ describe('normalizeXltTokenConfig', () => {
       permCacheTimeout: DEFAULT_XLT_TOKEN_CONFIG.permCacheTimeout,
       offlineRecordTimeout: DEFAULT_XLT_TOKEN_CONFIG.offlineRecordTimeout,
     });
+  });
+
+  it('部分配置仅覆盖指定字段', () => {
+    const config = normalizeXltTokenConfig({ timeout: '5m' });
+    expect(config.timeout).toBe(300);
+    expect(config.activeTimeout).toBe(DEFAULT_XLT_TOKEN_CONFIG.activeTimeout);
+    expect(config.permCacheTimeout).toBe(DEFAULT_XLT_TOKEN_CONFIG.permCacheTimeout);
+    expect(config.offlineRecordTimeout).toBe(DEFAULT_XLT_TOKEN_CONFIG.offlineRecordTimeout);
+  });
+
+  it('非时长字段透传不变', () => {
+    const config = normalizeXltTokenConfig({
+      tokenName: 'x-auth',
+      isConcurrent: false,
+      isShare: false,
+      jwt: { secret: 's3cr3t' },
+    });
+    expect(config.tokenName).toBe('x-auth');
+    expect(config.isConcurrent).toBe(false);
+    expect(config.isShare).toBe(false);
+    expect(config.jwt).toEqual({ secret: 's3cr3t' });
+  });
+
+  it('混合传入字符串和数字时长', () => {
+    const config = normalizeXltTokenConfig({
+      timeout: '7d',
+      activeTimeout: 1800,
+    });
+    expect(config.timeout).toBe(604800);
+    expect(config.activeTimeout).toBe(1800);
+  });
+
+  it('返回配置中的四个时长字段均为 number', () => {
+    const config = normalizeXltTokenConfig({
+      timeout: '30m',
+      activeTimeout: -1,
+      permCacheTimeout: 0,
+      offlineRecordTimeout: '1h',
+    });
+    expect(typeof config.timeout).toBe('number');
+    expect(typeof config.activeTimeout).toBe('number');
+    expect(typeof config.permCacheTimeout).toBe('number');
+    expect(typeof config.offlineRecordTimeout).toBe('number');
   });
 });

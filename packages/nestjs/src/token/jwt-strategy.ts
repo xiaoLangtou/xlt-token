@@ -1,7 +1,8 @@
 import { Inject, Injectable } from "@nestjs/common";
+import { randomUUID } from 'node:crypto';
 import { createRequire } from 'node:module';
 import { XLT_TOKEN_CONFIG } from '@xlt-token/core';
-import type { TokenStrategy, XltTokenConfig } from '@xlt-token/core';
+import type { DurationInput, TokenStrategy, XltTokenConfig } from '@xlt-token/core';
 
 const require = createRequire(import.meta.url);
 
@@ -31,13 +32,12 @@ export class JwtStrategy implements TokenStrategy {
     @Inject(XLT_TOKEN_CONFIG) private readonly config: XltTokenConfig
   ) { }
 
-
-
-  createToken(loginId: string, config: XltTokenConfig): string {
+  createToken(loginId: string, config: XltTokenConfig, options?: { timeout?: DurationInput }): string {
     const { sign } = getJsonwebtoken();
     const jwt = config.jwt!;
-    const jti = crypto.randomUUID();
+    const jti = randomUUID();
 
+    const resolvedTimeout = options?.timeout ?? config.timeout;
 
     return sign({
       sub: loginId, jti
@@ -45,22 +45,18 @@ export class JwtStrategy implements TokenStrategy {
       algorithm: jwt.algorithm ?? 'HS256',
       ...(jwt.issuer && { issuer: jwt.issuer }),
       ...(jwt.audience && { audience: jwt.audience }),
-      ...(config.timeout > 0 && { expiresIn: config.timeout }),
+      ...(resolvedTimeout > 0 && { expiresIn: resolvedTimeout }),
     })
-
   }
-
 
   generateToken(payload: any): string {
     const { sign } = getJsonwebtoken();
     return sign(payload, this.config.jwt!.secret);
   }
 
-
-
   verifyToken(token: string): XltJwtPayload {
     const { verify } = getJsonwebtoken();
-    return verify(token, this.config.jwt!.secret) as any;
+    return verify(token, this.config.jwt!.secret) as XltJwtPayload;
   }
 
 }

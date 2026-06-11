@@ -1,4 +1,4 @@
-import { RedisStore, XLT_REDIS_CLIENT } from './redis-store';
+import { RedisStore, XLT_REDIS_CLIENT } from '../src/store/redis-store';
 import { Test, TestingModule } from '@nestjs/testing';
 
 describe('RedisStore', () => {

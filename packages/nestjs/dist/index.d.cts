@@ -1,7 +1,6 @@
 import * as _nestjs_common0 from "@nestjs/common";
 import { CanActivate, ExecutionContext, ForbiddenException, ModuleMetadata, Provider, UnauthorizedException } from "@nestjs/common";
-import * as _xlt_token_core0 from "@xlt-token/core";
-import { AuthResult, CreateOptions, DEFAULT_XLT_TOKEN_CONFIG, DeviceInfo, HttpContext, MemoryStore, NotLoginType, NotLoginType as NotLoginType$1, StpInterface, StpInterface as StpInterface$1, StpLogic, StpLogic as StpLogic$1, StpPermLogic, StpPermLogic as StpPermLogic$1, StpUtil, TokenStrategy, TokenStrategy as TokenStrategy$1, UuidStrategy, XLT_STP_INTERFACE, XLT_TOKEN_CONFIG, XLT_TOKEN_HOOKS, XLT_TOKEN_STORE, XLT_TOKEN_STRATEGY, XltHooks, XltHooks as XltHooks$1, XltMode, XltMode as XltMode$1, XltSession, XltTokenConfig, XltTokenConfig as XltTokenConfig$1, XltTokenContext, XltTokenStore, XltTokenStore as XltTokenStore$1, createExpressContext, createMockHttpContext, createXltToken, matchPermission, setStpLogic, setStpPermLogic } from "@xlt-token/core";
+import { AuthResult, CreateOptions, DEFAULT_XLT_TOKEN_CONFIG, DeviceInfo, DurationInput, HttpContext, MemoryStore, NotLoginType, NotLoginType as NotLoginType$1, StpInterface, StpInterface as StpInterface$1, StpLogic, StpLogic as StpLogic$1, StpPermLogic, StpPermLogic as StpPermLogic$1, StpUtil, TokenStrategy, TokenStrategy as TokenStrategy$1, UuidStrategy, XLT_STP_INTERFACE, XLT_TOKEN_CONFIG, XLT_TOKEN_HOOKS, XLT_TOKEN_STORE, XLT_TOKEN_STRATEGY, XltHooks, XltHooks as XltHooks$1, XltMode, XltMode as XltMode$1, XltSession, XltTokenConfig, XltTokenConfig as XltTokenConfig$1, XltTokenContext, XltTokenStore, XltTokenStore as XltTokenStore$1, createExpressContext, createMockHttpContext, createXltToken, matchPermission, setStpLogic, setStpPermLogic } from "@xlt-token/core";
 import { Reflector } from "@nestjs/core";
 
 //#region src/xlt-token.module.d.ts
@@ -37,10 +36,6 @@ interface XltTokenModuleAsyncOptions extends Pick<ModuleMetadata, 'imports'> {
   hooks?: XltHooks$1;
 }
 declare class XltTokenModule {
-  private static createStoreProvider;
-  private static createStrategyProvider;
-  private static createStpInterfaceProvider;
-  private static createHooksProvider;
   private static readonly stpLogicProvider;
   private static readonly stpPermLogicProvider;
   private static readonly initProvider;
@@ -56,29 +51,16 @@ declare class XltTokenModule {
     imports: (_nestjs_common0.Type<any> | _nestjs_common0.DynamicModule | Promise<_nestjs_common0.DynamicModule> | _nestjs_common0.ForwardReference<any>)[];
     providers: (_nestjs_common0.Type<any> | _nestjs_common0.ClassProvider<any> | _nestjs_common0.ValueProvider<any> | _nestjs_common0.FactoryProvider<any> | _nestjs_common0.ExistingProvider<any> | {
       provide: string;
-      useFactory: (...args: any[]) => Promise<{
-        tokenName: string;
-        timeout: number;
-        activeTimeout: number;
-        isConcurrent: boolean;
-        isShare: boolean;
-        tokenStyle: "uuid" | "simple-uuid" | "random-32";
-        isReadHeader: boolean;
-        isReadCookie: boolean;
-        isReadQuery: boolean;
-        tokenPrefix: string;
-        defaultCheck: boolean;
-        permCacheTimeout?: number;
-        offlineRecordEnabled?: boolean;
-        offlineRecordTimeout?: number;
-        deviceConcurrent?: boolean;
-        jwt?: _xlt_token_core0.JwtConfig;
-      }>;
+      useFactory: (...args: any[]) => Promise<XltTokenConfig$1>;
       inject: any[];
     })[];
     exports: (string | typeof StpLogic$1 | typeof StpPermLogic$1)[];
     global: boolean;
   };
+  private static createStoreProvider;
+  private static createStrategyProvider;
+  private static createStpInterfaceProvider;
+  private static createHooksProvider;
 }
 //#endregion
 //#region src/store/redis-store.d.ts
@@ -104,7 +86,9 @@ type XltJwtPayload = Record<string, any> & {
 declare class JwtStrategy implements TokenStrategy$1 {
   private readonly config;
   constructor(config: XltTokenConfig$1);
-  createToken(loginId: string, config: XltTokenConfig$1): string;
+  createToken(loginId: string, config: XltTokenConfig$1, options?: {
+    timeout?: DurationInput;
+  }): string;
   generateToken(payload: any): string;
   verifyToken(token: string): XltJwtPayload;
 }

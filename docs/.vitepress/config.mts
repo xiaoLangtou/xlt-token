@@ -1,6 +1,6 @@
-import { copyFileSync, mkdirSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, resolve } from 'node:path';
 import { createMarkdownRenderer, defineConfig } from 'vitepress';
 import { transformerTwoslash } from '@shikijs/vitepress-twoslash';
 // @ts-ignore
@@ -13,47 +13,7 @@ const dir = dirname(fileURLToPath(import.meta.url))
 const root = resolve(dir, '../..')
 const docsRoot = resolve(root, 'docs')
 
-const rawPages: string[] = [
-  '/guide/getting-started',
-  '/guide/architecture',
-  '/guide/migration-2-0',
-  '/guide/mcp-server',
-  '/guide/mcp-server',
-  '/guide/llms',
-  '/guide/skills',
-  '/guide/relative-time-integration',
-  '/core/configuration',
-  '/core/getting-started',
-  '/core/core-api',
-  '/core/permissions-and-session',
-  '/core/storage',
-  '/core/token-strategy',
-  '/core/exceptions',
-  '/core/recipes',
-  '/core/multi-device',
-  '/core/secondary-auth',
-  '/core/jwt-strategy',
-  '/core/hooks-and-observability',
-  '/adapters/index',
-  '/adapters/nestjs/getting-started',
-  '/adapters/nestjs/module-config',
-  '/adapters/nestjs/guards-and-decorators',
-  '/adapters/express',
-  '/reference/changelog',
-  '/reference/src-reference',
-  '/reference/llms',
-]
 
-function generateRawMarkdownFiles() {
-  for (const routePath of rawPages) {
-    const source = join(docsRoot, `${routePath.slice(1)}.md`)
-    const target = join(docsRoot, 'public', 'raw', `${routePath.slice(1)}.md`)
-    mkdirSync(dirname(target), { recursive: true })
-    copyFileSync(source, target)
-  }
-}
-
-generateRawMarkdownFiles()
 
 const markdown = {
   theme: {
@@ -256,7 +216,7 @@ export default defineConfig({
     ],
   ],
 
-  srcExclude: ['README.md', 'archive/**', 'juejin/**', 'public/raw/**'],
+  srcExclude: ['README.md', 'archive/**', 'juejin/**'],
 
   themeConfig: {
     siteTitle: 'xlt-token',
@@ -287,7 +247,7 @@ export default defineConfig({
             { text: '选择接入方式', link: '/guide/getting-started' },
             { text: '架构设计', link: '/guide/architecture' },
             { text: '1.0 迁移指南', link: '/guide/migration-2-0' },
-            { text: '相对时间集成方案', link: '/guide/relative-time-integration' },
+
           ],
         },
         {

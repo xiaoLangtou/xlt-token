@@ -23,11 +23,11 @@
 login(
   loginId: string | number,
   options?: {
-    timeout?: number;   // 本次登录专属有效期（秒），覆盖全局 timeout
-    device?: string;    // 设备标识，见多端登录文档
-    token?: string;     // 手动指定 token（极少使用，通常留空由策略生成）
+    timeout?: DurationInput;  // 本次登录有效期，支持 '30m', '2h', '7d' 等或数字秒数
+    device?: string;          // 设备标识，见多端登录文档
+    token?: string;           // 手动指定 token（极少使用，通常留空由策略生成）
   },
-): Promise<string>       // 返回纯 token（不含前缀）
+): Promise<string>             // 返回纯 token（不含前缀）
 ```
 
 **行为要点**：
@@ -41,8 +41,8 @@ login(
 
 ```ts twoslash
 const token = await this.stp.login(user.id);
-// 指定本次登录 1 小时超时（不影响全局配置）
-const tempToken = await this.stp.login(user.id, { timeout: 3600 });
+// 指定本次登录 1 小时超时（不影响全局配置），支持相对时间字符串
+const tempToken = await this.stp.login(user.id, { timeout: '1h' });
 ```
 
 ### `getTokenValue(ctx)`
@@ -115,12 +115,21 @@ kickout(loginId: string): Promise<boolean | null>
 **续签 token / session / lastActive 的 TTL**。不改值，只改过期。
 
 ```ts twoslash
-renewTimeout(token: string, timeout: number): Promise<boolean | null>
+renewTimeout(token: string, timeout: DurationInput): Promise<boolean | null>
 ```
 
-- `timeout` 单位秒，`-1` 永久
+- `timeout` 支持相对时间字符串（如 `'30m'`）或数字秒数，`-1` 永久
 - `token` 找不到返回 `null`
 - 常用于"refresh-token"接口或"滑动续期"
+
+### 其他支持 DurationInput 的方法
+
+以下方法的 `timeout` 参数同样支持相对时间字符串：
+
+- `openSafe(token, business, timeout: DurationInput)` — 见 [二级认证](/core/secondary-auth)
+- `createTempToken(value, timeout: DurationInput)` — 见 [二级认证](/core/secondary-auth)
+
+类型 `DurationInput = number | \`${number}s\` | \`${number}m\` | \`${number}h\` | \`${number}d\` | \`${number}w\``
 
 ### `StpUtil.getLoginId(req)`（仅 StpUtil 提供）
 
@@ -200,6 +209,10 @@ StpLogic.logout(token)
 | `logoutByLoginId(loginId)` | ✅ | ✅ | `Promise<boolean \| null>` |
 | `kickout(loginId)` | ✅ | ✅ | `Promise<boolean \| null>` |
 | `renewTimeout(token, timeout)` | ✅ | ✅ | `Promise<boolean \| null>` |
+| `openSafe(token, business, timeout)` | ✅ | ✅ | `Promise<void>` |
+| `createTempToken(value, timeout)` | ✅ | ✅ | `Promise<string>` |
+| `parseTempToken(tempToken)` | ✅ | ✅ | `Promise<string \| null>` |
+| `deleteTempToken(tempToken)` | ✅ | ✅ | `Promise<void>` |
 | `getLoginId(req)` | ❌ | ✅ | `Promise<string \| null>` |
 
 ¹ `StpUtil` 的 `getTokenValue` / `isLogin` / `checkLogin` 在 NestJS 中仍接受 Express `Request`，内部自动包装为 `HttpContext`。

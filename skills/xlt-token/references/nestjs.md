@@ -57,6 +57,19 @@ export class AuthController {
 }
 ```
 
+## DurationInput
+
+All timeout fields in `config` and `login({ timeout })`, `renewTimeout`, `openSafe`, `createTempToken` accept `DurationInput`: a number (seconds), or a relative string like `'30s'`, `'15m'`, `'2h'`, `'7d'`, `'2w'`. The internal Store always receives normalized seconds.
+
+```ts
+XltTokenModule.forRoot({
+  config: {
+    timeout: '7d',   // 7 天
+    activeTimeout: '30m',  // 30 分钟闲置冻结
+  }
+})
+```
+
 ## Guard Modes
 
 Black-list mode, the default:

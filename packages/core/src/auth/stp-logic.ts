@@ -1,6 +1,6 @@
 // 核心引擎
 import { isNull, isUndefined } from 'es-toolkit';
-import type { DeviceInfo, XltTokenConfig } from '../config/xlt-token-config.js';
+import type { DeviceInfo, DurationInput, XltTokenConfig, XltTokenConfigInput } from '../config/xlt-token-config.js';
 import { NotLoginType } from '../const/index.js';
 import { XltTokenKeys } from '../config/xlt-token-keys.js';
 import { NotLoginException } from '../exceptions/not-login.exception.js';
@@ -10,6 +10,7 @@ import type { HttpContext } from '../http/context.js';
 import { XltSession } from '../session/xlt-session.js';
 import type { XltTokenStore } from '../store/xlt-token-store.interface.js';
 import type { TokenStrategy } from '../token/token-strategy.interface.js';
+import { normalizeDuration } from "../time/duration.js";
 
 export interface AuthResult {
   ok: boolean;
@@ -37,7 +38,7 @@ export class StpLogic {
    */
   async login(
     loginId: string | number,
-    options: { timeout?: number; device?: string; token?: string } = {},
+    options: { timeout?: DurationInput; device?: string; token?: string } = {},
   ): Promise<string> {
     if (isNull(loginId) || isUndefined(loginId) || loginId === '') throw new Error('invalid loginId');
 
@@ -49,7 +50,11 @@ export class StpLogic {
 
 
     const device = options.device ?? 'default';
-    const timeout = options.timeout ?? this.config.timeout;
+    const timeout = normalizeDuration(options.timeout ?? this.config.timeout,{
+      field:"timeout",
+      allowZero: true,
+      allowNever: true,
+    });
 
     const sessionKey = this.keys.sessionKey(_loginId, device);
     const oldToken = await this.store.get(sessionKey);
@@ -60,24 +65,24 @@ export class StpLogic {
     if (!this.config.deviceConcurrent) {
       // 任意新登录踢掉所有设备（等价于 1.0 isConcurrent=false 的全局版）
       await this._kickoutAllDevices(_loginId);
-      token = options.token ?? this.strategy.createToken(_loginId, this.config);
+      token = options.token ?? this.strategy.createToken(_loginId, this.config, { timeout });
     } else if (!this.config.isConcurrent) {
       // 同设备互踢
       if (oldToken) {
         replacedOldFullToken = await this._resolveHookToken(_loginId, device, oldToken);
         await this._replacedToken(_loginId, oldToken, device);
       }
-      token = options.token ?? this.strategy.createToken(_loginId, this.config);
+      token = options.token ?? this.strategy.createToken(_loginId, this.config, { timeout });
     } else if (this.config.isShare && oldToken) {
       if (this._isJwtMode()) {
         const list = await this.getDeviceList(_loginId);
         const info = list.find(d => d.device === device);
-        token = info?.token ?? options.token ?? this.strategy.createToken(_loginId, this.config);
+        token = info?.token ?? options.token ?? this.strategy.createToken(_loginId, this.config, { timeout });
       } else {
         token = oldToken;
       }
     } else {
-      token = options.token ?? this.strategy.createToken(_loginId, this.config);
+      token = options.token ?? this.strategy.createToken(_loginId, this.config, { timeout });
     }
 
 
@@ -115,7 +120,7 @@ export class StpLogic {
    * @param info
    * @param timeout
    */
-  async _addToSessionList(loginId: string, info: DeviceInfo, timeout: number): Promise<void> {
+  async _addToSessionList(loginId: string, info: DeviceInfo, timeout: DurationInput): Promise<void> {
     const key = this.keys.sessionListKey(loginId);
     const raw = await this.store.get(key);
     const list: DeviceInfo[] = raw ? JSON.parse(raw) : [];
@@ -123,7 +128,7 @@ export class StpLogic {
     const idx = list.findIndex(d => d.device === info.device);
     if (idx >= 0) list.splice(idx, 1);
     list.push(info);
-    await this.store.set(key, JSON.stringify(list), timeout);
+    await this.store.set(key, JSON.stringify(list), normalizeDuration(timeout, { field: 'timeout', allowZero: true, allowNever: true }));
   }
 
   /**
@@ -168,9 +173,9 @@ export class StpLogic {
    * @param business  业务标识
    * @param timeout 有效期（秒）
    */
-  async openSafe(token: string, business: string, timeout: number): Promise<void> {
+  async openSafe(token: string, business: string, timeout: DurationInput): Promise<void> {
     const safeKey = this.keys.safeKey(token, business);
-    await this.store.set(safeKey, String(Date.now()), timeout);
+    await this.store.set(safeKey, String(Date.now()), normalizeDuration(timeout, { field: 'timeout' })  );
   }
 
   /**
@@ -203,10 +208,10 @@ export class StpLogic {
    * @param timeout 有效期（秒）
    * @returns 临时token字符串
    */
-  async createTempToken(value: string, timeout: number): Promise<string> {
-    const tempToken = this.strategy.createToken('__temp__', this.config);
+  async createTempToken(value: string, timeout: DurationInput): Promise<string> {
+    const tempToken = this.strategy.createToken('__temp__', this.config, { timeout });
     const tempTokenKey = this.keys.tempTokenKey(tempToken);
-    await this.store.set(tempTokenKey, value, timeout);
+    await this.store.set(tempTokenKey, value, normalizeDuration(timeout, { field: 'timeout' }));
     return tempToken;
   }
 
@@ -348,18 +353,18 @@ export class StpLogic {
    * @param token
    * @param timeout
    */
-  async renewTimeout(token: string, timeout: number): Promise<boolean | null> {
+  async renewTimeout(token: string, timeout: DurationInput): Promise<boolean | null> {
     if (!token) return null;
 
     const loginId = await this.store.get(this.keys.tokenKey(token));
 
     if (!loginId) return null;
 
-    await this.store.updateTimeout(this.keys.tokenKey(token), timeout);
-    await this.store.updateTimeout(this.keys.sessionKey(loginId), timeout);
+    await this.store.updateTimeout(this.keys.tokenKey(token), normalizeDuration(timeout, { field: 'timeout', allowZero: true, allowNever: true }));
+    await this.store.updateTimeout(this.keys.sessionKey(loginId), normalizeDuration(timeout, { field: 'timeout', allowZero: true, allowNever: true }));
 
     if (this.config.activeTimeout > 0) {
-      await this.store.updateTimeout(this.keys.lastActiveKey(token), timeout);
+      await this.store.updateTimeout(this.keys.lastActiveKey(token), normalizeDuration(timeout, { field: 'activeTimeout', allowZero: true, allowNever: true }));
     }
 
     return true;
@@ -472,6 +477,8 @@ export class StpLogic {
     this.callHook('onKickout', loginId, token);
     return true;
   }
+
+
 
   /**
    * 查询所有在线loginIds

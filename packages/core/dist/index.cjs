@@ -1,6 +1,35 @@
 Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+//#region \0rolldown/runtime.js
+var __create = Object.create;
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __getProtoOf = Object.getPrototypeOf;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __copyProps = (to, from, except, desc) => {
+	if (from && typeof from === "object" || typeof from === "function") {
+		for (var keys = __getOwnPropNames(from), i = 0, n = keys.length, key; i < n; i++) {
+			key = keys[i];
+			if (!__hasOwnProp.call(to, key) && key !== except) {
+				__defProp(to, key, {
+					get: ((k) => from[k]).bind(null, key),
+					enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable
+				});
+			}
+		}
+	}
+	return to;
+};
+var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", {
+	value: mod,
+	enumerable: true
+}) : target, mod));
+
+//#endregion
 let node_crypto = require("node:crypto");
 let es_toolkit = require("es-toolkit");
+let ms = require("ms");
+ms = __toESM(ms);
 
 //#region src/const/index.ts
 /**
@@ -213,7 +242,7 @@ var UuidStrategy = class {
 	verifyToken(token) {
 		return token;
 	}
-	createToken(_loginId, config) {
+	createToken(_loginId, config, _options) {
 		return this.buildRaw(config.tokenStyle);
 	}
 	buildRaw(style) {
@@ -438,6 +467,62 @@ var XltSession = class {
 };
 
 //#endregion
+//#region src/time/duration.ts
+const DURATION_PATTERN = /^\d+(?:\.\d+)?[smhdw]$/;
+function normalizeDuration(value, options) {
+	const invalid = () => {
+		throw new TypeError(`Invalid duration for "${options.field}": expected integer seconds or a duration such as "30m", received ${JSON.stringify(value)}`);
+	};
+	if (typeof value === "number") {
+		if (!Number.isFinite(value) || !Number.isInteger(value)) invalid();
+		if (value === 0) return options.allowZero ? 0 : invalid();
+		if (value === -1) return options.allowNever ? -1 : invalid();
+		if (value < 0) invalid();
+		return value;
+	}
+	if (!DURATION_PATTERN.test(value)) invalid();
+	const seconds = (0, ms.default)(value) / 1e3;
+	if (!Number.isFinite(seconds) || !Number.isInteger(seconds) || seconds <= 0) invalid();
+	return seconds;
+}
+/**
+* 规范化 XltToken 配置
+*/
+function normalizeXltTokenConfig(input) {
+	const config = {
+		...DEFAULT_XLT_TOKEN_CONFIG,
+		...input,
+		timeout: input?.timeout ?? DEFAULT_XLT_TOKEN_CONFIG.timeout,
+		activeTimeout: input?.activeTimeout ?? DEFAULT_XLT_TOKEN_CONFIG.activeTimeout,
+		permCacheTimeout: input?.permCacheTimeout ?? DEFAULT_XLT_TOKEN_CONFIG.permCacheTimeout,
+		offlineRecordTimeout: input?.offlineRecordTimeout ?? DEFAULT_XLT_TOKEN_CONFIG.offlineRecordTimeout
+	};
+	return {
+		...config,
+		timeout: normalizeDuration(config.timeout, {
+			field: "timeout",
+			allowZero: true,
+			allowNever: true
+		}),
+		activeTimeout: normalizeDuration(config.activeTimeout, {
+			field: "activeTimeout",
+			allowZero: true,
+			allowNever: true
+		}),
+		permCacheTimeout: normalizeDuration(config.permCacheTimeout, {
+			field: "permCacheTimeout",
+			allowZero: true,
+			allowNever: true
+		}),
+		offlineRecordTimeout: normalizeDuration(config.offlineRecordTimeout, {
+			field: "offlineRecordTimeout",
+			allowZero: true,
+			allowNever: true
+		})
+	};
+}
+
+//#endregion
 //#region src/auth/stp-logic.ts
 var StpLogic = class {
 	constructor(config, store, strategy, hooks = {}) {
@@ -457,23 +542,27 @@ var StpLogic = class {
 		const _loginId = String(loginId);
 		if (_loginId.includes(":")) throw new Error("invalid loginId");
 		const device = options.device ?? "default";
-		const timeout = options.timeout ?? this.config.timeout;
+		const timeout = normalizeDuration(options.timeout ?? this.config.timeout, {
+			field: "timeout",
+			allowZero: true,
+			allowNever: true
+		});
 		const sessionKey = this.keys.sessionKey(_loginId, device);
 		const oldToken = await this.store.get(sessionKey);
 		let replacedOldFullToken;
 		let token;
 		if (!this.config.deviceConcurrent) {
 			await this._kickoutAllDevices(_loginId);
-			token = options.token ?? this.strategy.createToken(_loginId, this.config);
+			token = options.token ?? this.strategy.createToken(_loginId, this.config, { timeout });
 		} else if (!this.config.isConcurrent) {
 			if (oldToken) {
 				replacedOldFullToken = await this._resolveHookToken(_loginId, device, oldToken);
 				await this._replacedToken(_loginId, oldToken, device);
 			}
-			token = options.token ?? this.strategy.createToken(_loginId, this.config);
-		} else if (this.config.isShare && oldToken) if (this._isJwtMode()) token = (await this.getDeviceList(_loginId)).find((d) => d.device === device)?.token ?? options.token ?? this.strategy.createToken(_loginId, this.config);
+			token = options.token ?? this.strategy.createToken(_loginId, this.config, { timeout });
+		} else if (this.config.isShare && oldToken) if (this._isJwtMode()) token = (await this.getDeviceList(_loginId)).find((d) => d.device === device)?.token ?? options.token ?? this.strategy.createToken(_loginId, this.config, { timeout });
 		else token = oldToken;
-		else token = options.token ?? this.strategy.createToken(_loginId, this.config);
+		else token = options.token ?? this.strategy.createToken(_loginId, this.config, { timeout });
 		if (this._isJwtMode()) {
 			const { jti } = this.strategy.verifyToken(token);
 			await this.store.set(sessionKey, jti, timeout);
@@ -505,7 +594,11 @@ var StpLogic = class {
 		const idx = list.findIndex((d) => d.device === info.device);
 		if (idx >= 0) list.splice(idx, 1);
 		list.push(info);
-		await this.store.set(key, JSON.stringify(list), timeout);
+		await this.store.set(key, JSON.stringify(list), normalizeDuration(timeout, {
+			field: "timeout",
+			allowZero: true,
+			allowNever: true
+		}));
 	}
 	/**
 	* 踢掉所有设备
@@ -541,7 +634,7 @@ var StpLogic = class {
 	*/
 	async openSafe(token, business, timeout) {
 		const safeKey = this.keys.safeKey(token, business);
-		await this.store.set(safeKey, String(Date.now()), timeout);
+		await this.store.set(safeKey, String(Date.now()), normalizeDuration(timeout, { field: "timeout" }));
 	}
 	/**
 	* 检查二级认证是否有效
@@ -567,9 +660,9 @@ var StpLogic = class {
 	* @returns 临时token字符串
 	*/
 	async createTempToken(value, timeout) {
-		const tempToken = this.strategy.createToken("__temp__", this.config);
+		const tempToken = this.strategy.createToken("__temp__", this.config, { timeout });
 		const tempTokenKey = this.keys.tempTokenKey(tempToken);
-		await this.store.set(tempTokenKey, value, timeout);
+		await this.store.set(tempTokenKey, value, normalizeDuration(timeout, { field: "timeout" }));
 		return tempToken;
 	}
 	/**
@@ -686,9 +779,21 @@ var StpLogic = class {
 		if (!token) return null;
 		const loginId = await this.store.get(this.keys.tokenKey(token));
 		if (!loginId) return null;
-		await this.store.updateTimeout(this.keys.tokenKey(token), timeout);
-		await this.store.updateTimeout(this.keys.sessionKey(loginId), timeout);
-		if (this.config.activeTimeout > 0) await this.store.updateTimeout(this.keys.lastActiveKey(token), timeout);
+		await this.store.updateTimeout(this.keys.tokenKey(token), normalizeDuration(timeout, {
+			field: "timeout",
+			allowZero: true,
+			allowNever: true
+		}));
+		await this.store.updateTimeout(this.keys.sessionKey(loginId), normalizeDuration(timeout, {
+			field: "timeout",
+			allowZero: true,
+			allowNever: true
+		}));
+		if (this.config.activeTimeout > 0) await this.store.updateTimeout(this.keys.lastActiveKey(token), normalizeDuration(timeout, {
+			field: "activeTimeout",
+			allowZero: true,
+			allowNever: true
+		}));
 		return true;
 	}
 	/**
@@ -1123,7 +1228,7 @@ var StpUtil = class {
 };
 
 //#endregion
-//#region src/test/setup-stp-logic.ts
+//#region src/factory.ts
 const defaultStpInterface = {
 	getPermissionList: () => {
 		throw new Error("StpInterface not registered: getPermissionList");
@@ -1132,14 +1237,8 @@ const defaultStpInterface = {
 		throw new Error("StpInterface not registered: getRoleList");
 	}
 };
-
-//#endregion
-//#region src/factory.ts
 function createXltToken(options = {}) {
-	const config = {
-		...DEFAULT_XLT_TOKEN_CONFIG,
-		...options.config
-	};
+	const config = normalizeXltTokenConfig(options.config);
 	const store = options.store ?? new MemoryStore();
 	const strategy = options.strategy ?? new UuidStrategy();
 	const stpInterface = options.stpInterface ?? defaultStpInterface;
@@ -1160,6 +1259,12 @@ function createXltToken(options = {}) {
 //#endregion
 exports.DEFAULT_XLT_TOKEN_CONFIG = DEFAULT_XLT_TOKEN_CONFIG;
 exports.MemoryStore = MemoryStore;
+Object.defineProperty(exports, 'NormalizeDurationOptions', {
+  enumerable: true,
+  get: function () {
+    return NormalizeDurationOptions;
+  }
+});
 exports.NotLoginException = NotLoginException;
 exports.NotLoginType = NotLoginType;
 exports.NotPermissionException = NotPermissionException;
@@ -1186,5 +1291,7 @@ exports.createExpressContext = createExpressContext;
 exports.createMockHttpContext = createMockHttpContext;
 exports.createXltToken = createXltToken;
 exports.matchPermission = matchPermission;
+exports.normalizeDuration = normalizeDuration;
+exports.normalizeXltTokenConfig = normalizeXltTokenConfig;
 exports.setStpLogic = setStpLogic;
 exports.setStpPermLogic = setStpPermLogic;

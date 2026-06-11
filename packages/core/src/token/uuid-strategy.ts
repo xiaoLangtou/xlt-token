@@ -1,5 +1,5 @@
 import { randomBytes, randomUUID } from 'node:crypto';
-import type { XltTokenConfig } from '../config/xlt-token-config.js';
+import type { DurationInput, XltTokenConfig } from '../config/xlt-token-config.js';
 import type { TokenStrategy } from './token-strategy.interface.js';
 
 export class UuidStrategy implements TokenStrategy {
@@ -11,7 +11,7 @@ export class UuidStrategy implements TokenStrategy {
     return token;
   }
 
-  createToken(_loginId: string, config: XltTokenConfig): string {
+  createToken(_loginId: string, config: XltTokenConfig, _options?: { timeout?: DurationInput }): string {
     return this.buildRaw(config.tokenStyle);
   }
 

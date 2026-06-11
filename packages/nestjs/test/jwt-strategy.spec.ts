@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { sign } from 'jsonwebtoken';
-import { JwtStrategy } from './jwt-strategy';
+import { JwtStrategy } from '../src/token/jwt-strategy';
 import {
   DEFAULT_XLT_TOKEN_CONFIG,
   XLT_TOKEN_CONFIG,
@@ -52,6 +52,27 @@ describe('JwtStrategy', () => {
       const token = strategy.createToken('1001', makeConfig({ timeout: 60 }));
       const payload = strategy.verifyToken(token);
       expect(payload.exp).toBeGreaterThan(Math.floor(Date.now() / 1000));
+    });
+
+    it('options.timeout 优先于 config.timeout', () => {
+      const config = makeConfig({ timeout: 2592000 }); // 30 天
+      const token = strategy.createToken('1001', config, { timeout: 60 });
+      const payload = strategy.verifyToken(token);
+      const expiresIn = payload.exp! - Math.floor(Date.now() / 1000);
+      expect(expiresIn).toBeGreaterThan(30);
+      expect(expiresIn).toBeLessThan(120);
+    });
+
+    it('options.timeout 为 0 时不带 exp', () => {
+      const token = strategy.createToken('1001', makeConfig({ timeout: 3600 }), { timeout: 0 });
+      const payload = strategy.verifyToken(token);
+      expect(payload.exp).toBeUndefined();
+    });
+
+    it('options.timeout 为 -1 时不带 exp', () => {
+      const token = strategy.createToken('1001', makeConfig({ timeout: 3600 }), { timeout: -1 });
+      const payload = strategy.verifyToken(token);
+      expect(payload.exp).toBeUndefined();
     });
 
     it('issuer / audience 写入 JWT', () => {

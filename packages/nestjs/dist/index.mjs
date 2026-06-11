@@ -1,6 +1,7 @@
 import { createRequire } from "node:module";
 import { ForbiddenException, Inject, Injectable, Module, Optional, SetMetadata, UnauthorizedException, createParamDecorator } from "@nestjs/common";
-import { DEFAULT_XLT_TOKEN_CONFIG, DEFAULT_XLT_TOKEN_CONFIG as DEFAULT_XLT_TOKEN_CONFIG$1, MemoryStore, MemoryStore as MemoryStore$1, NotLoginException as NotLoginException$1, NotLoginType, NotLoginType as NotLoginType$1, NotPermissionException as NotPermissionException$1, NotRoleException as NotRoleException$1, NotSafeException as NotSafeException$1, StpLogic, StpLogic as StpLogic$1, StpPermLogic, StpPermLogic as StpPermLogic$1, StpUtil, UuidStrategy, UuidStrategy as UuidStrategy$1, XLT_CHECK_LOGIN_KEY, XLT_IGNORE_KEY, XLT_PERMISSION_KEY, XLT_ROLE_KEY, XLT_STP_INTERFACE, XLT_STP_INTERFACE as XLT_STP_INTERFACE$1, XLT_TOKEN_CONFIG, XLT_TOKEN_CONFIG as XLT_TOKEN_CONFIG$1, XLT_TOKEN_HOOKS, XLT_TOKEN_HOOKS as XLT_TOKEN_HOOKS$1, XLT_TOKEN_STORE, XLT_TOKEN_STORE as XLT_TOKEN_STORE$1, XLT_TOKEN_STRATEGY, XLT_TOKEN_STRATEGY as XLT_TOKEN_STRATEGY$1, XltMode, XltMode as XltMode$1, XltSession, createExpressContext, createExpressContext as createExpressContext$1, createMockHttpContext, createXltToken, matchPermission, setStpLogic, setStpLogic as setStpLogic$1, setStpPermLogic, setStpPermLogic as setStpPermLogic$1 } from "@xlt-token/core";
+import { DEFAULT_XLT_TOKEN_CONFIG, DEFAULT_XLT_TOKEN_CONFIG as DEFAULT_XLT_TOKEN_CONFIG$1, MemoryStore, MemoryStore as MemoryStore$1, NotLoginException as NotLoginException$1, NotLoginType, NotLoginType as NotLoginType$1, NotPermissionException as NotPermissionException$1, NotRoleException as NotRoleException$1, NotSafeException as NotSafeException$1, StpLogic, StpLogic as StpLogic$1, StpPermLogic, StpPermLogic as StpPermLogic$1, StpUtil, UuidStrategy, UuidStrategy as UuidStrategy$1, XLT_CHECK_LOGIN_KEY, XLT_IGNORE_KEY, XLT_PERMISSION_KEY, XLT_ROLE_KEY, XLT_STP_INTERFACE, XLT_STP_INTERFACE as XLT_STP_INTERFACE$1, XLT_TOKEN_CONFIG, XLT_TOKEN_CONFIG as XLT_TOKEN_CONFIG$1, XLT_TOKEN_HOOKS, XLT_TOKEN_HOOKS as XLT_TOKEN_HOOKS$1, XLT_TOKEN_STORE, XLT_TOKEN_STORE as XLT_TOKEN_STORE$1, XLT_TOKEN_STRATEGY, XLT_TOKEN_STRATEGY as XLT_TOKEN_STRATEGY$1, XltMode, XltMode as XltMode$1, XltSession, createExpressContext, createExpressContext as createExpressContext$1, createMockHttpContext, createXltToken, matchPermission, normalizeXltTokenConfig, setStpLogic, setStpLogic as setStpLogic$1, setStpPermLogic, setStpPermLogic as setStpPermLogic$1 } from "@xlt-token/core";
+import { randomUUID } from "node:crypto";
 import { Reflector } from "@nestjs/core";
 
 //#region \0@oxc-project+runtime@0.112.0/helpers/decorate.js
@@ -17,51 +18,6 @@ var _XltTokenModule;
 let XltTokenModule = class XltTokenModule {
 	static {
 		_XltTokenModule = this;
-	}
-	static createStoreProvider(store) {
-		if (!store) return {
-			provide: XLT_TOKEN_STORE$1,
-			useClass: MemoryStore$1
-		};
-		return "useClass" in store ? {
-			provide: XLT_TOKEN_STORE$1,
-			useClass: store.useClass
-		} : {
-			provide: XLT_TOKEN_STORE$1,
-			useValue: store.useValue
-		};
-	}
-	static createStrategyProvider(strategy) {
-		return strategy?.useClass ? {
-			provide: XLT_TOKEN_STRATEGY$1,
-			useClass: strategy.useClass
-		} : {
-			provide: XLT_TOKEN_STRATEGY$1,
-			useClass: UuidStrategy$1
-		};
-	}
-	static createStpInterfaceProvider(stpInterface) {
-		if (stpInterface) return {
-			provide: XLT_STP_INTERFACE$1,
-			useClass: stpInterface
-		};
-		return {
-			provide: XLT_STP_INTERFACE$1,
-			useValue: {
-				getPermissionList: () => {
-					throw new Error("StpInterface not registered: getPermissionList");
-				},
-				getRoleList: () => {
-					throw new Error("StpInterface not registered: getRoleList");
-				}
-			}
-		};
-	}
-	static createHooksProvider(hooks) {
-		return {
-			provide: XLT_TOKEN_HOOKS$1,
-			useValue: hooks ?? {}
-		};
 	}
 	static {
 		this.stpLogicProvider = {
@@ -113,10 +69,10 @@ let XltTokenModule = class XltTokenModule {
 			providers: [
 				{
 					provide: XLT_TOKEN_CONFIG$1,
-					useValue: {
+					useValue: normalizeXltTokenConfig({
 						...DEFAULT_XLT_TOKEN_CONFIG$1,
 						...userConfig
-					}
+					})
 				},
 				_XltTokenModule.createStoreProvider(store),
 				_XltTokenModule.createStrategyProvider(strategy),
@@ -141,10 +97,10 @@ let XltTokenModule = class XltTokenModule {
 					provide: XLT_TOKEN_CONFIG$1,
 					useFactory: async (...args) => {
 						const { config = {} } = await useFactory(...args);
-						return {
+						return normalizeXltTokenConfig({
 							...DEFAULT_XLT_TOKEN_CONFIG$1,
 							...config
-						};
+						});
 					},
 					inject
 				},
@@ -159,6 +115,51 @@ let XltTokenModule = class XltTokenModule {
 			],
 			exports: _XltTokenModule.moduleExports,
 			global: isGlobal
+		};
+	}
+	static createStoreProvider(store) {
+		if (!store) return {
+			provide: XLT_TOKEN_STORE$1,
+			useClass: MemoryStore$1
+		};
+		return "useClass" in store ? {
+			provide: XLT_TOKEN_STORE$1,
+			useClass: store.useClass
+		} : {
+			provide: XLT_TOKEN_STORE$1,
+			useValue: store.useValue
+		};
+	}
+	static createStrategyProvider(strategy) {
+		return strategy?.useClass ? {
+			provide: XLT_TOKEN_STRATEGY$1,
+			useClass: strategy.useClass
+		} : {
+			provide: XLT_TOKEN_STRATEGY$1,
+			useClass: UuidStrategy$1
+		};
+	}
+	static createStpInterfaceProvider(stpInterface) {
+		if (stpInterface) return {
+			provide: XLT_STP_INTERFACE$1,
+			useClass: stpInterface
+		};
+		return {
+			provide: XLT_STP_INTERFACE$1,
+			useValue: {
+				getPermissionList: () => {
+					throw new Error("StpInterface not registered: getPermissionList");
+				},
+				getRoleList: () => {
+					throw new Error("StpInterface not registered: getRoleList");
+				}
+			}
+		};
+	}
+	static createHooksProvider(hooks) {
+		return {
+			provide: XLT_TOKEN_HOOKS$1,
+			useValue: hooks ?? {}
 		};
 	}
 };
@@ -249,17 +250,19 @@ let JwtStrategy = class JwtStrategy {
 	constructor(config) {
 		this.config = config;
 	}
-	createToken(loginId, config) {
+	createToken(loginId, config, options) {
 		const { sign } = getJsonwebtoken();
 		const jwt = config.jwt;
+		const jti = randomUUID();
+		const resolvedTimeout = options?.timeout ?? config.timeout;
 		return sign({
 			sub: loginId,
-			jti: crypto.randomUUID()
+			jti
 		}, jwt.secret, {
 			algorithm: jwt.algorithm ?? "HS256",
 			...jwt.issuer && { issuer: jwt.issuer },
 			...jwt.audience && { audience: jwt.audience },
-			...config.timeout > 0 && { expiresIn: config.timeout }
+			...resolvedTimeout > 0 && { expiresIn: resolvedTimeout }
 		});
 	}
 	generateToken(payload) {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createNestHttpContext } from './nest-bridge.js';
+import { createNestHttpContext } from '../src/http/nest-bridge.js';
 
 describe('createNestHttpContext (跨平台 response 适配)', () => {
   it('读取 header / cookie / query（与平台无关）', () => {

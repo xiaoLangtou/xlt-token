@@ -89,6 +89,37 @@ describe('StpLogic', () => {
       expect(ttl).toBeLessThanOrEqual(50);
     });
 
+    it('options.timeout 支持 DurationInput 字符串', async () => {
+      await buildModule(makeConfig({ timeout: 1000 }));
+      const token = await logic.login('u1', { timeout: '30s' });
+      const ttl = await store.getTimeout(tokenKey(config, token));
+      expect(ttl).toBeGreaterThan(25);
+      expect(ttl).toBeLessThanOrEqual(30);
+    });
+
+    it('options.timeout 为 0 时 store 立即过期', async () => {
+      await buildModule(makeConfig({ timeout: 1000 }));
+      const token = await logic.login('u1', { timeout: 0 });
+      const ttl = await store.getTimeout(tokenKey(config, token));
+      // 0 表示立即过期，getTimeout 返回 -2
+      expect(ttl).toBe(-2);
+    });
+
+    it('options.timeout 为 -1 时永不过期', async () => {
+      await buildModule(makeConfig({ timeout: 1000 }));
+      const token = await logic.login('u1', { timeout: -1 });
+      const ttl = await store.getTimeout(tokenKey(config, token));
+      expect(ttl).toBe(-1);
+    });
+
+    it('config.timeout 也支持 DurationInput', async () => {
+      await buildModule(makeConfig({ timeout: '30s' as any }));
+      const token = await logic.login('u1');
+      const ttl = await store.getTimeout(tokenKey(config, token));
+      expect(ttl).toBeGreaterThan(25);
+      expect(ttl).toBeLessThanOrEqual(30);
+    });
+
     it('activeTimeout > 0 时会写入 lastActiveKey', async () => {
       await buildModule(makeConfig({ activeTimeout: 60 }));
       const token = await logic.login('u1');

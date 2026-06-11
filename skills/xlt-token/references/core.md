@@ -40,6 +40,8 @@ await xlt.stpLogic.logout(token)
 
 `loginId` must be a non-empty string or number and cannot contain `:`.
 
+All timeout parameters accept `DurationInput`: a number (seconds), or a string like `'30s'`, `'15m'`, `'2h'`, `'7d'`, `'2w'`. Special values `0` (immediate) and `-1` (never) are accepted as numbers only. This applies to `config.timeout`, `config.activeTimeout`, `config.permCacheTimeout`, `config.offlineRecordTimeout`, `login({ timeout })`, `renewTimeout(token, timeout)`, `openSafe(token, biz, timeout)`, and `createTempToken(value, timeout)`.
+
 ## Token Reading
 
 Default config reads the token from the `authorization` header and strips the `Bearer ` prefix.

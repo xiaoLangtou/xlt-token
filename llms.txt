@@ -15,13 +15,13 @@ xlt-token is a pnpm monorepo that provides token login, logout, session, permiss
 
 - Project overview: `README.md`
 - Documentation map: `docs/README.md`
-- Source reference: `docs/SRC-REFERENCE.md`
-- Architecture: `docs/02-architecture.md`
-- Core API: `docs/04-core-api.md`
-- NestJS guards and decorators: `docs/05-guards-and-decorators.md`
-- NestJS module config: `docs/12-nestjs-module-config.md`
-- Express adapter: `docs/18-express-adapter.md`
-- AI coding agent guide: `docs/19-ai-coding-agents.md`
+- Source reference: `docs/reference/src-reference.md`
+- Architecture: `docs/guide/architecture.md`
+- Core API: `docs/core/core-api.md`
+- NestJS guards and decorators: `docs/adapters/nestjs/guards-and-decorators.md`
+- NestJS module config: `docs/adapters/nestjs/module-config.md`
+- Express adapter: `docs/adapters/express.md`
+- AI coding agent guide: `docs/reference/llms.md`
 
 ## Important Source Entry Points
 

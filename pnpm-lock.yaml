@@ -159,10 +159,16 @@ importers:
       es-toolkit:
         specifier: ^1.0.0
         version: 1.45.1
+      ms:
+        specifier: ^2.1.3
+        version: 2.1.3
     devDependencies:
       '@types/jsonwebtoken':
         specifier: ^9.0.10
         version: 9.0.10
+      '@types/ms':
+        specifier: ^2.1.0
+        version: 2.1.0
       '@types/node':
         specifier: ^20.0.0
         version: 20.19.39

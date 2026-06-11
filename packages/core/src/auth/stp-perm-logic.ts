@@ -1,5 +1,5 @@
 import type { StpInterface } from '../perm/stp-interface.js';
-import type { XltTokenConfig } from '../config/xlt-token-config.js';
+import type { XltTokenConfig, XltTokenConfigInput } from '../config/xlt-token-config.js';
 import { XltTokenKeys } from '../config/xlt-token-keys.js';
 import type { XltTokenStore } from '../store/xlt-token-store.interface.js';
 import { XltMode } from '../const/index.js';
@@ -19,7 +19,7 @@ export class StpPermLogic {
   }
 
   private permCacheTimeoutSec(): number {
-    return this.tokenConfig.permCacheTimeout ?? 0;
+    return this.tokenConfig.permCacheTimeout  ?? 0;
   }
 
   private async getPermissionList(loginId: string): Promise<string[]> {

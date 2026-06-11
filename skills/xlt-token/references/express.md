@@ -47,6 +47,19 @@ app.get('/auth/me', (req, res) => {
 - `req.stpToken`
 - `req._xltState`
 
+## DurationInput
+
+All timeout fields in `createXltToken({ config })` and `login({ timeout })`, `renewTimeout`, `openSafe`, `createTempToken` accept `DurationInput`: number (seconds) or relative string like `'30s'`, `'15m'`, `'2h'`, `'7d'`, `'2w'`.
+
+```ts
+const xlt = createXltToken({
+  config: {
+    timeout: '7d',
+    activeTimeout: '30m',
+  }
+})
+```
+
 ## Route Policies
 
 Use policies when route metadata must be known before the auth middleware runs:
