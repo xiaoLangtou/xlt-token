@@ -262,5 +262,5 @@ transfer() {}
 
 ## 下一步
 
-- 想知道各类 401 的具体 reason → [08-exceptions](/core/exceptions)
-- 踢人/顶号完整流程 → [09-recipes](/core/recipes)
+- 想知道各类 401 的具体 reason → [异常处理](/core/exceptions)
+- 踢人/顶号完整流程 → [场景手册](/core/recipes)

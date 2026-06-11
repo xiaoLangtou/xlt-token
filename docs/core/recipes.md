@@ -29,7 +29,7 @@ XltTokenModule.forRoot({
 
 **效果**：同账号二次登录时，旧 token 的值被改为 `BE_REPLACED`，旧设备下次请求收到 401 `BE_REPLACED`。
 
-**前端处理**：见 [08-exceptions · 前端统一处理](/core/exceptions#前端统一处理示例)。
+**前端处理**：见 [异常处理 · 前端统一处理](/core/exceptions#前端统一处理示例)。
 
 ---
 
@@ -57,7 +57,7 @@ XltTokenModule.forRoot({
 });
 ```
 
-**⚠️ 注意**：1.1.0 起 `sessionKey` 已支持 `device` 后缀，多端场景请用 `forceLogout` 全端登出，详见 [14-multi-device](/core/multi-device)。
+**⚠️ 注意**：1.1.0 起 `sessionKey` 已支持 `device` 后缀，多端场景请用 `forceLogout` 全端登出，详见 [多端登录](/core/multi-device)。
 
 ---
 

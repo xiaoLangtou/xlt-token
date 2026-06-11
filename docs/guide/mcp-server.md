@@ -26,10 +26,10 @@ MCP Server 适合把项目知识、API 索引、示例和诊断工具以结构�
 - `llms.txt`
 - `docs/README.md`
 - `docs/SRC-REFERENCE.md`
-- `docs/04-core-api.md`
-- `docs/05-guards-and-decorators.md`
-- `docs/12-nestjs-module-config.md`
-- `docs/18-express-adapter.md`
+- `core/core-api.md`
+- `adapters/nestjs/guards-and-decorators.md`
+- `adapters/nestjs/module-config.md`
+- `adapters/express.md`
 
 ## 运行建议
 

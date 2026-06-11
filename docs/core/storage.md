@@ -227,5 +227,5 @@ export class MyCustomStore implements XltTokenStore {
 
 ## 下一步
 
-- 想换 token 生成方式？→ [07-token-strategy](/core/token-strategy)
-- 接入 Redis 后如何观察/调试？→ [09-recipes · 运维调试](/core/recipes)
+- 想换 token 生成方式？→ [Token 策略](/core/token-strategy)
+- 接入 Redis 后如何观察/调试？→ [场景手册 · 运维调试](/core/recipes)

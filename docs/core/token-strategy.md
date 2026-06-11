@@ -102,7 +102,7 @@ export class AppModule {}
 
 - 推荐使用内置 **`JwtStrategy`**（`import { JwtStrategy } from '@xlt-token/nestjs'`），无需自行实现黑名单与 `_resolveLoginId` 分支。
 - 若自定义 JWT 策略，需实现 `verifyToken`，并在 `config.jwt.secret` 中配置密钥，`StpLogic` 才会进入 JWT 鉴权分支。
-- **`createToken` 只负责生成**。UUID 模式下 token 是否仍有效由 store 决定；JWT 模式下正常鉴权以验签为主，踢人/顶号走 **jti 黑名单**（详见 [16-jwt-strategy](/core/jwt-strategy)）。
+- **`createToken` 只负责生成**。UUID 模式下 token 是否仍有效由 store 决定；JWT 模式下正常鉴权以验签为主，踢人/顶号走 **jti 黑名单**（详见 [JWT 策略](/core/jwt-strategy)）。
 - 若只想要「纯无状态 JWT，服务端不保存状态」，xlt-token 并不是合适的方案。
 
 ## 策略 vs 存储：该改哪个？
@@ -116,5 +116,5 @@ export class AppModule {}
 
 ## 下一步
 
-- 看各个 NotLoginType 什么时候触发 → [08-exceptions](/core/exceptions)
-- 实战场景（顶号、踢人） → [09-recipes](/core/recipes)
+- 看各个 NotLoginType 什么时候触发 → [异常处理](/core/exceptions)
+- 实战场景（顶号、踢人） → [场景手册](/core/recipes)

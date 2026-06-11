@@ -20,11 +20,11 @@
 - 项目总览：`README.md`
 - 文档导航：`docs/README.md`
 - 源码速查：`docs/SRC-REFERENCE.md`
-- 架构设计：`docs/02-architecture.md`
-- Core API：`docs/04-core-api.md`
-- NestJS 守卫与装饰器：`docs/05-guards-and-decorators.md`
-- NestJS 模块配置：`docs/12-nestjs-module-config.md`
-- Express 适配器：`docs/18-express-adapter.md`
+- 架构设计：`guide/architecture.md`
+- Core API：`core/core-api.md`
+- NestJS 守卫与装饰器：`adapters/nestjs/guards-and-decorators.md`
+- NestJS 模块配置：`adapters/nestjs/module-config.md`
+- Express 适配器：`adapters/express.md`
 
 ## 核心源码入口
 

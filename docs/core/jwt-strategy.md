@@ -163,7 +163,7 @@ class JwtStrategy implements TokenStrategy {
 }
 ```
 
-也可参考 [07-token-strategy](/core/token-strategy) 自定义 JWT 策略，只要实现 `verifyToken` 且配置 `jwt.secret`，`StpLogic` 会自动进入 JWT 分支。
+也可参考 [Token 策略](/core/token-strategy) 自定义 JWT 策略，只要实现 `verifyToken` 且配置 `jwt.secret`，`StpLogic` 会自动进入 JWT 分支。
 
 ## 限制与已知差异
 
@@ -206,6 +206,6 @@ Authorization: eyJhbGciOiJIUzI1NiIs...
 
 ## 下一步
 
-- Token 策略接口说明 → [07-token-strategy](/core/token-strategy)
-- 多端 + JWT 踢设备 → [14-multi-device](/core/multi-device)
-- NotLoginType 与前端处理 → [08-exceptions](/core/exceptions)
+- Token 策略接口说明 → [Token 策略](/core/token-strategy)
+- 多端 + JWT 踢设备 → [多端登录](/core/multi-device)
+- NotLoginType 与前端处理 → [异常处理](/core/exceptions)

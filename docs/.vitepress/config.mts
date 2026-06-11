@@ -13,40 +13,43 @@ const dir = dirname(fileURLToPath(import.meta.url))
 const root = resolve(dir, '../..')
 const docsRoot = resolve(root, 'docs')
 
-const rawPages: Record<string, string> = {
-  '/guide/getting-started': '01-getting-started.md',
-  '/guide/architecture': '02-architecture.md',
-  '/guide/migration-2-0': 'migration-2.0.md',
-  '/guide/mcp-server': '20-mcp-server.md',
-  '/guide/llms': '21-llms-txt.md',
-  '/guide/skills': '22-skills.md',
-  '/core/configuration': '03-configuration.md',
-  '/core/getting-started': '10-core-getting-started.md',
-  '/core/core-api': '04-core-api.md',
-  '/core/permissions-and-session': '11-permissions-and-session.md',
-  '/core/storage': '06-storage.md',
-  '/core/token-strategy': '07-token-strategy.md',
-  '/core/exceptions': '08-exceptions.md',
-  '/core/recipes': '09-recipes.md',
-  '/core/multi-device': '14-multi-device.md',
-  '/core/secondary-auth': '15-secondary-auth.md',
-  '/core/jwt-strategy': '16-jwt-strategy.md',
-  '/core/hooks-and-observability': '17-hooks-and-observability.md',
-  '/adapters': '13-adapters-overview.md',
-  '/adapters/nestjs/getting-started': '10-nestjs-getting-started.md',
-  '/adapters/nestjs/module-config': '12-nestjs-module-config.md',
-  '/adapters/nestjs/guards-and-decorators': '05-guards-and-decorators.md',
-  '/adapters/express': '18-express-adapter.md',
-  '/reference/changelog': 'CHANGELOG.md',
-  '/reference/src-reference': 'SRC-REFERENCE.md',
-  '/reference/llms': '19-ai-coding-agents.md',
-}
+const rawPages: string[] = [
+  '/guide/getting-started',
+  '/guide/architecture',
+  '/guide/migration-2-0',
+  '/guide/mcp-server',
+  '/guide/mcp-server',
+  '/guide/llms',
+  '/guide/skills',
+  '/guide/relative-time-integration',
+  '/core/configuration',
+  '/core/getting-started',
+  '/core/core-api',
+  '/core/permissions-and-session',
+  '/core/storage',
+  '/core/token-strategy',
+  '/core/exceptions',
+  '/core/recipes',
+  '/core/multi-device',
+  '/core/secondary-auth',
+  '/core/jwt-strategy',
+  '/core/hooks-and-observability',
+  '/adapters/index',
+  '/adapters/nestjs/getting-started',
+  '/adapters/nestjs/module-config',
+  '/adapters/nestjs/guards-and-decorators',
+  '/adapters/express',
+  '/reference/changelog',
+  '/reference/src-reference',
+  '/reference/llms',
+]
 
 function generateRawMarkdownFiles() {
-  for (const [routePath, sourceFile] of Object.entries(rawPages)) {
+  for (const routePath of rawPages) {
+    const source = join(docsRoot, `${routePath.slice(1)}.md`)
     const target = join(docsRoot, 'public', 'raw', `${routePath.slice(1)}.md`)
     mkdirSync(dirname(target), { recursive: true })
-    copyFileSync(resolve(docsRoot, sourceFile), target)
+    copyFileSync(source, target)
   }
 }
 
@@ -284,6 +287,7 @@ export default defineConfig({
             { text: '选择接入方式', link: '/guide/getting-started' },
             { text: '架构设计', link: '/guide/architecture' },
             { text: '1.0 迁移指南', link: '/guide/migration-2-0' },
+            { text: '相对时间集成方案', link: '/guide/relative-time-integration' },
           ],
         },
         {
@@ -425,32 +429,5 @@ export default defineConfig({
     externalLinkIcon: true,
   },
 
-  rewrites: {
-    'migration-2.0.md': 'guide/migration-2-0.md',
-    '01-getting-started.md': 'guide/getting-started.md',
-    '02-architecture.md': 'guide/architecture.md',
-    '20-mcp-server.md': 'guide/mcp-server.md',
-    '21-llms-txt.md': 'guide/llms.md',
-    '22-skills.md': 'guide/skills.md',
-    '03-configuration.md': 'core/configuration.md',
-    '10-core-getting-started.md': 'core/getting-started.md',
-    '10-nestjs-getting-started.md': 'adapters/nestjs/getting-started.md',
-    '12-nestjs-module-config.md': 'adapters/nestjs/module-config.md',
-    '13-adapters-overview.md': 'adapters/index.md',
-    '18-express-adapter.md': 'adapters/express.md',
-    '04-core-api.md': 'core/core-api.md',
-    '05-guards-and-decorators.md': 'adapters/nestjs/guards-and-decorators.md',
-    '06-storage.md': 'core/storage.md',
-    '07-token-strategy.md': 'core/token-strategy.md',
-    '08-exceptions.md': 'core/exceptions.md',
-    '09-recipes.md': 'core/recipes.md',
-    '11-permissions-and-session.md': 'core/permissions-and-session.md',
-    '14-multi-device.md': 'core/multi-device.md',
-    '15-secondary-auth.md': 'core/secondary-auth.md',
-    '16-jwt-strategy.md': 'core/jwt-strategy.md',
-    '17-hooks-and-observability.md': 'core/hooks-and-observability.md',
-    '19-ai-coding-agents.md': 'reference/llms.md',
-    'CHANGELOG.md': 'reference/changelog.md',
-    'SRC-REFERENCE.md': 'reference/src-reference.md',
-  },
+
 })

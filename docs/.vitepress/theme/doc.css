@@ -774,6 +774,7 @@
   border-radius: var(--x-radius-sm);
   overflow: hidden;
   background: color-mix(in srgb, var(--x-surface) 80%, transparent);
+  display:table;
 }
 
 .vp-doc th,

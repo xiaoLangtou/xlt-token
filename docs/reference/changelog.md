@@ -6,7 +6,7 @@ aside: false
 ---
 
 <script setup>
-import ChangelogTimeline from './.vitepress/theme/components/ChangelogTimeline.vue'
+import ChangelogTimeline from '../.vitepress/theme/components/ChangelogTimeline.vue'
 </script>
 
 <ChangelogTimeline />

@@ -21,7 +21,7 @@ archive/
 
 | 文件 / 目录 | 用途 | 状态 |
 | --- | --- | --- |
-| `10-roadmap-1.1.0.md` | 1.1.0 四大方向规划 | ✅ 已实现，用户文档见 [多端登录](../14-multi-device.md) 等 |
+| `10-roadmap-1.1.0.md` | 1.1.0 四大方向规划 | ✅ 已实现，用户文档见 [多端登录](../core/multi-device.md) 等 |
 | `13-1.1.0-implementation-design.md` | 1.1.0 实施摘要 | ✅ 归档 |
 | `12-multi-framework-architecture.md` | 2.0 多框架「核心 + 适配器」总方案 | Phase 1/2 完成，Phase 3 进行中 |
 | `core-extraction-implementation.md` | core 包抽离任务分解 | ✅ Phase 1 完成 |
@@ -38,12 +38,12 @@ archive/
 | `03-integration.md` | 旧鉴权迁移方案 |
 | `04-status.md` | 2026-04 现状快照 |
 | `05-npm-package.md` | npm 包抽离记录 |
-| `10-roadmap-p1.md` | P1 权限与会话路线图 → 见 [权限与会话](../11-permissions-and-session.md) |
+| `10-roadmap-p1.md` | P1 权限与会话路线图 → 见 [权限与会话](../core/permissions-and-session.md) |
 | `p1-implementation-design.md` | P1 实施设计 |
 | `p1-progress-checklist.md` | P1 进度清单 |
 | `e2e-testing-plan.md` | E2E 测试计划 |
 
 ## 关联
 
-- 用户向架构概览：[架构设计](../02-architecture.md)
-- 用户向迁移说明：[2.0 迁移指南](../migration-2.0.md)
+- 用户向架构概览：[架构设计](../guide/architecture.md)
+- 用户向迁移说明：[2.0 迁移指南](../guide/migration-2-0.md)

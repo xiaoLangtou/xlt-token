@@ -209,10 +209,10 @@ kickoutByDevice('1001', 'pc')
 
 - `logout(token)` 会从 `session-list` 移除对应 device，但当前实现仍可能误删共享的 `sessionData`（多 device 场景下需注意 session 数据生命周期）
 - `logoutByLoginId(loginId)` 目前仅处理 `default` device，**多 device 全端登出请用 `forceLogout`**
-- JWT 模式下踢人走黑名单机制，详见 [16-jwt-strategy](/core/jwt-strategy)
+- JWT 模式下踢人走黑名单机制，详见 [JWT 策略](/core/jwt-strategy)
 
 ## 下一步
 
-- 在线人数 / 在线列表 API → [17-hooks-and-observability](/core/hooks-and-observability)
-- 管理员踢人场景代码 → [09-recipes · 管理员踢人](/core/recipes#6-管理员踢人下线)
+- 在线人数 / 在线列表 API → [Hooks 与观测性](/core/hooks-and-observability)
+- 管理员踢人场景代码 → [场景手册 · 管理员踢人](/core/recipes#6-管理员踢人下线)
 - 配置字段完整列表 → [Core 配置参考](/core/configuration)
