@@ -182,7 +182,7 @@ export default defineConfig({
   title: 'xlt-token',
   description: '框架无关 Token 鉴权库，灵感来源于 Sa-Token。核心 @xlt-token/core + NestJS / Express 适配器，轻量、可插拔。',
   lang: 'zh-CN',
-  base: '/xlt-token/',
+  base: '/',
   cleanUrls: true,
   lastUpdated: true,
   ignoreDeadLinks: true,
