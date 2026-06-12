@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { useData, useRoute, withBase } from 'vitepress'
+import { useData, useRoute } from 'vitepress'
 
 const { page, frontmatter, site } = useData()
 const route = useRoute()
@@ -47,11 +47,9 @@ const routeSourceMap: Record<string, string> = {
   '/reference/llms': '19-ai-coding-agents.md',
 }
 
-const rawPath = computed(() => `/raw${normalizedRoute.value}.md`)
-const rawHref = computed(() => withBase(rawPath.value))
 const sourcePath = computed(() => routeSourceMap[normalizedRoute.value] ?? page.value.relativePath)
 const githubRawHref = computed(
-  () => `https://raw.githubusercontent.com/xiaoLangtou/xlt-token/refs/heads/master/docs/${sourcePath.value}`,
+  () => `https://raw.githubusercontent.com/xiaoLangtou/xlt-token/refs/heads/main/docs/${sourcePath.value}`,
 )
 
 const fileName = computed(() => {
@@ -68,18 +66,16 @@ async function copyText(text: string, label: string) {
 }
 
 async function getMarkdown() {
-  const response = await fetch(rawHref.value)
-  if (!response.ok) throw new Error(`Failed to load markdown: ${rawHref.value}`)
+  const response = await fetch(githubRawHref.value)
+  if (!response.ok) throw new Error(`Failed to load markdown: ${githubRawHref.value}`)
   return response.text()
 }
 
 async function copyMarkdown() {
   try {
-    const response = await fetch(githubRawHref.value)
-    if (!response.ok) throw new Error(`Failed to load markdown: ${githubRawHref.value}`)
-    await copyText(await response.text(), 'copy')
-  } catch {
     await copyText(await getMarkdown(), 'copy')
+  } catch {
+    // silently fail
   }
 }
 
