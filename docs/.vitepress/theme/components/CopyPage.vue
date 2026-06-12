@@ -18,38 +18,9 @@ const normalizedRoute = computed(() => {
   return value || '/'
 })
 
-const routeSourceMap: Record<string, string> = {
-  '/guide/getting-started': '01-getting-started.md',
-  '/guide/architecture': '02-architecture.md',
-  '/guide/migration-2-0': 'migration-2.0.md',
-  '/guide/mcp-server': '20-mcp-server.md',
-  '/guide/llms': '21-llms-txt.md',
-  '/guide/skills': '22-skills.md',
-  '/core/configuration': '03-configuration.md',
-  '/core/getting-started': '10-core-getting-started.md',
-  '/core/core-api': '04-core-api.md',
-  '/core/permissions-and-session': '11-permissions-and-session.md',
-  '/core/storage': '06-storage.md',
-  '/core/token-strategy': '07-token-strategy.md',
-  '/core/exceptions': '08-exceptions.md',
-  '/core/recipes': '09-recipes.md',
-  '/core/multi-device': '14-multi-device.md',
-  '/core/secondary-auth': '15-secondary-auth.md',
-  '/core/jwt-strategy': '16-jwt-strategy.md',
-  '/core/hooks-and-observability': '17-hooks-and-observability.md',
-  '/adapters': '13-adapters-overview.md',
-  '/adapters/nestjs/getting-started': '10-nestjs-getting-started.md',
-  '/adapters/nestjs/module-config': '12-nestjs-module-config.md',
-  '/adapters/nestjs/guards-and-decorators': '05-guards-and-decorators.md',
-  '/adapters/express': '18-express-adapter.md',
-  '/reference/changelog': 'CHANGELOG.md',
-  '/reference/src-reference': 'SRC-REFERENCE.md',
-  '/reference/llms': '19-ai-coding-agents.md',
-}
-
-const sourcePath = computed(() => routeSourceMap[normalizedRoute.value] ?? page.value.relativePath)
+const sourcePath = computed(() => page.value.relativePath)
 const githubRawHref = computed(
-  () => `https://raw.githubusercontent.com/xiaoLangtou/xlt-token/refs/heads/main/docs/${sourcePath.value}`,
+  () => `https://raw.githubusercontent.com/xiaoLangtou/xlt-token/refs/heads/master/docs/${sourcePath.value}`,
 )
 
 const fileName = computed(() => {
