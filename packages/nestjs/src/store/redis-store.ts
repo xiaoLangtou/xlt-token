@@ -76,12 +76,12 @@ export  class RedisStore implements XltTokenStore {
 
   async keys(pattern: string): Promise<string[]> {
     const result: string[] = [];
-    let cursor = 0;
+    let cursor = "0";
     do {
       const reply = await this.redisClient.scan(cursor, { MATCH: pattern, COUNT: 100 });
-      cursor = reply.cursor;
+      cursor = String(reply.cursor);
       result.push(...reply.keys);
-    } while (cursor !== 0);
+    } while (cursor !== "0");
     return result;
   }
 }

@@ -4,6 +4,8 @@ node_modules
 **/node_modules
 
 # VitePress
+.vitepress/cache
+.vitepress/dist
 docs/.vitepress/cache
 docs/.vitepress/dist
 docs/public/raw
@@ -38,8 +40,10 @@ packages/*/coverage
 .settings/
 *.sublime-workspace
 
-# IDE - VSCode
+# IDE / Agent
 .vscode/*
+.claude
+.codex
 !.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json

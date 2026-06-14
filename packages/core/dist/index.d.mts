@@ -482,6 +482,13 @@ declare class StpLogic {
    */
   kickout(loginId: string, device?: string): Promise<boolean | null>;
   /**
+   * 刷新 token（仅 JWT 模式）：签发新 JWT，旧 jti 加入黑名单
+   * @param token 当前 JWT
+   * @param timeout 新 token 过期时间，默认沿用配置
+   * @returns 新 JWT，失败返回 null
+   */
+  refreshToken(token: string, timeout?: DurationInput): Promise<string | null>;
+  /**
    * 刷新 token 过期时间
    * @param token
    * @param timeout
@@ -506,6 +513,10 @@ declare class StpLogic {
    * @returns
    */
   getDeviceList(loginId: string): Promise<DeviceInfo[]>;
+  /**
+   * 登出指定设备（自愿登出，非强制踢下线）
+   */
+  logoutByDevice(loginId: string, device: string): Promise<boolean | null>;
   /**
    * 踢掉指定设备
    */

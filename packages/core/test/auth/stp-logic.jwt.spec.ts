@@ -26,6 +26,8 @@ const jwtBlacklistKey = (cfg: XltTokenConfig, jti: string) =>
   `${cfg.tokenName}:jwt-blacklist:${jti}`;
 const lastActiveKey = (cfg: XltTokenConfig, id: string) =>
   `${cfg.tokenName}:login:lastActive:${id}`;
+const sessionListKey = (cfg: XltTokenConfig, loginId: string) =>
+  `${cfg.tokenName}:login:session-list:${loginId}`;
 
 const makeReq = (cfg: XltTokenConfig, token?: string) => {
   const headers: Record<string, string> = {};
@@ -184,9 +186,126 @@ describe('StpLogic · JWT 模式 (Milestone 3)', () => {
     });
   });
 
-  describe('renewTimeout', () => {
-    it('JWT 模式无 tokenKey 时 renewTimeout 返回 null', async () => {
+  describe('logout', () => {
+    it('JWT 模式 logout 写入黑名单并清理 session', async () => {
       const token = await logic.login('jwt-u12');
+      const { jti } = strategy.verifyToken(token);
+
+      await expect(logic.logout(token)).resolves.toBe(true);
+      await expect(store.get(jwtBlacklistKey(config, jti))).resolves.toBe(NotLoginType.INVALID_TOKEN);
+      await expect(logic.isLogin(makeReq(config, token))).resolves.toBe(false);
+    });
+
+    it('JWT 模式 logout 后在线列表不包含该用户', async () => {
+      const token = await logic.login('jwt-u13');
+      await expect(logic.getOnlineCount()).resolves.toBe(1);
+
+      await logic.logout(token);
+      await expect(logic.getOnlineCount()).resolves.toBe(0);
+    });
+  });
+
+  describe('logoutByLoginId', () => {
+    it('JWT 模式 logoutByLoginId 清除所有设备', async () => {
+      const pcToken = await logic.login('jwt-u14', { device: 'pc' });
+      const appToken = await logic.login('jwt-u14', { device: 'app' });
+      const { jti: pcJti } = strategy.verifyToken(pcToken);
+      const { jti: appJti } = strategy.verifyToken(appToken);
+
+      await expect(logic.logoutByLoginId('jwt-u14')).resolves.toBe(true);
+
+      await expect(store.get(jwtBlacklistKey(config, pcJti))).resolves.toBe(NotLoginType.INVALID_TOKEN);
+      await expect(store.get(jwtBlacklistKey(config, appJti))).resolves.toBe(NotLoginType.INVALID_TOKEN);
+      await expect(logic.isLogin(makeReq(config, pcToken))).resolves.toBe(false);
+      await expect(logic.isLogin(makeReq(config, appToken))).resolves.toBe(false);
+      await expect(store.get(sessionListKey(config, 'jwt-u14'))).resolves.toBeNull();
+    });
+
+    it('未知 loginId 返回 null', async () => {
+      await expect(logic.logoutByLoginId('nonexistent')).resolves.toBeNull();
+    });
+  });
+
+  describe('logoutByDevice', () => {
+    it('JWT 模式 logoutByDevice 黑名单指定设备', async () => {
+      const pcToken = await logic.login('jwt-u15', { device: 'pc' });
+      const appToken = await logic.login('jwt-u15', { device: 'app' });
+      const { jti: pcJti } = strategy.verifyToken(pcToken);
+      const { jti: appJti } = strategy.verifyToken(appToken);
+
+      await expect(logic.logoutByDevice('jwt-u15', 'pc')).resolves.toBe(true);
+
+      await expect(store.get(jwtBlacklistKey(config, pcJti))).resolves.toBe(NotLoginType.INVALID_TOKEN);
+      await expect(store.get(jwtBlacklistKey(config, appJti))).resolves.toBeNull();
+      await expect(logic.isLogin(makeReq(config, pcToken))).resolves.toBe(false);
+      await expect(logic.isLogin(makeReq(config, appToken))).resolves.toBe(true);
+    });
+
+    it('未知设备返回 null', async () => {
+      await expect(logic.logoutByDevice('jwt-u15', 'unknown')).resolves.toBeNull();
+    });
+  });
+
+  describe('refreshToken', () => {
+    it('成功刷新 JWT，旧 token 失效', async () => {
+      const token = await logic.login('jwt-u16');
+      const { jti: oldJti } = strategy.verifyToken(token);
+
+      const newToken = await logic.refreshToken(token);
+      expect(newToken).not.toBeNull();
+      expect(newToken).not.toBe(token);
+
+      const { jti: newJti } = strategy.verifyToken(newToken!);
+      expect(newJti).not.toBe(oldJti);
+
+      // 旧 token 应在黑名单中
+      await expect(store.get(jwtBlacklistKey(config, oldJti))).resolves.toBe('REFRESHED');
+      // 旧 token 不可用
+      await expect(logic.isLogin(makeReq(config, token))).resolves.toBe(false);
+      // 新 token 可用
+      await expect(logic.isLogin(makeReq(config, newToken!))).resolves.toBe(true);
+    });
+
+    it('已黑名单 token 不可刷新', async () => {
+      const token = await logic.login('jwt-u17');
+      await logic.kickout('jwt-u17');
+
+      await expect(logic.refreshToken(token)).resolves.toBeNull();
+    });
+
+    it('过期 JWT 返回 null', async () => {
+      const expired = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJleHBpcmVkIn0.invalid';
+      await expect(logic.refreshToken(expired)).resolves.toBeNull();
+    });
+
+    it('非 JWT 模式返回 null', async () => {
+      const { logic: uuidLogic } = createStpLogic({});
+      const result = await uuidLogic.refreshToken('some-random-token');
+      expect(result).toBeNull();
+    });
+
+    it('自定义 timeout 刷新', async () => {
+      const token = await logic.login('jwt-u18');
+      const newToken = await logic.refreshToken(token, 7200);
+      expect(newToken).not.toBeNull();
+      await expect(logic.isLogin(makeReq(config, newToken!))).resolves.toBe(true);
+    });
+  });
+
+  describe('renewTimeout', () => {
+    it('JWT 模式 renewTimeout 延长 session TTL', async () => {
+      const token = await logic.login('jwt-u19');
+      await expect(logic.renewTimeout(token, 7200)).resolves.toBe(true);
+
+      // 验证 sessionKey TTL 已延长
+      const sessionKeyStr = sessionKey(config, 'jwt-u19');
+      const ttl = await store.getTimeout(sessionKeyStr);
+      expect(ttl).toBeGreaterThan(3500); // 7200s, 允许一定延迟
+    });
+
+    it('已黑名单 JWT 的 renewTimeout 返回 null', async () => {
+      const token = await logic.login('jwt-u20');
+      await logic.kickout('jwt-u20');
       await expect(logic.renewTimeout(token, 7200)).resolves.toBeNull();
     });
   });

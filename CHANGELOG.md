@@ -2,6 +2,70 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.0] - 2026-06-14
+
+### Added
+
+- JWT 模式 `logout(token)` 新增 JWT 黑名单分支，解析 JWT 提取 jti、黑名单化、清理会话存储
+- `logoutByLoginId(loginId)` 遍历所有设备会话逐一吊销，而非仅 default 设备
+- 新增 `logoutByDevice(loginId, device)` 方法，支持 JWT / UUID 双模式自愿登出指定设备
+- 新增 `refreshToken(token, timeout?)` 方法（仅 JWT 模式）：旧 jti 加入黑名单，签发新 JWT，更新会话存储
+- JWT 模式 `renewTimeout(token, timeout)` 延长 sessionKey 和 lastActiveKey 的 Store TTL
+
+### Fixed
+
+- 修复 JWT 模式下 `logout` / `logoutByLoginId` 返回 `null` 的问题
+- 修复 `RedisStore.keys()` 中 SCAN 命令 cursor 类型为数字导致的 `@redis/client` v5/v6 报错：改用字符串类型并显式转换 `reply.cursor`
+- 修复 `@xlt-token/nestjs` 和根包中 `jsonwebtoken` / `redis` 缺失 `peerDependencies` 声明的问题
+- 修复 `_resolveLoginIdJwt` 无法识别非 `KICK_OUT` / `BE_REPLACED` 的黑名单值的问题（新增兜底返回 `INVALID_TOKEN`）
+
+### Changed
+
+- 所有发布包版本升级到 `1.2.0`：`xlt-token`、`@xlt-token/core`、`@xlt-token/nestjs`、`@xlt-token/express`
+- `@xlt-token/nestjs` 内部依赖 `@xlt-token/core` 升级到 `^1.2.0`
+- `@xlt-token/express` 内部依赖 `@xlt-token/core` 升级到 `^1.2.0`
+
+---
+
+## [1.1.0] - 2026-06-11
+
+> 本版本聚焦相对时间 DurationInput、JWT 单次登录超时、代码质量提升与 AI Agent 支持。
+
+### Added
+
+- **相对时间 DurationInput**：配置和 API 中的时长参数支持可读字符串（`'30m'`、`'2h'`、`'7d'`），保留数字秒数兼容：`DurationInput = number | \`${number}s\` | \`${number}m\` | \`${number}h\` | \`${number}d\` | \`${number}w\``，支持小数 `'1.5h'` = 5400 秒
+- **JWT 单次登录超时**：`TokenStrategy.createToken` 新增可选参数 `options?.timeout`，JWT Strategy 使用 `options?.timeout ?? config.timeout` 生成 `exp`，与 Store TTL 保持一致
+- **Docs 结构重构**：扁平编号文档迁移到 `guide/`、`core/`、`adapters/`、`reference/` 子目录，移除 `public/raw/` 冗余副本
+- **AI Agent Skills**：项目新增 `skills/` 目录，包含 xlt-token AI Agent 工作流指南与参考文件
+
+### Changed
+
+- **TokenStrategy 泛型化**：`TokenStrategy<T = any>`，`JwtStrategy` 使用 `TokenStrategy<XltJwtPayload>` 获得类型安全的 `verifyToken` 返回值
+- **Module 配置类型修复**：`XltTokenModuleOptions.config` 改为 `Partial<XltTokenConfigInput>`，消除类型不一致
+- **JWT 非空断言消除**：`config.jwt!` 替换为 `ensureJwtConfig()` 并带清晰错误提示
+- **`_resolveLoginIdJwt` 异常收窄**：仅捕获 `JsonWebTokenError`/`TokenExpiredError`/`NotBeforeError`，意外异常上抛
+- **`MemoryStore` 长 TTL 警告**：超过 ~24.85 天的定时器添加 `console.warn` 提示
+- **`DEFAULT_XLT_TOKEN_CONFIG` 冻结**：使用 `Object.freeze` 防止意外修改
+- **`stp-perm-logic` 去重**：AND/OR 分支合并，消除重复 `Promise.all`
+- **`factory.ts` 作用域修复**：`defaultStpInterface` 移到 `createXltToken` 函数内部
+- **`NormalizeDurationOptions` 导出修复**：改为 `export type` 消除 `tsdown` 警告
+
+### Test Coverage
+
+```
+Core:  241 tests passed (+10)
+NestJS: 32 tests passed
+E2E:    72 tests passed (+4)
+```
+
+### Documentation
+
+- 文档目录重构为 `guide/`、`core/`、`adapters/`、`reference/`
+- `configuration.md` 新增 DurationInput 章节和表格
+- `core-api.md` 新增 DurationInput API 说明和类型
+
+---
+
 ## [1.0.2] - 2026-06-08
 
 ### Added

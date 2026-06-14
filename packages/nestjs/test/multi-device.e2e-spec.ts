@@ -147,6 +147,52 @@ describe('多端登录 (e2e)', () => {
   });
 });
 
+describe('logoutByDevice (e2e)', () => {
+  it('logoutByDevice 只使目标设备 token 失效', async () => {
+    const { app, moduleRef } = await buildTestApp();
+    const stp = moduleRef.get(StpLogic);
+
+    const pcToken = await stp.login('7101', { device: 'pc' });
+    const appToken = await stp.login('7101', { device: 'app' });
+
+    await stp.logoutByDevice('7101', 'pc');
+
+    await request(app.getHttpServer())
+      .get('/api/me')
+      .set('authorization', pcToken)
+      .expect(401);
+
+    await request(app.getHttpServer())
+      .get('/api/me')
+      .set('authorization', appToken)
+      .expect(200, { id: '7101', token: appToken });
+
+    await app.close();
+  });
+
+  it('logoutByDevice 另一设备不受影响', async () => {
+    const { app, moduleRef } = await buildTestApp();
+    const stp = moduleRef.get(StpLogic);
+
+    const pcToken = await stp.login('7102', { device: 'pc' });
+    const appToken = await stp.login('7102', { device: 'app' });
+
+    await stp.logoutByDevice('7102', 'app');
+
+    await request(app.getHttpServer())
+      .get('/api/me')
+      .set('authorization', pcToken)
+      .expect(200, { id: '7102', token: pcToken });
+
+    await request(app.getHttpServer())
+      .get('/api/me')
+      .set('authorization', appToken)
+      .expect(401);
+
+    await app.close();
+  });
+});
+
 describe('观测性 API (e2e)', () => {
   it('getOnlineCount / getOnlineLoginIds 统计在线用户', async () => {
     const { app, moduleRef } = await buildTestApp();

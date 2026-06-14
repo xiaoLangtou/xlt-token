@@ -58,14 +58,14 @@ packages/nestjs/        @xlt-token/nestjs
 
 - **loginId**：业务层的用户唯一标识，由使用者在 `login()` 时传入，不能包含 `:`。
 - **token**：由 `TokenStrategy` 生成的字符串，客户端持有。
-- **三类存储键**（均以 `tokenName` 为前缀，见 `@/Volumes/weipengcheng/个人项目/tva/xlt-token/packages/core/src/auth/stp-logic.ts:176-196`）：
+- **三类存储键**（均以 `tokenName` 为前缀，见 `@/packages/core/src/auth/stp-logic.ts:176-196`）：
   - `tokenKey`   = `${tokenName}:login:token:${token}`      → 值为 `loginId` 或状态标记（`BE_REPLACED` / `KICK_OUT`）
   - `sessionKey` = `${tokenName}:login:session:${loginId}` → 值为 `token`，用于反查当前 token、顶号
   - `lastActiveKey` = `${tokenName}:login:lastActive:${token}` → 值为最后活跃时间戳（毫秒），用于 `activeTimeout` 冻结判定
 
 ### 1.4 并发 / 共享语义
 
-由 `isConcurrent` 与 `isShare` 组合决定登录行为（见 `@/Volumes/weipengcheng/个人项目/tva/xlt-token/packages/core/src/auth/stp-logic.ts:37-44`）：
+由 `isConcurrent` 与 `isShare` 组合决定登录行为（见 `@/packages/core/src/auth/stp-logic.ts:37-44`）：
 
 | isConcurrent | isShare | 行为                                                     |
 | ------------ | ------- | -------------------------------------------------------- |
@@ -171,7 +171,7 @@ export class AppModule {}
 
 ### 2.5 两种守卫模式
 
-由 `defaultCheck` 决定默认行为（见 `@/Volumes/weipengcheng/个人项目/tva/xlt-token/packages/nestjs/src/guards/xlt-token.guard.ts:28-45`）：
+由 `defaultCheck` 决定默认行为（见 `@/packages/nestjs/src/guards/xlt-token.guard.ts:28-45`）：
 
 - `defaultCheck: true`（推荐）→ 默认全部校验，使用 `@XltIgnore()` 放行。
 - `defaultCheck: false` → 默认全部放行，使用 `@XltCheckLogin()` 开启校验。
@@ -230,7 +230,7 @@ XltTokenModule.forRootAsync({
 
 ## 四、配置项（XltTokenConfig）
 
-来源：`@/Volumes/weipengcheng/个人项目/tva/xlt-token/packages/core/src/config/xlt-token-config.ts`
+来源：`@/packages/core/src/config/xlt-token-config.ts`
 
 ```ts twoslash
 export interface XltTokenConfig {
@@ -278,7 +278,7 @@ export interface XltTokenConfig {
 
 ### 5.1 `StpLogic`
 
-来源：`@/Volumes/weipengcheng/个人项目/tva/xlt-token/packages/core/src/auth/stp-logic.ts`
+来源：`@/packages/core/src/auth/stp-logic.ts`
 
 通过 DI 获取：
 
@@ -333,7 +333,7 @@ constructor(private readonly stp: StpLogic) {}
 
 ### 6.1 `XltTokenStore` 接口
 
-来源：`@/Volumes/weipengcheng/个人项目/tva/xlt-token/packages/core/src/store/xlt-token-store.interface.ts`
+来源：`@/packages/core/src/store/xlt-token-store.interface.ts`
 
 ```ts twoslash
 interface XltTokenStore {
@@ -350,7 +350,7 @@ interface XltTokenStore {
 
 ### 6.2 `MemoryStore`
 
-来源：`@/Volumes/weipengcheng/个人项目/tva/xlt-token/packages/core/src/store/memory-store.ts`
+来源：`@/packages/core/src/store/memory-store.ts`
 
 - 基于 `Map<string, MemoryEntry>` 实现。
 - 采用 **惰性过期 + setTimeout** 双重机制：
@@ -362,7 +362,7 @@ interface XltTokenStore {
 
 ### 6.3 `RedisStore`
 
-来源：`@/Volumes/weipengcheng/个人项目/tva/xlt-token/packages/nestjs/src/store/redis-store.ts`
+来源：`@/packages/nestjs/src/store/redis-store.ts`
 
 - 需注入 `XLT_REDIS_CLIENT`，兼容 `redis@4` / `redis@5` 客户端 API。
 - 语义映射：
@@ -378,8 +378,8 @@ interface XltTokenStore {
 ## 七、Token 策略（TokenStrategy / UuidStrategy）
 
 来源：
-- `@/Volumes/weipengcheng/个人项目/tva/xlt-token/packages/core/src/token/token-strategy.interface.ts`
-- `@/Volumes/weipengcheng/个人项目/tva/xlt-token/packages/core/src/token/uuid-strategy.ts`
+- `@/packages/core/src/token/token-strategy.interface.ts`
+- `@/packages/core/src/token/uuid-strategy.ts`
 
 ```ts twoslash
 interface TokenStrategy {
@@ -405,7 +405,7 @@ interface TokenStrategy {
 
 ### 8.1 `XltTokenGuard`（零配置开箱即用）
 
-来源：`@/Volumes/weipengcheng/个人项目/tva/xlt-token/packages/nestjs/src/guards/xlt-token.guard.ts`
+来源：`@/packages/nestjs/src/guards/xlt-token.guard.ts`
 
 - 使用 `Reflector` 读取 `@XltIgnore` / `@XltCheckLogin` 元数据。
 - 校验通过后将结果挂载到 `request`：
@@ -426,7 +426,7 @@ providers: [{ provide: APP_GUARD, useClass: XltTokenGuard }]
 
 ### 8.2 `XltAbstractLoginGuard`（业务可扩展基类）
 
-来源：`@/Volumes/weipengcheng/个人项目/tva/xlt-token/packages/nestjs/src/guards/xlt-abstract-login.guard.ts`
+来源：`@/packages/nestjs/src/guards/xlt-abstract-login.guard.ts`
 
 抽象类，封装了 token 校验的完整流程，通过**钩子**让业务层接入会话加载、元数据自定义等能力，避免每个项目重复实现一个 `LoginGuard`。
 
@@ -519,7 +519,7 @@ export class LoginGuard extends XltAbstractLoginGuard {
 
 ## 九、装饰器
 
-全部来源：`@/Volumes/weipengcheng/个人项目/tva/xlt-token/packages/nestjs/src/decorators/`
+全部来源：`@/packages/nestjs/src/decorators/`
 
 | 装饰器 | 位置 | 作用 |
 | ------ | ---- | ---- |
@@ -550,7 +550,7 @@ export class UserController {
 
 ### 10.1 `NotLoginException`
 
-来源：`@/Volumes/weipengcheng/个人项目/tva/xlt-token/packages/core/src/exceptions/not-login.exception.ts`
+来源：`@/packages/core/src/exceptions/not-login.exception.ts`
 
 - 继承 `UnauthorizedException`，HTTP 状态码 `401`。
 - 响应体：`{ statusCode: 401, type, message }`。
@@ -558,7 +558,7 @@ export class UserController {
 
 ### 10.2 `NotLoginType`
 
-来源：`@/Volumes/weipengcheng/个人项目/tva/xlt-token/packages/core/src/const/index.ts`
+来源：`@/packages/core/src/const/index.ts`
 
 | 常量 | 值 | 触发场景 | 默认中文 message |
 | ---- | --- | -------- | ---------------- |

@@ -214,8 +214,12 @@ StpLogic.logout(token)
 | `parseTempToken(tempToken)` | ✅ | ✅ | `Promise<string \| null>` |
 | `deleteTempToken(tempToken)` | ✅ | ✅ | `Promise<void>` |
 | `getLoginId(req)` | ❌ | ✅ | `Promise<string \| null>` |
+| `logoutByDevice(loginId, device)` | ✅ | ✅ | `Promise<boolean \| null>` |
+| `refreshToken(token, timeout?)` | ✅ | ✅ | `Promise<string \| null>` |
 
 ¹ `StpUtil` 的 `getTokenValue` / `isLogin` / `checkLogin` 在 NestJS 中仍接受 Express `Request`，内部自动包装为 `HttpContext`。
+
+> **JWT 模式差异**：`logout`、`logoutByLoginId`、`logoutByDevice` 在 JWT 模式下通过 jti 黑名单吊销 token，而非删除 tokenKey（JWT 模式不存在 tokenKey）。`renewTimeout` 在 JWT 模式下延长 Store TTL（JWT 内嵌的 `exp` 不可修改）。`refreshToken` 为 JWT 模式专用方法，UUID 模式下返回 `null`。
 
 ## 下一步
 

@@ -2,7 +2,7 @@
 
 xlt-token 采用 **「框架无关核心 + 框架适配器」** 的 monorepo 结构。鉴权语义集中在 `@xlt-token/core`；NestJS 集成在 `@xlt-token/nestjs`。
 
-> 多框架适配（Express / Hono / Fastify 等）正在开发中，设计文档见仓库 [`docs/archive/`](https://github.com/xiaoLangtou/xlt-token/tree/master/docs/archive)。
+> Express 适配器（`@xlt-token/express`）v1.0.0 已正式发布，提供中间件与路由策略覆盖。Hono / Fastify 等更多框架适配正在规划中。
 
 ## 包结构
 
@@ -10,6 +10,7 @@ xlt-token 采用 **「框架无关核心 + 框架适配器」** 的 monorepo 结
 | --- | --- | --- |
 | `@xlt-token/core` | 鉴权引擎、HttpContext、Store/Strategy 契约、Hooks、观测性 API | `createXltToken`, `StpLogic`, `MemoryStore` |
 | `@xlt-token/nestjs` | Module、Guard、Decorator、RedisStore、JwtStrategy、Nest 异常包装 | `XltTokenModule`, `XltTokenGuard`, `@LoginId()` |
+| `@xlt-token/express` | 中间件、路由策略、请求上下文适配 | `xltMiddleware`, `requireLogin`, `checkPermission` |
 
 ```
 packages/
@@ -22,12 +23,18 @@ packages/
 │   ├── hooks/     # XltHooks
 │   └── factory.ts # createXltToken()
 │
-└── nestjs/        # @xlt-token/nestjs — NestJS 集成
-    ├── xlt-token.module.ts
-    ├── guards/
-    ├── decorators/
-    ├── store/redis-store.ts   # RedisStore（暂留 nestjs 包）
-    └── token/jwt-strategy.ts    # JwtStrategy（暂留 nestjs 包）
+├── nestjs/        # @xlt-token/nestjs — NestJS 集成
+│   ├── xlt-token.module.ts
+│   ├── guards/
+│   ├── decorators/
+│   ├── store/redis-store.ts   # RedisStore（暂留 nestjs 包）
+│   └── token/jwt-strategy.ts    # JwtStrategy（暂留 nestjs 包）
+│
+└── express/       # @xlt-token/express — Express 中间件
+    ├── middleware/ # xltMiddleware / requireLogin / checkPermission / checkRole / checkSafe
+    ├── auth/       # runAuth / shouldCheckLogin / resolveRouteAuthMeta
+    ├── error/      # xltErrorHandler
+    └── context.ts  # createExpressContext
 ```
 
 ## 设计目标
