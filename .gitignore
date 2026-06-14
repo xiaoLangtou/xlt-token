@@ -44,6 +44,11 @@ packages/*/coverage
 .vscode/*
 .claude
 .codex
+
+# OpenSpec 规划文件
+openspec
+.claude
+.codex
 !.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
