@@ -50,6 +50,7 @@ pnpm add xlt-token
 
 ```bash
 pnpm add redis              # RedisStore
+pnpm add ioredis            # IORedisStore
 pnpm add jsonwebtoken       # JwtStrategy
 ```
 
@@ -58,7 +59,7 @@ pnpm add jsonwebtoken       # JwtStrategy
 | 包 | 职责 | 典型 import |
 | --- | --- | --- |
 | `@xlt-token/core` | 鉴权引擎、HttpContext、Store / Strategy 契约、Hooks | `createXltToken`, `StpLogic`, `MemoryStore` |
-| `@xlt-token/nestjs` | Module、Guard、Decorator、RedisStore、JwtStrategy | `XltTokenModule`, `XltTokenGuard`, `@LoginId()` |
+| `@xlt-token/nestjs` | Module、Guard、Decorator、RedisStore、IORedisStore、JwtStrategy | `XltTokenModule`, `XltTokenGuard`, `@LoginId()` |
 | `xlt-token` | 兼容包，等价于 `@xlt-token/nestjs` | `XltTokenModule`, `StpUtil` |
 
 - NestJS 集成 → `@xlt-token/nestjs`（或 `xlt-token`）
@@ -170,7 +171,7 @@ app.use(async (req, res, next) => {
 | 参数 | 类型 | 默认值 | 说明 |
 |---|---|---|---|
 | `config` | `Partial<XltTokenConfig>` | - | 配置选项（见下表） |
-| `store` | `{ useClass } \| { useValue }` | `MemoryStore` | 存储实现（内置 MemoryStore 和 RedisStore） |
+| `store` | `{ useClass } \| { useValue }` | `MemoryStore` | 存储实现（内置 MemoryStore、RedisStore 和 IORedisStore） |
 | `strategy` | `{ useClass }` | `UuidStrategy` | Token 策略（`UuidStrategy` / `JwtStrategy`） |
 | `isGlobal` | `boolean` | `false` | 是否全局模块 |
 | `stpInterface` | `class` | 内置 stub | 权限 / 角色数据源 |

@@ -1,8 +1,8 @@
 # 06 · 存储层
 
-> 接口与 `MemoryStore`：`@xlt-token/core`；`RedisStore`：`@xlt-token/nestjs`。
+> 接口与 `MemoryStore`：`@xlt-token/core`；`RedisStore` 和 `IORedisStore`：`@xlt-token/nestjs`。
 
-`XltTokenStore` 接口 + 两种内置实现（`MemoryStore` / `RedisStore`）+ 自定义存储。
+`XltTokenStore` 接口 + 三种内置实现（`MemoryStore` / `RedisStore` / `IORedisStore`）+ 自定义存储。
 
 ## `XltTokenStore` 接口
 
@@ -68,6 +68,9 @@ XltTokenModule.forRoot({
 - 依赖注入 `XLT_REDIS_CLIENT`
 - 兼容 `redis@4` / `redis@5` 两套客户端 API
 - 多实例共享、天然支持分布式会话
+
+`RedisStore` 适用于 `redis`（node-redis）客户端。如果项目使用 `ioredis`，请选择
+`IORedisStore`，两者不能交叉注入。
 
 ### 语义映射
 
@@ -179,6 +182,40 @@ redis-cli TTL authorization:login:token:<token>
 redis-cli GET authorization:login:session:1001
 ```
 
+## `IORedisStore`
+
+`IORedisStore` 实现相同的 `XltTokenStore` 接口，并使用 ioredis 的命令参数与
+`SCAN` 返回值格式。先安装可选依赖：
+
+```bash
+pnpm add ioredis
+```
+
+通过独立的 `XLT_IOREDIS_CLIENT` 令牌注入客户端：
+
+```ts twoslash
+import Redis from 'ioredis';
+import {
+  IORedisStore,
+  XLT_IOREDIS_CLIENT,
+  XltTokenModule,
+} from '@xlt-token/nestjs';
+
+XltTokenModule.forRoot({
+  isGlobal: true,
+  store: { useClass: IORedisStore },
+  providers: [
+    {
+      provide: XLT_IOREDIS_CLIENT,
+      useFactory: () => new Redis(process.env.REDIS_URL),
+    },
+  ],
+});
+```
+
+单机、Sentinel 和 Cluster 客户端都可以使用该 Store，只要注入的客户端提供
+ioredis 通用命令接口。连接管理和重连策略仍由应用负责。
+
 ## 自定义 Store
 
 ### 步骤
@@ -221,7 +258,8 @@ export class MyCustomStore implements XltTokenStore {
 | 场景 | 推荐 |
 | --- | --- |
 | 单机开发、Demo、单元测试 | `MemoryStore` |
-| 生产多实例、需要持久化 | `RedisStore` |
+| 生产多实例、使用 node-redis | `RedisStore` |
+| 生产多实例、使用 ioredis | `IORedisStore` |
 | 已有其他 KV 基础设施（Dynamo / Etcd） | 自定义 Store |
 | 测试中需要"可观察的 store" | 继承 `MemoryStore` 加钩子 |
 

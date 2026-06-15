@@ -44,6 +44,7 @@ export {
 
 // Redis / JWT 实现（暂留根包）
 export { RedisStore, XLT_REDIS_CLIENT } from './store/redis-store.js';
+export { IORedisStore, XLT_IOREDIS_CLIENT } from './store/ioredis-store.js';
 export { JwtStrategy } from './token/jwt-strategy.js';
 
 // 装饰器

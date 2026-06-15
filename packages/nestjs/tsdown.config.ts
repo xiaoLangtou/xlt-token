@@ -18,6 +18,7 @@ export default defineConfig({
     'rxjs',
     'express',
     'redis',
+    'ioredis',
     'jsonwebtoken',
     'uuid',
   ],

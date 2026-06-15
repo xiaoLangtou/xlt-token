@@ -229,6 +229,63 @@ RedisStore = __decorate([
 ], RedisStore);
 
 //#endregion
+//#region src/store/ioredis-store.ts
+const XLT_IOREDIS_CLIENT = "XLT_IOREDIS_CLIENT";
+let IORedisStore = class IORedisStore {
+	constructor(redisClient) {
+		this.redisClient = redisClient;
+	}
+	async get(key) {
+		return this.redisClient.get(key);
+	}
+	async set(key, value, timeoutSec) {
+		if (timeoutSec === -1) {
+			await this.redisClient.set(key, value);
+			return;
+		}
+		await this.redisClient.set(key, value, "EX", timeoutSec);
+	}
+	async delete(key) {
+		await this.redisClient.del(key);
+	}
+	async update(key, value) {
+		if (await this.redisClient.set(key, value, "XX", "KEEPTTL") === null) throw new Error(`Key not found: ${key}`);
+	}
+	async has(key) {
+		return await this.redisClient.exists(key) === 1;
+	}
+	async updateTimeout(key, timeoutSec) {
+		if (!await this.redisClient.exists(key)) throw new Error(`Key not found: ${key}`);
+		if (timeoutSec === -1) {
+			await this.redisClient.persist(key);
+			return;
+		}
+		await this.redisClient.expire(key, timeoutSec);
+	}
+	async getTimeout(key) {
+		return this.redisClient.ttl(key);
+	}
+	async keys(pattern) {
+		const result = [];
+		const clients = this.redisClient.nodes?.("master") ?? [this.redisClient];
+		for (const client of clients) {
+			let cursor = "0";
+			do {
+				const [nextCursor, keys] = await client.scan(cursor, "MATCH", pattern, "COUNT", 100);
+				cursor = nextCursor;
+				result.push(...keys);
+			} while (cursor !== "0");
+		}
+		return result;
+	}
+};
+IORedisStore = __decorate([
+	(0, _nestjs_common.Injectable)(),
+	__decorateParam(0, (0, _nestjs_common.Inject)(XLT_IOREDIS_CLIENT)),
+	__decorateMetadata("design:paramtypes", [Object])
+], IORedisStore);
+
+//#endregion
 //#region src/token/jwt-strategy.ts
 const require$1 = (0, node_module.createRequire)(require("url").pathToFileURL(__filename).href);
 let jsonwebtoken;
@@ -567,6 +624,12 @@ Object.defineProperty(exports, 'DEFAULT_XLT_TOKEN_CONFIG', {
     return _xlt_token_core.DEFAULT_XLT_TOKEN_CONFIG;
   }
 });
+Object.defineProperty(exports, 'IORedisStore', {
+  enumerable: true,
+  get: function () {
+    return IORedisStore;
+  }
+});
 Object.defineProperty(exports, 'JwtStrategy', {
   enumerable: true,
   get: function () {
@@ -622,6 +685,7 @@ Object.defineProperty(exports, 'UuidStrategy', {
   }
 });
 exports.XLT_CHECK_SAFE_KEY = XLT_CHECK_SAFE_KEY;
+exports.XLT_IOREDIS_CLIENT = XLT_IOREDIS_CLIENT;
 exports.XLT_REDIS_CLIENT = XLT_REDIS_CLIENT;
 Object.defineProperty(exports, 'XLT_STP_INTERFACE', {
   enumerable: true,

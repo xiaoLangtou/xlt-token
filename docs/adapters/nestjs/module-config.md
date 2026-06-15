@@ -29,9 +29,10 @@ import { XltTokenGuard, XltTokenModule } from '@xlt-token/nestjs';
 export class AppModule {}
 ```
 
-## 使用 RedisStore
+## 使用 `RedisStore`
 
-多实例部署时应使用 Redis 存储。`RedisStore` 位于 `@xlt-token/nestjs`，Redis client 通过 `XLT_REDIS_CLIENT` 注入。
+多实例部署时应使用 Redis 存储。`RedisStore` 适配 `redis`（node-redis）客户端，
+并通过 `XLT_REDIS_CLIENT` 注入。
 
 ```ts twoslash
 import { Module } from '@nestjs/common';
@@ -68,6 +69,47 @@ import {
   providers: [{ provide: APP_GUARD, useClass: XltTokenGuard }],
 })
 export class AppModule {}
+```
+
+## 使用 `IORedisStore`
+
+项目使用 ioredis 时，通过 `IORedisStore` 和独立的 `XLT_IOREDIS_CLIENT` 令牌注入
+客户端：
+
+```ts twoslash
+import { Module } from '@nestjs/common';
+import Redis from 'ioredis';
+import {
+  IORedisStore,
+  XLT_IOREDIS_CLIENT,
+  XltTokenModule,
+} from '@xlt-token/nestjs';
+
+@Module({
+  imports: [
+    XltTokenModule.forRoot({
+      isGlobal: true,
+      config: {
+        tokenName: 'authorization',
+        timeout: 30 * 24 * 60 * 60,
+      },
+      store: { useClass: IORedisStore },
+      providers: [
+        {
+          provide: XLT_IOREDIS_CLIENT,
+          useFactory: () => new Redis(process.env.REDIS_URL),
+        },
+      ],
+    }),
+  ],
+})
+export class AppModule {}
+```
+
+安装对应客户端：
+
+```bash
+pnpm add ioredis
 ```
 
 ## `forRootAsync`

@@ -78,6 +78,36 @@ declare class RedisStore implements XltTokenStore$1 {
   keys(pattern: string): Promise<string[]>;
 }
 //#endregion
+//#region src/store/ioredis-store.d.ts
+declare const XLT_IOREDIS_CLIENT = "XLT_IOREDIS_CLIENT";
+interface IORedisScanClient {
+  scan(cursor: string, matchToken: 'MATCH', pattern: string, countToken: 'COUNT', count: number): Promise<[string, string[]]>;
+}
+interface IORedisClient extends IORedisScanClient {
+  get(key: string): Promise<string | null>;
+  set(key: string, value: string): Promise<string | null>;
+  set(key: string, value: string, mode: 'EX', timeoutSec: number): Promise<string | null>;
+  set(key: string, value: string, condition: 'XX', keepTtl: 'KEEPTTL'): Promise<string | null>;
+  del(key: string): Promise<number>;
+  exists(key: string): Promise<number>;
+  persist(key: string): Promise<number>;
+  expire(key: string, timeoutSec: number): Promise<number>;
+  ttl(key: string): Promise<number>;
+  nodes?(role: 'master'): IORedisScanClient[];
+}
+declare class IORedisStore implements XltTokenStore$1 {
+  private readonly redisClient;
+  constructor(redisClient: IORedisClient);
+  get(key: string): Promise<string | null>;
+  set(key: string, value: string, timeoutSec: number): Promise<void>;
+  delete(key: string): Promise<void>;
+  update(key: string, value: string): Promise<void>;
+  has(key: string): Promise<boolean>;
+  updateTimeout(key: string, timeoutSec: number): Promise<void>;
+  getTimeout(key: string): Promise<number>;
+  keys(pattern: string): Promise<string[]>;
+}
+//#endregion
 //#region src/token/jwt-strategy.d.ts
 type XltJwtPayload = Record<string, any> & {
   sub: string;
@@ -214,5 +244,5 @@ declare class NotSafeException extends ForbiddenException {
   constructor(business: string);
 }
 //#endregion
-export { type AuthResult, type CreateOptions, DEFAULT_XLT_TOKEN_CONFIG, type DeviceInfo, type HttpContext, JwtStrategy, LoginId, MemoryStore, NotLoginException, NotLoginType, NotPermissionException, NotRoleException, NotSafeException, RedisStore, type StpInterface, StpLogic, StpPermLogic, StpUtil, type TokenStrategy, TokenValue, UuidStrategy, XLT_CHECK_SAFE_KEY, XLT_REDIS_CLIENT, XLT_STP_INTERFACE, XLT_TOKEN_CONFIG, XLT_TOKEN_HOOKS, XLT_TOKEN_STORE, XLT_TOKEN_STRATEGY, XltAbstractLoginGuard, XltCheckLogin, XltCheckPermission, XltCheckRole, XltCheckSafe, type XltHooks, XltIgnore, XltMode, XltSession, type XltTokenConfig, type XltTokenContext, XltTokenGuard, XltTokenModule, type XltTokenModuleAsyncOptions, type XltTokenModuleOptions, type XltTokenStore, createExpressContext, createMockHttpContext, createXltToken, matchPermission, setStpLogic, setStpPermLogic };
+export { type AuthResult, type CreateOptions, DEFAULT_XLT_TOKEN_CONFIG, type DeviceInfo, type HttpContext, IORedisStore, JwtStrategy, LoginId, MemoryStore, NotLoginException, NotLoginType, NotPermissionException, NotRoleException, NotSafeException, RedisStore, type StpInterface, StpLogic, StpPermLogic, StpUtil, type TokenStrategy, TokenValue, UuidStrategy, XLT_CHECK_SAFE_KEY, XLT_IOREDIS_CLIENT, XLT_REDIS_CLIENT, XLT_STP_INTERFACE, XLT_TOKEN_CONFIG, XLT_TOKEN_HOOKS, XLT_TOKEN_STORE, XLT_TOKEN_STRATEGY, XltAbstractLoginGuard, XltCheckLogin, XltCheckPermission, XltCheckRole, XltCheckSafe, type XltHooks, XltIgnore, XltMode, XltSession, type XltTokenConfig, type XltTokenContext, XltTokenGuard, XltTokenModule, type XltTokenModuleAsyncOptions, type XltTokenModuleOptions, type XltTokenStore, createExpressContext, createMockHttpContext, createXltToken, matchPermission, setStpLogic, setStpPermLogic };
 //# sourceMappingURL=index.d.mts.map
