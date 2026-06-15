@@ -1,257 +1,176 @@
-# 06 · 存储层
+# Store 契约与内存存储
 
-> 接口与 `MemoryStore`：`@xlt-token/core`；`RedisStore` 和 `IORedisStore`：`@xlt-token/store-redis`。
-
-`XltTokenStore` 接口 + 三种内置实现（`MemoryStore` / `RedisStore` / `IORedisStore`）+ 自定义存储。
+`@xlt-token/core` 通过 `XltTokenStore` 访问所有登录态数据。Core 不依赖数据库或框架，
+默认使用 `MemoryStore`；生产多实例可以额外安装框架无关的
+[`@xlt-token/store-redis`](/store-redis/)。
 
 ## `XltTokenStore` 接口
 
 源码：`packages/core/src/store/xlt-token-store.interface.ts`
 
-```ts twoslash
-interface XltTokenStore {
+```ts
+export interface XltTokenStore {
   get(key: string): Promise<string | null>;
-  set(key: string, value: string, timeoutSec: number): Promise<void>;  // timeoutSec = -1 永不过期
+  set(key: string, value: string, timeoutSec: number): Promise<void>;
   delete(key: string): Promise<void>;
   has(key: string): Promise<boolean>;
-  update(key: string, value: string): Promise<void>;                    // 只改值，保持 TTL；key 不存在抛错
-  updateTimeout(key: string, timeoutSec: number): Promise<void>;        // 只改 TTL
-  getTimeout(key: string): Promise<number>;                             // -1=永久, -2=不存在, >0=剩余秒数
-  keys(pattern: string): Promise<string[]>;                            // 前缀匹配，如 'authorization:login:session-list:*'
+  update(key: string, value: string): Promise<void>;
+  updateTimeout(key: string, timeoutSec: number): Promise<void>;
+  getTimeout(key: string): Promise<number>;
+  keys(pattern: string): Promise<string[]>;
 }
 ```
 
-`StpLogic` 只与该接口打交道，**换存储只需换实现**，业务代码零改动。
+`StpLogic` 和 `StpPermLogic` 只依赖这份契约。更换 Store 不需要修改登录、权限或
+Session 业务代码。
 
-## `MemoryStore`（默认，内存实现）
+## 方法语义
 
-源码：`packages/core/src/store/memory-store.ts`
+| 方法 | 必须满足的行为 |
+| --- | --- |
+| `get` | 键不存在时返回 `null` |
+| `set` | 覆盖值和 TTL；`timeoutSec = -1` 表示永久 |
+| `delete` | 删除键；不存在时也应安全完成 |
+| `has` | 只判断键是否存在 |
+| `update` | 只更新值并保留原 TTL；键不存在时抛错 |
+| `updateTimeout` | 只修改 TTL；`-1` 改为永久；键不存在时抛错 |
+| `getTimeout` | `-2` 不存在，`-1` 永久，非负数为剩余秒数 |
+| `keys` | 返回匹配 pattern 的键，用于在线统计和批量会话操作 |
 
-### 特性
+自定义实现必须保持这些语义。尤其不能把 `-1` 当成立即过期，也不能在 `update()`
+时重置 TTL。
 
-- 基于 `Map<string, MemoryEntry>` 实现
-- 惰性过期 + `setTimeout` 双重机制：
-  - `setTimeout` 到期自动删除
-  - 每次读取前做一次过期检查，兜底定时器漂移
-- `setTimeout` delay 上限 `2^31 - 1` 毫秒（约 24.8 天）；超过则仅依赖惰性过期，避免 Node.js 警告
-- 定时器 `.unref()`，不阻塞进程退出
+## `MemoryStore`
+
+`MemoryStore` 是 Core 默认实现，使用进程内 `Map` 保存数据。没有传入 `store` 时，
+`createXltToken()` 自动创建它：
+
+```ts twoslash
+import { createXltToken } from '@xlt-token/core';
+
+const xlt = createXltToken({
+  config: {
+    tokenName: 'authorization',
+    timeout: 3600,
+  },
+});
+```
+
+也可以显式创建：
+
+```ts twoslash
+import { createXltToken, MemoryStore } from '@xlt-token/core';
+
+const store = new MemoryStore();
+const xlt = createXltToken({ store });
+```
+
+### 过期机制
+
+MemoryStore 同时使用定时删除和惰性检查：
+
+1. 写入有 TTL 的键时安排 `setTimeout`。
+2. 读取键时再次检查过期时间，防止定时器延迟。
+3. 定时器调用 `.unref()`，不会阻止 Node.js 进程退出。
+4. TTL 超过 Node.js 单个定时器上限时，不创建超长定时器，改由读取时清理。
+
+惰性清理意味着过期但从未再次访问的长 TTL 键可能暂时保留在 Map 中。开发和测试
+通常可以接受，长期运行且数据量大的生产服务应使用外部 Store。
 
 ### 适用范围
 
-✅ 单进程开发/测试、内部工具、Demo
-❌ 多实例生产部署、需要持久化（重启丢数据）
-
-### 用法
-
-什么都不配就是它（默认值）：
-
-```ts twoslash
-XltTokenModule.forRoot({ config: { tokenName: 'authorization' } });
-```
-
-显式指定：
-
-```ts twoslash
-import { MemoryStore } from '@xlt-token/core';
-
-XltTokenModule.forRoot({
-  store: { useClass: MemoryStore },
-});
-```
-
-## `RedisStore`（生产推荐）
-
-源码：`packages/store-redis/src/redis-store.ts`
-
-### 特性
-
-- 构造函数直接接收 node-redis 客户端
-- 兼容 `redis@4` / `redis@5` 两套客户端 API
-- 多实例共享、天然支持分布式会话
-
-`RedisStore` 适用于 `redis`（node-redis）客户端。如果项目使用 `ioredis`，请选择
-`IORedisStore`，两者不能交叉注入。
-
-### 语义映射
-
-| 接口方法 | Redis 命令 |
-| --- | --- |
-| `set(key, val, -1)` | `SET key val` |
-| `set(key, val, n)` | `SET key val EX n` |
-| `get` | `GET` |
-| `delete` | `DEL` |
-| `has` | `EXISTS`（结果为 `1` 时 `true`） |
-| `update` | `SET key val XX KEEPTTL`（保留 TTL） |
-| `updateTimeout(-1)` | `PERSIST` |
-| `updateTimeout(n)` | `EXPIRE key n` |
-| `getTimeout` | `TTL`（返回值与接口约定一致：`-2 / -1 / >0`） |
-
-### 基本用法
-
-```bash
-pnpm add @xlt-token/store-redis redis
-```
-
-```ts twoslash
-import { createXltToken } from '@xlt-token/core';
-import { RedisStore } from '@xlt-token/store-redis';
-import { createClient } from 'redis';
-
-const client = createClient({ url: process.env.REDIS_URL });
-await client.connect();
-
-const xlt = createXltToken({
-  store: new RedisStore(client),
-});
-```
-
-### NestJS 兼容 DI 用法
-
-`@xlt-token/nestjs` 继续导出 `RedisStore` 和 `XLT_REDIS_CLIENT`，用于兼容已有项目。
-新项目应优先从 `@xlt-token/store-redis` 创建 Store，并通过 `store.useValue` 注册。
-
-以下 `forRootAsync` 示例保留旧注入方式，适合 Redis 客户端由 Nest Provider 创建的
-现有项目：
-
-```ts twoslash
-XltTokenModule.forRootAsync({
-  isGlobal: true,
-  imports: [ConfigModule],
-  useFactory: () => ({ config: { timeout: 86400 } }),
-  store: { useClass: RedisStore },
-  providers: [
-    {
-      provide: XLT_REDIS_CLIENT,
-      inject: [ConfigService],
-      useFactory: async (cfg: ConfigService) => {
-        const client = createClient({
-          url: cfg.get<string>('REDIS_URL'),
-          password: cfg.get<string>('REDIS_PASSWORD'),
-        });
-        client.on('error', (err) => console.error('[Redis] error', err));
-        await client.connect();
-        return client;
-      },
-    },
-  ],
-})
-```
-
-### 复用项目已有的 Redis Client
-
-如果项目已有 `RedisModule` 并导出了一个 client token，把它 re-provide 到 `XLT_REDIS_CLIENT` 即可：
-
-```ts twoslash
-@Module({
-  imports: [
-    RedisModule,
-    XltTokenModule.forRootAsync({
-      isGlobal: true,
-      imports: [RedisModule],
-      useFactory: () => ({ config: {} }),
-      store: { useClass: RedisStore },
-      providers: [
-        {
-          provide: XLT_REDIS_CLIENT,
-          useExisting: 'REDIS_CLIENT', // 项目里已有的 token
-        },
-      ],
-    }),
-  ],
-})
-export class AppModule {}
-```
-
-### 键空间
-
-以默认 `tokenName='authorization'` 为例：
-
-```
-authorization:login:token:<token>        → loginId / BE_REPLACED / KICK_OUT
-authorization:login:session:<loginId>    → token
-authorization:login:lastActive:<token>   → 毫秒时间戳（仅 activeTimeout > 0）
-```
-
-可结合 `redis-cli` 快速调试：
-
-```bash
-redis-cli --scan --pattern 'authorization:login:*'
-redis-cli TTL authorization:login:token:<token>
-redis-cli GET authorization:login:session:1001
-```
-
-## `IORedisStore`
-
-`IORedisStore` 实现相同的 `XltTokenStore` 接口，并使用 ioredis 的命令参数与
-`SCAN` 返回值格式。先安装可选依赖：
-
-```bash
-pnpm add @xlt-token/store-redis ioredis
-```
-
-直接把客户端传给 Store：
-
-```ts twoslash
-import Redis from 'ioredis';
-import { createXltToken } from '@xlt-token/core';
-import { IORedisStore } from '@xlt-token/store-redis';
-
-const xlt = createXltToken({
-  store: new IORedisStore(new Redis(process.env.REDIS_URL)),
-});
-```
-
-单机、Sentinel 和 Cluster 客户端都可以使用该 Store，只要注入的客户端提供
-ioredis 通用命令接口。连接管理和重连策略仍由应用负责。
+| 场景 | 是否推荐 | 原因 |
+| --- | --- | --- |
+| 单元测试 | 推荐 | 无外部依赖，测试隔离简单 |
+| 本地开发和 Demo | 推荐 | 零配置 |
+| 单进程内部工具 | 视数据丢失容忍度决定 | 重启会丢失登录态 |
+| 多实例部署 | 不推荐 | 实例之间不共享数据 |
+| 需要故障恢复 | 不推荐 | 没有持久化 |
 
 ## 自定义 Store
 
-### 步骤
+自定义 Store 适合数据库、KV 服务、分片 Redis 或已有缓存抽象。实现类不需要任何
+NestJS 装饰器：
 
-1. 实现 `XltTokenStore` 接口
-2. 通过 `store: { useClass: YourStore }` 注入
-
-```ts twoslash
-import { Injectable } from '@nestjs/common';
+```ts twoslash [src/database-store.ts]
 import type { XltTokenStore } from '@xlt-token/core';
 
-@Injectable()
-export class MyCustomStore implements XltTokenStore {
-  async get(key: string): Promise<string | null> { /* ... */ }
-  async set(key: string, value: string, timeoutSec: number): Promise<void> { /* ... */ }
-  async delete(key: string): Promise<void> { /* ... */ }
-  async has(key: string): Promise<boolean> { /* ... */ }
-  async update(key: string, value: string): Promise<void> { /* ... */ }
-  async updateTimeout(key: string, timeoutSec: number): Promise<void> { /* ... */ }
-  async getTimeout(key: string): Promise<number> { /* ... */ }
+export class DatabaseStore implements XltTokenStore {
+  async get(key: string): Promise<string | null> {
+    throw new Error('Implement database read');
+  }
+
+  async set(key: string, value: string, timeoutSec: number): Promise<void> {
+    throw new Error('Implement upsert with expiration');
+  }
+
+  async delete(key: string): Promise<void> {
+    throw new Error('Implement delete');
+  }
+
+  async has(key: string): Promise<boolean> {
+    return (await this.get(key)) !== null;
+  }
+
+  async update(key: string, value: string): Promise<void> {
+    throw new Error('Update the value without changing expiration');
+  }
+
+  async updateTimeout(key: string, timeoutSec: number): Promise<void> {
+    throw new Error('Update expiration without changing the value');
+  }
+
+  async getTimeout(key: string): Promise<number> {
+    throw new Error('Return -2, -1, or remaining seconds');
+  }
+
+  async keys(pattern: string): Promise<string[]> {
+    throw new Error('Return keys that match the prefix pattern');
+  }
 }
 ```
 
-### 契约要点（务必遵守，否则 `StpLogic` 行为会异常）
+传给 Core：
 
-- **`timeoutSec = -1` 必须实现为永不过期**，不能误当作"立即过期"
-- **`update` 必须保留 TTL**（只改值）；若 key 不存在应抛错
-- **`getTimeout`**：`-2` = key 不存在、`-1` = 永不过期、`>0` = 剩余秒数
-- 所有方法都要返回 Promise；同步抛错会逃逸
+```ts
+const xlt = createXltToken({
+  store: new DatabaseStore(),
+});
+```
 
-### 典型场景
+### `keys(pattern)` 的匹配约定
 
-- **混合存储**：热点走 Redis、长尾走 MySQL / Dynamo
-- **集群路由**：按 loginId 分片到多个 Redis 实例
-- **加密存储**：在 `set` / `get` 时做对称加密
-- **Mock Store for Test**：实现一份内存版用于 e2e 测试，不依赖外部服务
+Core 当前传入的 pattern 主要是以 `*` 结尾的前缀模式，例如：
 
-## 选型建议
+```text
+authorization:login:session-list:*
+```
 
-| 场景 | 推荐 |
-| --- | --- |
-| 单机开发、Demo、单元测试 | `MemoryStore` |
-| 生产多实例、使用 node-redis | `RedisStore` |
-| 生产多实例、使用 ioredis | `IORedisStore` |
-| 已有其他 KV 基础设施（Dynamo / Etcd） | 自定义 Store |
-| 测试中需要"可观察的 store" | 继承 `MemoryStore` 加钩子 |
+实现可以把末尾 `*` 去掉后执行前缀查询。不要直接把用户输入拼成 SQL；如果 Store
+使用数据库，应参数化查询并为键前缀建立索引。
+
+### 一致性和并发
+
+Store 方法会被多个请求并发调用。外部存储实现需要考虑：
+
+- `set` 覆盖值和 TTL 应尽量原子完成。
+- `update` 必须在键存在时更新并保留 TTL。
+- `updateTimeout` 不能先读值再无条件重写，否则会覆盖并发更新。
+- 多实例必须访问同一个逻辑数据源。
+- 存储错误应拒绝 Promise，让上层区分基础设施故障和鉴权失败。
+
+## Redis Store
+
+生产多实例通常使用独立的 `@xlt-token/store-redis`。完整文档包括 node-redis、
+ioredis、Sentinel、Cluster、TTL、SCAN、Core、NestJS 和 Express 接入：
+
+[进入 Redis Store 完整指南](/store-redis/)
 
 ## 下一步
 
-- 想换 token 生成方式？→ [Token 策略](/core/token-strategy)
-- 接入 Redis 后如何观察/调试？→ [场景手册 · 运维调试](/core/recipes)
+- Core 框架无关接入：[Core 独立使用](/core/getting-started)
+- Redis 生产存储：[Redis Store 完整指南](/store-redis/)
+- NestJS Store 注册：[NestJS 模块配置](/adapters/nestjs/module-config)
+- Express Store 初始化：[Express 完整指南](/adapters/express)
+- Store 相关在线统计：[Hooks 与观测性](/core/hooks-and-observability)
+- 查看所有核心方法：[核心 API](/core/core-api)

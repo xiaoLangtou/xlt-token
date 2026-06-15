@@ -15,13 +15,14 @@
 | | [配置参考](/core/configuration) | 查阅 `XltTokenConfig` 与 `createXltToken` 选项 |
 | | [核心 API](/core/core-api) | `StpLogic` / `StpUtil` 所有方法 |
 | | [权限与会话](/core/permissions-and-session) | `StpInterface`、`XltSession`、权限装饰器语义 |
-| | [存储层](/core/storage) | `MemoryStore` / `RedisStore` / 自定义 Store |
+| | [Store 契约与内存存储](/core/storage) | `XltTokenStore` / `MemoryStore` / 自定义 Store |
 | | [Token 策略](/core/token-strategy) | UUID / JWT 策略与自定义 |
+| **Redis Store** | [完整使用指南](/store-redis/) | node-redis、ioredis、Cluster 和三种框架接入 |
 | **适配器** | [适配器总览](/adapters) | 查看可用框架适配器 |
 | **NestJS** | [快速开始](/adapters/nestjs/getting-started) | 第一次接入 NestJS，5 分钟跑通登录/登出 |
 | | [模块配置](/adapters/nestjs/module-config) | `XltTokenModule.forRoot` / `forRootAsync` |
 | | [守卫与装饰器](/adapters/nestjs/guards-and-decorators) | `XltTokenGuard`、`@LoginId`、`@XltIgnore` |
-| **Express** | [Express 适配器](/adapters/express) | 在纯 Express 应用中使用中间件、路由策略和错误处理器 |
+| **Express** | [Express 完整指南](/adapters/express) | 在纯 Express 应用中使用中间件、路由策略和错误处理器 |
 | **1.1.0** | [多端登录](/core/multi-device) · [二级认证](/core/secondary-auth) · [JWT](/core/jwt-strategy) · [Hooks](/core/hooks-and-observability) | 新特性专题 |
 | **进阶** | [异常处理](/core/exceptions) · [场景手册](/core/recipes) | 实战与排错 |
 | **参考** | [AI 编码代理指南](/reference/llms) · [更新日志](/reference/changelog) · [源码参考](/reference/src-reference) | AI 入口、发布说明与单文件速查 |

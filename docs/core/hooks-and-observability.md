@@ -166,7 +166,7 @@ ${tokenName}:login:session-list:*
 ```
 
 - **MemoryStore**：内存前缀扫描，适合开发与小规模
-- **RedisStore**：`SCAN` 迭代，避免 `KEYS` 阻塞
+- **RedisStore / IORedisStore**：分页 `SCAN`；Cluster 会扫描所有 master
 
 生产环境若在线用户量极大，建议：
 
@@ -197,5 +197,6 @@ import { XLT_TOKEN_HOOKS } from '@xlt-token/core';
 ## 下一步
 
 - 多端 API 详解 → [多端登录](/core/multi-device)
-- Store `keys()` 实现 → [存储层](/core/storage)
+- Store `keys()` 契约 → [Store 契约与内存存储](/core/storage)
+- Redis SCAN 与 Cluster 行为 → [Redis Store 完整指南](/store-redis/)
 - 模块注册选项 → [NestJS 模块配置](/adapters/nestjs/module-config)

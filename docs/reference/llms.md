@@ -23,6 +23,7 @@
 - 源码速查：`docs/SRC-REFERENCE.md`
 - 架构设计：`guide/architecture.md`
 - Core API：`core/core-api.md`
+- Redis Store：`store-redis/index.md`
 - NestJS 守卫与装饰器：`adapters/nestjs/guards-and-decorators.md`
 - NestJS 模块配置：`adapters/nestjs/module-config.md`
 - Express 适配器：`adapters/express.md`
@@ -36,6 +37,7 @@
 - Core 权限引擎：`packages/core/src/auth/stp-perm-logic.ts`
 - Core 静态门面：`packages/core/src/auth/stp-util.ts`
 - Core HTTP 上下文：`packages/core/src/http/context.ts`
+- Redis Store 导出：`packages/store-redis/src/index.ts`
 - NestJS 模块：`packages/nestjs/src/xlt-token.module.ts`
 - NestJS 全局守卫：`packages/nestjs/src/guards/xlt-token.guard.ts`
 - Express 全局中间件：`packages/express/src/middleware/xlt-middleware.ts`

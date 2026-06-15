@@ -35,6 +35,7 @@ const markdown = {
             '@xlt-token/nestjs': ['packages/nestjs/src/index.ts'],
             '@xlt-token/core': ['packages/core/src/index.ts'],
             '@xlt-token/express': ['packages/express/src/index.ts'],
+            '@xlt-token/store-redis': ['packages/store-redis/src/index.ts'],
           },
         },
         handbookOptions: {
@@ -230,9 +231,19 @@ export default defineConfig({
     },
 
     nav: [
+      { text: '快速开始', link: '/guide/getting-started' },
+      { text: 'Core', link: '/core/getting-started' },
+      { text: 'Redis Store', link: '/store-redis/' },
+      {
+        text: '框架适配',
+        items: [
+          { text: 'NestJS', link: '/adapters/nestjs/getting-started' },
+          { text: 'Express', link: '/adapters/express' },
+        ],
+      },
       { text: 'AI 指南', link: '/reference/llms' },
       {
-        text: 'v1.0.0',
+        text: 'v1.2.0',
         items: [
           { text: '更新日志', link: '/reference/changelog' },
           { text: 'GitHub Releases', link: 'https://github.com/xiaoLangtou/xlt-token/releases' },
@@ -241,104 +252,71 @@ export default defineConfig({
       },
     ],
 
-    sidebar: {
-      '/guide/': [
-        {
-          text: '指南',
-          items: [
-            { text: '选择接入方式', link: '/guide/getting-started' },
-            { text: '架构设计', link: '/guide/architecture' },
-            { text: '1.0 迁移指南', link: '/guide/migration-2-0' },
-
-          ],
-        },
-        {
-          text: 'Agents',
-          items: [
-            { text: 'LLMs.txt', link: '/guide/llms' },
-            { text: 'Skills 指南', link: '/guide/skills' },
-          ],
-        },
-      ],
-      '/core/': [
-        {
-          text: '核心（@xlt-token/core）',
-          collapsed: false,
-          items: [
-            { text: '快速开始', link: '/core/getting-started' },
-            { text: '配置参考', link: '/core/configuration' },
-            { text: '核心 API', link: '/core/core-api' },
-            { text: '权限与会话', link: '/core/permissions-and-session' },
-            { text: '存储层', link: '/core/storage' },
-            { text: 'Token 策略', link: '/core/token-strategy' },
-          ],
-        },
-        {
-          text: '1.1.0 新特性',
-          collapsed: false,
-          items: [
-            { text: '多端登录', link: '/core/multi-device' },
-            { text: '二级认证', link: '/core/secondary-auth' },
-            { text: 'JWT 策略', link: '/core/jwt-strategy' },
-            { text: 'Hooks 与观测性', link: '/core/hooks-and-observability' },
-          ],
-        },
-        {
-          text: '进阶',
-          collapsed: false,
-          items: [
-            { text: '异常处理', link: '/core/exceptions' },
-            { text: '场景手册', link: '/core/recipes' },
-          ],
-        },
-      ],
-      '/adapters/': [
-        {
-          text: '适配器总览',
-          collapsed: false,
-          items: [
-            { text: '总览', link: '/adapters' },
-          ],
-        },
-        {
-          text: 'NestJS',
-          collapsed: false,
-          items: [
-            { text: '快速开始', link: '/adapters/nestjs/getting-started' },
-            { text: '模块配置', link: '/adapters/nestjs/module-config' },
-            { text: '守卫与装饰器', link: '/adapters/nestjs/guards-and-decorators' },
-          ],
-        },
-        {
-          text: 'Express',
-          collapsed: false,
-          items: [
-            { text: 'Express 适配器', link: '/adapters/express' },
-          ],
-        },
-        {
-          text: 'Core 相关能力',
-          collapsed: false,
-          items: [
-            { text: '权限与会话', link: '/core/permissions-and-session' },
-            { text: 'Redis 存储', link: '/core/storage' },
-            { text: 'JWT 策略', link: '/core/jwt-strategy' },
-            { text: '异常处理', link: '/core/exceptions' },
-            { text: '场景手册', link: '/core/recipes' },
-          ],
-        },
-      ],
-      '/reference/': [
-        {
-          text: '参考',
-          items: [
-            { text: 'AI 编码代理指南', link: '/reference/llms' },
-            { text: '更新日志', link: '/reference/changelog' },
-            { text: '源码参考', link: '/reference/src-reference' },
-          ],
-        },
-      ],
-    },
+    sidebar: [
+      {
+        text: '快速开始',
+        collapsed: false,
+        items: [
+          { text: '选择接入方式', link: '/guide/getting-started' },
+        ],
+      },
+      {
+        text: '核心能力',
+        collapsed: false,
+        items: [
+          { text: 'Core 快速开始', link: '/core/getting-started' },
+          { text: '配置参考', link: '/core/configuration' },
+          { text: '核心 API', link: '/core/core-api' },
+          { text: '权限与会话', link: '/core/permissions-and-session' },
+          { text: 'Store 契约与内存存储', link: '/core/storage' },
+          { text: 'Token 策略', link: '/core/token-strategy' },
+          { text: '多端登录', link: '/core/multi-device' },
+          { text: '二级认证', link: '/core/secondary-auth' },
+          { text: 'JWT 策略', link: '/core/jwt-strategy' },
+          { text: 'Hooks 与观测性', link: '/core/hooks-and-observability' },
+          { text: '异常处理', link: '/core/exceptions' },
+          { text: '场景手册', link: '/core/recipes' },
+        ],
+      },
+      {
+        text: 'Redis Store',
+        collapsed: false,
+        items: [
+          { text: '完整使用指南', link: '/store-redis/' },
+        ],
+      },
+      {
+        text: '框架适配',
+        collapsed: false,
+        items: [
+          { text: '适配器总览', link: '/adapters' },
+          { text: 'NestJS 快速开始', link: '/adapters/nestjs/getting-started' },
+          { text: 'NestJS 模块配置', link: '/adapters/nestjs/module-config' },
+          { text: 'NestJS 守卫与装饰器', link: '/adapters/nestjs/guards-and-decorators' },
+          { text: 'Express 完整指南', link: '/adapters/express' },
+        ],
+      },
+      {
+        text: '进阶指南',
+        collapsed: true,
+        items: [
+          { text: '架构设计', link: '/guide/architecture' },
+          { text: '迁移指南', link: '/guide/migration-2-0' },
+          { text: 'LLMs.txt', link: '/guide/llms' },
+          { text: 'Skills 指南', link: '/guide/skills' },
+          { text: 'MCP Server', link: '/guide/mcp-server' },
+        ],
+      },
+      {
+        text: '参考',
+        collapsed: true,
+        items: [
+          { text: 'AI 编码代理指南', link: '/reference/llms' },
+          { text: '更新日志', link: '/reference/changelog' },
+          { text: '源码参考', link: '/reference/src-reference' },
+        ],
+      },
+    ],
 
     search: {
       provider: 'local',

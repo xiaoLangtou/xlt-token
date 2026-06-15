@@ -56,6 +56,9 @@ pnpm add @xlt-token/store-redis redis
 pnpm add jsonwebtoken       # 可选：JwtStrategy
 ```
 
+Redis 客户端选择、NestJS 旧注入令牌迁移和完整配置见
+[Redis Store 完整指南](/store-redis/)。
+
 `@xlt-token/nestjs` peer 依赖：
 
 - `@nestjs/common`、`@nestjs/core`

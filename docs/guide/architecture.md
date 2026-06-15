@@ -180,7 +180,8 @@ const xlt = createXltToken({
 ## 下一步
 
 - 具体 API 签名 → [核心 API](/core/core-api)
-- 自定义 Store / 策略 → [存储层](/core/storage) / [Token 策略](/core/token-strategy)
+- 自定义 Store / 策略 → [Store 契约](/core/storage) / [Token 策略](/core/token-strategy)
+- Redis Store → [完整使用指南](/store-redis/)
 - NestJS Guard 与装饰器 → [守卫与装饰器](/adapters/nestjs/guards-and-decorators)
 - 从 1.x 升级 → [2.0 迁移指南](/guide/migration-2-0)
 - 登录异常处理 → [异常处理](/core/exceptions)

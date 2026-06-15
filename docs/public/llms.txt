@@ -7,7 +7,8 @@ xlt-token is a pnpm monorepo that provides token login, logout, session, permiss
 ## Primary Packages
 
 - `@xlt-token/core`: framework-agnostic authentication engine, store contracts, token strategies, permissions, sessions, hooks, HTTP context, and errors.
-- `@xlt-token/nestjs`: NestJS module, guards, decorators, RedisStore, JwtStrategy, and re-exports from core.
+- `@xlt-token/store-redis`: framework-agnostic RedisStore and IORedisStore for node-redis and ioredis.
+- `@xlt-token/nestjs`: NestJS module, guards, decorators, JwtStrategy, deprecated Redis DI wrappers, and re-exports from core.
 - `@xlt-token/express`: Express middleware adapter, route helpers, request state sync, and error handler.
 - `xlt-token`: compatibility package that re-exports `@xlt-token/nestjs`.
 
@@ -18,6 +19,7 @@ xlt-token is a pnpm monorepo that provides token login, logout, session, permiss
 - Source reference: `docs/reference/src-reference.md`
 - Architecture: `docs/guide/architecture.md`
 - Core API: `docs/core/core-api.md`
+- Redis Store guide: `docs/store-redis/index.md`
 - NestJS guards and decorators: `docs/adapters/nestjs/guards-and-decorators.md`
 - NestJS module config: `docs/adapters/nestjs/module-config.md`
 - Express adapter: `docs/adapters/express.md`
@@ -32,6 +34,7 @@ xlt-token is a pnpm monorepo that provides token login, logout, session, permiss
 - Core permission engine: `packages/core/src/auth/stp-perm-logic.ts`
 - Core static facade: `packages/core/src/auth/stp-util.ts`
 - Core HTTP context: `packages/core/src/http/context.ts`
+- Redis Store public export: `packages/store-redis/src/index.ts`
 - NestJS public export: `packages/nestjs/src/index.ts`
 - NestJS module: `packages/nestjs/src/xlt-token.module.ts`
 - NestJS guard: `packages/nestjs/src/guards/xlt-token.guard.ts`
@@ -44,7 +47,8 @@ xlt-token is a pnpm monorepo that provides token login, logout, session, permiss
 - Do not start frontend or documentation dev servers unless explicitly requested.
 - If asked how to run the docs locally, tell the user to run `pnpm docs:dev`.
 - Keep framework-independent behavior in `@xlt-token/core`.
-- Keep NestJS DI, guards, decorators, RedisStore, and JwtStrategy in `@xlt-token/nestjs`.
+- Keep Redis client integrations in `@xlt-token/store-redis`.
+- Keep NestJS DI, guards, decorators, compatibility wrappers, and JwtStrategy in `@xlt-token/nestjs`.
 - Keep Express middleware, route helpers, and Express error handling in `@xlt-token/express`.
 - Preserve public exports in each package `src/index.ts`.
 - When changing auth semantics, update tests before or alongside implementation.
@@ -58,6 +62,7 @@ xlt-token is a pnpm monorepo that provides token login, logout, session, permiss
 - Test workspace: `pnpm test:workspace`
 - Test core: `pnpm --filter @xlt-token/core test`
 - Test NestJS: `pnpm --filter @xlt-token/nestjs test`
+- Test Redis Store: `pnpm --filter @xlt-token/store-redis test`
 - Test NestJS e2e: `pnpm --filter @xlt-token/nestjs test:e2e`
 - Test Express: `pnpm --filter @xlt-token/express test`
 - Run docs locally: `pnpm docs:dev`

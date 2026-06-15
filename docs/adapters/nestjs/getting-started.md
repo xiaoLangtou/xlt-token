@@ -22,7 +22,8 @@ pnpm add @xlt-token/store-redis redis
 
 ## 最小集成（内存存储）
 
-**适合**：单进程开发环境、小项目、Demo。生产环境请走 [Redis 存储](/core/storage#redisstore)。
+**适合**：单进程开发环境、小项目、Demo。多实例生产环境请使用
+[Redis Store](/store-redis/)。
 
 
 ```ts twoslash
@@ -138,7 +139,14 @@ await redisClient.connect();
 export class AppModule {}
 ```
 
-启动后 `redis-cli KEYS 'authorization:login:*'` 即可看到键（详见 [架构设计 · 三类存储键](/guide/architecture#三类存储键)）。
+启动后可以使用非阻塞扫描查看键：
+
+```bash
+redis-cli --scan --pattern 'authorization:login:*'
+```
+
+客户端生命周期、ioredis、Cluster 和 Redis 命令语义见
+[Redis Store 完整指南](/store-redis/)。
 
 ## 守卫的两种工作模式
 
@@ -159,9 +167,69 @@ export class AppModule {}
 
 请继承 `XltAbstractLoginGuard` 实现自定义 Guard，详见 [守卫与装饰器 · 业务扩展](/adapters/nestjs/guards-and-decorators#xltabstractloginguard业务扩展)。
 
+## 异常响应
+
+`XltTokenGuard` 抛出 NestJS HTTP 异常，默认由 NestJS Exception Filter 生成响应：
+
+| 场景 | HTTP 状态 |
+| --- | --- |
+| 未携带 token、token 无效或已过期 | `401` |
+| 权限不足 | `403` |
+| 角色不足 | `403` |
+| 二级认证窗口未打开 | `403` |
+
+需要统一业务响应结构时，注册全局 Exception Filter，并识别
+`NotLoginException`、`NotPermissionException`、`NotRoleException` 和
+`NotSafeException`。不要把 Redis 连接错误等基础设施异常转换成 401。
+
+## Express 与 Fastify
+
+适配器通过 NestJS `HttpAdapterHost` 兼容 Express 和 Fastify。业务 Controller、
+Guard 和装饰器写法保持一致。
+
+Fastify 使用 Cookie 读取 token 时，需要先安装并注册 `@fastify/cookie`。没有注册
+插件时，header 模式仍可正常使用，但 `isReadCookie: true` 无法读取 Cookie。
+
+```bash
+pnpm add @fastify/cookie
+```
+
+平台专属的原始请求对象应通过 NestJS `@Req()` 获取。鉴权逻辑不要依赖 Express
+独有字段，否则切换 Fastify 时会失效。
+
+## 应用关闭与 Redis
+
+`XltTokenModule` 不创建 Redis 客户端，也不会自动关闭连接。创建客户端的模块应实现
+`OnApplicationShutdown`，并在 bootstrap 时开启关闭钩子：
+
+```ts twoslash [src/main.ts]
+import { NestFactory } from '@nestjs/core';
+import { AppModule } from './app.module';
+
+const app = await NestFactory.create(AppModule);
+app.enableShutdownHooks();
+await app.listen(3000);
+```
+
+完整客户端关闭示例见 [Redis Store · NestJS 接入](/store-redis/#nestjs-接入)。
+
+## 测试
+
+仓库中的 NestJS 测试命令：
+
+```bash
+pnpm --filter @xlt-token/nestjs test
+pnpm --filter @xlt-token/nestjs test:e2e
+```
+
+业务项目的 e2e 测试应至少覆盖登录公开路由、无 token 的 401、有效 token、登出后
+失效、权限 403 和 Redis Store 配置。使用 `MemoryStore` 时每个测试模块重新初始化，
+避免登录态在用例之间泄漏。
+
 ## 下一步
 
 - 想了解存储键长啥样、并发/共享到底如何决策？→ [架构设计](/guide/architecture)
 - 想一次看完所有配置项？→ [模块配置](/adapters/nestjs/module-config)
 - 想知道 `login` / `kickout` / `renewTimeout` 的完整签名？→ [核心 API](/core/core-api)
 - 遇到 `NotLoginException` 不知道怎么处理？→ [异常处理](/core/exceptions)
+- 生产 Redis、ioredis 或 Cluster → [Redis Store 完整指南](/store-redis/)

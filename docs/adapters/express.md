@@ -30,6 +30,9 @@ import { RedisStore } from '@xlt-token/store-redis';
 import { createClient } from 'redis';
 
 const redisClient = createClient({ url: process.env.REDIS_URL });
+redisClient.on('error', (error) => {
+  console.error('[redis]', error);
+});
 await redisClient.connect();
 
 export const xlt = createXltToken({
@@ -48,6 +51,10 @@ export const xlt = createXltToken({
   store: new IORedisStore(new Redis(process.env.REDIS_URL)),
 });
 ```
+
+每个应用进程复用一个客户端，不要在 middleware 或路由中创建连接。node-redis、
+ioredis、Cluster、TTL、SCAN 和关闭连接的完整说明见
+[Redis Store 完整指南](/store-redis/)。
 
 ## 最小应用
 
@@ -99,6 +106,11 @@ api.post('/auth/login', async (req, res) => {
   res.json({ token });
 });
 
+api.post('/auth/logout', async (req, res) => {
+  await xlt.stpLogic.logout(req.stpToken!);
+  res.json({ ok: true });
+});
+
 api.get('/public', (_req, res) => {
   res.json({ ok: true });
 });
@@ -120,6 +132,14 @@ app.use(xltErrorHandler());
 
 export { app, xlt };
 ```
+
+中间件顺序不能随意交换：
+
+1. `express.json()` 等 body parser 放在业务路由前。
+2. `xltMiddleware()` 放在需要鉴权的路由前。
+3. 登录等公开路由通过 `ignore` 或 `ignoreAuth()` 放行。
+4. `xltErrorHandler()` 放在所有路由之后。
+5. 业务自己的兜底错误处理中间件放在 `xltErrorHandler()` 之后。
 
 启动服务时使用普通 Express 写法。
 
@@ -302,6 +322,35 @@ TypeScript 项目可以直接读取这些字段，因为适配器会声明 Expre
 | `req._xltRouteMeta` | `RouteAuthMeta | undefined` | 当前请求的鉴权元数据 |
 | `req._xltState` | `Record<string, unknown> | undefined` | `HttpContext.state` 的 Express 挂载点 |
 
+## Session
+
+`XltSession` 按 loginId 保存业务数据。登录校验通过后，从 `req.stpLoginId` 创建当前用户
+Session：
+
+```ts twoslash [src/profile.ts]
+import express from 'express';
+import { createXltToken } from '@xlt-token/express';
+
+const xlt = createXltToken();
+const api = express.Router();
+// ---cut---
+api.put('/profile/theme', async (req, res) => {
+  const session = xlt.stpLogic.getSession(req.stpLoginId!);
+  await session.set('theme', String(req.body.theme));
+  res.json({ ok: true });
+});
+
+api.get('/profile/theme', async (req, res) => {
+  const session = xlt.stpLogic.getSession(req.stpLoginId!);
+  const theme = await session.get<string>('theme');
+  res.json({ theme });
+});
+```
+
+不要跨请求缓存 `XltSession` 实例。它会缓存首次读取的数据，每个请求重新调用
+`getSession()` 才能看到其他请求的更新。Redis Store 会让 Session 在多个 Express
+实例间共享。
+
 ## 二级认证
 
 `safeBusiness` 会在登录成功后调用 `stpLogic.checkSafe(token, business)`。用户需要先打开对应业务的安全窗口。
@@ -363,6 +412,108 @@ api.use(
 
 你也可以不用 `xltErrorHandler()`，改为在自己的错误中间件中识别 core 异常并返回统一响应。
 
+自定义处理器必须保留四参数签名，否则 Express 不会把它识别为错误处理中间件：
+
+```ts twoslash [src/error-handler.ts]
+import type { ErrorRequestHandler } from 'express';
+import { XltError } from '@xlt-token/express';
+
+export const errorHandler: ErrorRequestHandler = (error, _req, res, next) => {
+  if (error instanceof XltError) {
+    res.status(error.status).json({
+      code: error.code,
+      message: error.message,
+    });
+    return;
+  }
+
+  next(error);
+};
+```
+
+Redis 连接失败不是 `XltError`。应继续交给基础设施错误处理和监控，不能返回
+`NOT_LOGIN`。
+
+## 客户端验证
+
+启动应用后，可以用下面的请求验证完整流程：
+
+```bash
+# 登录并从响应中复制 token
+curl -s -X POST http://localhost:3000/api/auth/login \
+  -H 'Content-Type: application/json' \
+  -d '{"userId":"1001"}'
+
+TOKEN='<登录响应中的 token>'
+
+# 读取当前用户
+curl http://localhost:3000/api/me \
+  -H "Authorization: Bearer $TOKEN"
+
+# 登出
+curl -X POST http://localhost:3000/api/auth/logout \
+  -H "Authorization: Bearer $TOKEN"
+
+# 旧 token 应返回 401
+curl -i http://localhost:3000/api/me \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+命令假设默认 `tokenPrefix: 'Bearer '`。示例最小应用把前缀配置为空时，应把 Header
+改为 `Authorization: $TOKEN`。
+
+## 应用关闭
+
+MemoryStore 不需要关闭。使用 Redis 时，先停止接收新请求，等待已有请求结束，再关闭
+客户端：
+
+```ts twoslash [src/main.ts]
+import { app } from './app';
+import { redisClient } from './redis';
+
+const server = app.listen(3000);
+
+process.once('SIGTERM', () => {
+  server.close(async () => {
+    await redisClient.quit();
+  });
+});
+```
+
+生产环境还应处理 `SIGINT`，并为关停设置平台允许的最大等待时间。
+
+## 生产建议
+
+- 在反向代理后部署时，按项目需要配置 `trust proxy`，但不要信任客户端伪造的身份头。
+- `xltMiddleware()` 应挂在需要保护的 Router 上，避免静态资源和健康检查产生额外
+  Store 请求。
+- `ignore` 和 `policies` 使用应用实际看到的路径；Router 挂载前缀会影响匹配结果，
+  应通过 e2e 测试确认。
+- 多实例使用 Redis Store；MemoryStore 只适合单进程和测试。
+- 权限列表来自外部服务时，合理设置 `permCacheTimeout`，并设计权限变更后的失效策略。
+- 错误日志不要记录完整 token。需要关联请求时记录 token 摘要或业务 trace ID。
+
+## 常见问题
+
+### 登录接口返回 401
+
+登录路由被默认黑名单策略保护。把路径加入 `ignore`，或在同一路由链中把
+`ignoreAuth()` 放在 `xltMiddleware()` 前。
+
+### route helper 不生效
+
+helper 在 `xltMiddleware()` 之后执行，元数据写入太晚。调整 route chain 顺序，或改用
+Router 级 `policies`。
+
+### `req.stpLoginId` 是 `undefined`
+
+当前路由没有经过成功的登录校验，或者业务处理器运行在 middleware 之前。确认
+`xltMiddleware()` 的挂载位置和 `defaultCheck` 配置。
+
+### 自定义错误处理中间件不执行
+
+确认函数有 `(error, req, res, next)` 四个参数，并且注册在路由之后。
+
 ## API 参考
 
 | API | 说明 |
@@ -399,3 +550,4 @@ pnpm --filter @xlt-token/express test:e2e:cov
 - 查看 [Core 配置参考](/core/configuration)，配置 token 名称、并发登录和有效期。
 - 查看 [权限与会话](/core/permissions-and-session)，实现 `StpInterface`。
 - 查看 [二级认证](/core/secondary-auth)，了解 safe 窗口和临时 token。
+- 查看 [Redis Store 完整指南](/store-redis/)，配置生产多实例存储。

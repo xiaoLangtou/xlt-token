@@ -179,7 +179,7 @@ app.use(async (req, res, next) => {
 | 参数 | 类型 | 默认值 | 说明 |
 |---|---|---|---|
 | `config` | `Partial<XltTokenConfig>` | - | 配置选项（见下表） |
-| `store` | `{ useClass } \| { useValue }` | `MemoryStore` | 存储实现（内置 MemoryStore、RedisStore 和 IORedisStore） |
+| `store` | `{ useClass } \| { useValue }` | `MemoryStore` | 存储实现；Redis Store 从独立包安装 |
 | `strategy` | `{ useClass }` | `UuidStrategy` | Token 策略（`UuidStrategy` / `JwtStrategy`） |
 | `isGlobal` | `boolean` | `false` | 是否全局模块 |
 | `stpInterface` | `class` | 内置 stub | 权限 / 角色数据源 |
@@ -415,6 +415,8 @@ try {
 ```
 
 ### 使用 Redis 存储
+
+完整说明见 [Redis Store 文档](https://xiaolangtou.github.io/xlt-token/store-redis/)。
 
 ```ts
 import { Module } from '@nestjs/common';

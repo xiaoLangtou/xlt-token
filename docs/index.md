@@ -5,7 +5,7 @@ markdownStyles: false
 hero:
   name: xlt-token
   text: 框架无关的轻量 Token 鉴权库
-  tagline: 核心 @xlt-token/core 零框架依赖；NestJS 与 Express 适配器可直接接入。覆盖登录态、权限、多端会话、JWT 与观测性。
+  tagline: Core 零框架依赖，Redis Store 独立安装，NestJS 与 Express 提供完整框架接入。覆盖登录态、权限、多端会话、JWT 与观测性。
   actions:
     - theme: brand
       text: 开始使用
@@ -16,6 +16,9 @@ hero:
     - theme: alt
       text: Core 文档
       link: /core/getting-started
+    - theme: alt
+      text: Redis Store
+      link: /store-redis/
     - theme: alt
       text: NestJS 文档
       link: /adapters/nestjs/getting-started
@@ -28,8 +31,8 @@ hero:
 
 features:
   - icon: 🧩
-    title: 核心 + 适配器
-    details: '@xlt-token/core 承载鉴权语义；@xlt-token/nestjs 和 @xlt-token/express 提供框架接入。'
+    title: 核心 + Store + 适配器
+    details: '@xlt-token/core 承载鉴权语义；@xlt-token/store-redis 提供分布式存储；NestJS 和 Express 负责框架接入。'
   - icon: 🚀
     title: 框架接入开箱即用
     details: NestJS 使用 Module / Guard；Express 使用 middleware、路由策略和错误处理器。

@@ -1,14 +1,16 @@
-# 01 · 快速开始
+# 快速开始
 
-xlt-token 由框架无关的 `@xlt-token/core` 和框架适配器组成。选择你正在使用的运行环境，然后进入对应的快速开始。
+xlt-token 把鉴权核心、Redis 存储和框架适配器拆成独立包。先按运行环境选择入口；
+需要多实例共享登录态时，再为任一入口增加 Redis Store。
 
 ## 选择环境
 
-| 环境 | 安装 | 入口 |
+| 场景 | 安装 | 文档入口 |
 | --- | --- | --- |
-| NestJS | `pnpm add @xlt-token/nestjs` | [NestJS 快速开始](/adapters/nestjs/getting-started) |
-| Core | `pnpm add @xlt-token/core` | [Core 快速开始](/core/getting-started) |
-| Express | `pnpm add express @xlt-token/express` | [Express 适配器](/adapters/express) |
+| 自定义框架、脚本或只需要鉴权运行时 | `pnpm add @xlt-token/core` | [Core 独立使用](/core/getting-started) |
+| NestJS Module、Guard 和装饰器 | `pnpm add @xlt-token/nestjs` | [NestJS 快速开始](/adapters/nestjs/getting-started) |
+| Express middleware 和 route helper | `pnpm add express @xlt-token/express` | [Express 完整指南](/adapters/express) |
+| 多实例共享会话或需要持久化 | `pnpm add @xlt-token/store-redis redis` | [Redis Store 完整指南](/store-redis/) |
 
 ## NestJS 在线 Demo
 
@@ -20,13 +22,17 @@ xlt-token 由框架无关的 `@xlt-token/core` 和框架适配器组成。选择
 
 ## 怎么选
 
-选择 `NestJS` 时，你会看到模块、Guard、装饰器和参数装饰器。选择 `Core` 时，你会看到框架无关的鉴权运行时和 `HttpContext` 桥接方式。选择 `Express` 时，你会看到中间件、路由策略和错误处理器。
+选择 Core 时，你直接创建 `XltTokenContext`，并负责把当前请求桥接为
+`HttpContext`。选择 NestJS 时，适配器负责 Module 注册、依赖注入、Guard 和装饰器。
+选择 Express 时，适配器负责 middleware、Router 策略、请求状态同步和错误处理。
 
-后续 Fastify、Hono 等适配器会继续加入这排 tabs。
+Redis Store 不绑定任何框架。Core、NestJS 和 Express 都可以使用同一个
+`RedisStore` 或 `IORedisStore` 实例。
 
 ## 下一步
 
-- 想先跑起来？进入 [NestJS 快速开始](/adapters/nestjs/getting-started)。
-- 想接入 Express？进入 [Express 适配器](/adapters/express)。
+- 想只使用框架无关能力？进入 [Core 独立使用](/core/getting-started)。
+- 想先跑通 NestJS？进入 [NestJS 快速开始](/adapters/nestjs/getting-started)。
+- 想接入 Express？进入 [Express 完整指南](/adapters/express)。
+- 想部署多实例？进入 [Redis Store 完整指南](/store-redis/)。
 - 想理解底层机制？进入 [架构设计](/guide/architecture)。
-- 想只用核心能力？进入 [Core 快速开始](/core/getting-started)。

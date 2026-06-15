@@ -212,7 +212,8 @@ create() {}
 | `perms` | `string \| string[]` | 单个权限或权限数组 |
 | `options.mode` | `XltMode.AND`（默认）/ `XltMode.OR` | 多个权限的组合策略 |
 
-支持通配符匹配（`user:*` 命中 `user:read` 等）。需要在 Module 里注册 `stpInterface`，详见 [11 · 权限与会话](/core/permissions-and-session)。
+支持通配符匹配（`user:*` 命中 `user:read` 等）。需要在 Module 里注册
+`stpInterface`，详见 [权限与会话](/core/permissions-and-session)。
 
 ### `@XltCheckRole(roles, options?)`
 
@@ -238,7 +239,8 @@ sensitive() {}
 transfer() {}
 ```
 
-完整流程（验证码 → openSafe → 敏感操作）见 **[15 · 二级认证](/core/secondary-auth)**。
+完整流程（验证码 → openSafe → 敏感操作）见
+**[二级认证](/core/secondary-auth)**。
 
 ### 装饰器总览
 
@@ -259,8 +261,11 @@ transfer() {}
 - **全局守卫 + 登录接口本身**：一定要给 `/auth/login`、`/auth/captcha` 等加 `@XltIgnore()`（黑名单模式下），否则自己登录都会被 401。
 - **`defaultCheck` 默认是 `true`**：新项目接入时，**没标任何装饰器的接口全部要登录**。
 - **自定义 Guard 与 `XltTokenGuard` 不要同时挂成全局**：会重复校验，浪费 Redis 调用。
+- **Redis 连接错误不属于鉴权失败**：让异常进入基础设施错误处理，不要统一转换成
+  `NotLoginException`。
 
 ## 下一步
 
 - 想知道各类 401 的具体 reason → [异常处理](/core/exceptions)
 - 踢人/顶号完整流程 → [场景手册](/core/recipes)
+- Redis 客户端与生产配置 → [Redis Store 完整指南](/store-redis/)

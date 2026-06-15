@@ -6,7 +6,7 @@ const copied = ref(false)
 
 async function copyInstall() {
   try {
-    await navigator.clipboard.writeText('pnpm add xlt-token')
+    await navigator.clipboard.writeText('pnpm add @xlt-token/core')
     copied.value = true
     setTimeout(() => { copied.value = false }, 2000)
   }
@@ -14,16 +14,16 @@ async function copyInstall() {
 }
 
 const guides = [
-  { title: '快速开始', desc: '5 分钟接入 NestJS', link: '/guide/getting-started' },
+  { title: '选择接入方式', desc: 'Core、NestJS 或 Express', link: '/guide/getting-started' },
+  { title: 'Redis Store', desc: 'node-redis 与 ioredis 完整指南', link: '/store-redis/' },
   { title: '架构设计', desc: '分层与存储键结构', link: '/guide/architecture' },
-  { title: '配置参考', desc: 'XltTokenConfig 全字段', link: '/guide/configuration' },
 ]
 
 const core = [
+  { title: 'Core 独立使用', link: '/core/getting-started' },
   { title: '核心 API', link: '/core/core-api' },
-  { title: '守卫与装饰器', link: '/core/guards-and-decorators' },
   { title: '权限与会话', link: '/core/permissions-and-session' },
-  { title: '存储层', link: '/core/storage' },
+  { title: 'Store 契约与内存存储', link: '/core/storage' },
   { title: 'Token 策略', link: '/core/token-strategy' },
   { title: '异常处理', link: '/core/exceptions' },
 ]
@@ -38,17 +38,17 @@ const v110 = [
 ]
 
 const features = [
-  { n: '01', title: '开箱即用', desc: 'forRoot 一行注册，默认配置跑通登录、鉴权、踢人与登出。' },
-  { n: '02', title: '可插拔架构', desc: 'Store、Token 策略、守卫均可替换，适配 Redis / 内存。' },
+  { n: '01', title: '开箱即用', desc: 'Core 零框架依赖，默认配置即可跑通登录、鉴权、踢人与登出。' },
+  { n: '02', title: '可插拔架构', desc: 'Core、Redis Store 与框架适配器独立安装，Store 和 Token 策略均可替换。' },
   { n: '03', title: 'Sa-Token 语义', desc: '顶号、踢人、活跃过期、多端并发等能力原生支持。' },
-  { n: '04', title: '守卫 + 装饰器', desc: '@LoginId / @XltCheckPermission 声明式开发体验。' },
+  { n: '04', title: '多框架接入', desc: 'NestJS 提供 Guard 与装饰器；Express 提供 middleware 与路由策略。' },
   { n: '05', title: '1.1.0 新能力', desc: '多端 device、二级认证、JWT 黑名单、Hooks 与在线观测。', wide: true },
 ]
 
 const navGroups = [
-  { badge: 'Guide', title: '入门', items: guides },
-  { badge: 'Core', title: '核心', items: core },
-  { badge: 'v1.1', title: '1.1.0', items: v110 },
+  { badge: 'Start', title: '快速开始', items: guides },
+  { badge: 'Core', title: '核心能力', items: core },
+  { badge: 'More', title: '进阶与参考', items: v110 },
 ]
 
 const stats = [
@@ -74,7 +74,7 @@ const stats = [
         <div class="xlt-hero__copy">
           <div class="xlt-hero__badge xlt-anim xlt-anim--1">
             <span class="xlt-hero__pulse" />
-            v1.0.0-rc.1 · NestJS
+            v1.2.0 · Core + Redis + Adapters
           </div>
 
           <h1 class="xlt-hero__title xlt-anim xlt-anim--2">
@@ -82,13 +82,13 @@ const stats = [
           </h1>
 
           <p class="xlt-hero__lede xlt-anim xlt-anim--3">
-            为 NestJS 打造的轻量 Token 鉴权库。可插拔 Store 与策略、全局 Guard 一行接入。
+            框架无关的 Token 鉴权核心，配套独立 Redis Store、NestJS 与 Express 适配器。
           </p>
 
           <div class="xlt-hero__install xlt-anim xlt-anim--4">
             <button type="button" class="xlt-install" @click="copyInstall">
               <span class="xlt-install__prompt">$</span>
-              <code>pnpm add xlt-token</code>
+              <code>pnpm add @xlt-token/core</code>
               <span class="xlt-install__copy">{{ copied ? '已复制 ✓' : '复制' }}</span>
             </button>
           </div>
@@ -98,7 +98,7 @@ const stats = [
               快速开始
               <span class="xlt-btn__arrow">→</span>
             </a>
-            <a class="xlt-btn xlt-btn--glass" :href="withBase('/core/core-api')">核心 API</a>
+            <a class="xlt-btn xlt-btn--glass" :href="withBase('/store-redis/')">Redis Store</a>
             <a class="xlt-btn xlt-btn--glass" href="https://github.com/xiaoLangtou/xlt-token" target="_blank" rel="noreferrer">GitHub</a>
           </div>
 
@@ -114,21 +114,20 @@ const stats = [
           <div class="xlt-preview__glow" aria-hidden="true" />
           <div class="xlt-preview__bar">
             <span /><span /><span />
-            <span class="xlt-preview__name">app.module.ts</span>
+            <span class="xlt-preview__name">auth.ts</span>
             <span class="xlt-preview__tag">Live</span>
           </div>
-          <pre class="xlt-preview__code"><code><span class="c-k">import</span> { Module } <span class="c-k">from</span> <span class="c-s">'@nestjs/common'</span>
-<span class="c-k">import</span> { XltTokenModule } <span class="c-k">from</span> <span class="c-s">'xlt-token'</span>
+          <pre class="xlt-preview__code"><code><span class="c-k">import</span> { createXltToken } <span class="c-k">from</span> <span class="c-s">'@xlt-token/core'</span>
 
-@Module({
-  imports: [
-    XltTokenModule.forRoot({
-      isGlobal: <span class="c-b">true</span>,
-      config: { timeout: <span class="c-n">86400</span> },
-    }),
-  ],
+<span class="c-k">export const</span> xlt = createXltToken({
+  config: {
+    tokenName: <span class="c-s">'authorization'</span>,
+    timeout: <span class="c-s">'7d'</span>,
+    activeTimeout: <span class="c-s">'30m'</span>,
+  },
 })
-<span class="c-k">export class</span> <span class="c-t">AppModule</span> {}</code></pre>
+
+<span class="c-k">const</span> token = <span class="c-k">await</span> xlt.stpLogic.login(<span class="c-s">'1001'</span>)</code></pre>
         </div>
       </div>
     </section>

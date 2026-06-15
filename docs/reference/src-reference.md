@@ -7,6 +7,9 @@
 
 > **提示**：日常查阅请优先使用分区文档（[指南](/guide/getting-started) / [核心](/core/core-api)）。本文档为单文件速查，部分路径可能滞后于 monorepo 演进。
 
+Redis 的安装、客户端生命周期、Cluster 和框架接入请优先阅读
+[Redis Store 完整指南](/store-redis/)。
+
 ---
 
 ## 目录

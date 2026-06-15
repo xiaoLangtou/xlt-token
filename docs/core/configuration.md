@@ -140,5 +140,6 @@ const xlt = createXltToken({
 
 - 配置对应的运行时效果在哪看？→ [架构设计 · 三类存储键](/guide/architecture#三类存储键)
 - NestJS 模块注册 → [NestJS 模块配置](/adapters/nestjs/module-config)
-- 我要切换 Store → [存储层](/core/storage)
+- 我要实现 Store → [Store 契约与内存存储](/core/storage)
+- 我要使用 Redis → [Redis Store 完整指南](/store-redis/)
 - 我要换 token 格式 → [Token 策略](/core/token-strategy)
