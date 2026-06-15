@@ -9,10 +9,10 @@ importers:
   .:
     dependencies:
       '@xlt-token/core':
-        specifier: ^1.2.0
+        specifier: ^1.2.1
         version: link:packages/core
       '@xlt-token/nestjs':
-        specifier: ^1.2.0
+        specifier: ^1.2.1
         version: link:packages/nestjs
     devDependencies:
       '@nestjs/common':
@@ -188,7 +188,7 @@ importers:
   packages/express:
     dependencies:
       '@xlt-token/core':
-        specifier: ^1.2.0
+        specifier: ^1.2.1
         version: link:../core
     devDependencies:
       '@types/express':
@@ -222,10 +222,10 @@ importers:
   packages/nestjs:
     dependencies:
       '@xlt-token/core':
-        specifier: ^1.2.0
+        specifier: ^1.2.1
         version: link:../core
       '@xlt-token/store-redis':
-        specifier: ^1.2.0
+        specifier: ^1.2.1
         version: link:../store-redis
       uuid:
         specifier: ^10.0.0
@@ -295,7 +295,7 @@ importers:
   packages/store-redis:
     dependencies:
       '@xlt-token/core':
-        specifier: ^1.2.0
+        specifier: ^1.2.1
         version: link:../core
       ioredis:
         specifier: ^5.0.0

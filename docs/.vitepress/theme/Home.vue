@@ -74,7 +74,7 @@ const stats = [
         <div class="xlt-hero__copy">
           <div class="xlt-hero__badge xlt-anim xlt-anim--1">
             <span class="xlt-hero__pulse" />
-            v1.2.0 · Core + Redis + Adapters
+            v1.2.1 · Core + Redis + Adapters
           </div>
 
           <h1 class="xlt-hero__title xlt-anim xlt-anim--2">

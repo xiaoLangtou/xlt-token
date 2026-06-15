@@ -1,6 +1,6 @@
 {
   "name": "@xlt-token/store-redis",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Framework-agnostic Redis stores for xlt-token",
   "keywords": [
     "token",
@@ -67,7 +67,7 @@
     }
   },
   "dependencies": {
-    "@xlt-token/core": "^1.2.0"
+    "@xlt-token/core": "^1.2.1"
   },
   "devDependencies": {
     "@vitest/coverage-v8": "^2.1.9",

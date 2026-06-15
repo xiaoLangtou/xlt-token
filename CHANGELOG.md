@@ -2,6 +2,35 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.1] - 2026-06-15
+
+### Added
+
+- 新增 `@xlt-token/store-redis` 独立包，为 Core、Express、NestJS 和自定义框架提供统一的 `RedisStore` 与 `IORedisStore`
+- `IORedisStore` 支持 ioredis standalone、Sentinel 和 Cluster；Cluster 扫描会遍历所有 master 节点
+- 新增官方 node-redis、ioredis standalone 和 ioredis Cluster 客户端类型兼容测试
+
+### Fixed
+
+- 修复 Redis Store 被耦合在 `@xlt-token/nestjs` 中，导致只安装 Core 或 Express 时无法直接复用 Redis 的问题
+- 修复 node-redis `SCAN` cursor 在不同客户端版本中可能返回字符串或数字时的类型兼容问题
+- 修复 ioredis 重载 `set` 方法无法满足 Store 客户端结构类型的问题
+- 修正文档中 Redis 仍归属于 NestJS、生产示例使用阻塞式 `KEYS` 和部分过时链接的问题
+
+### Changed
+
+- `@xlt-token/nestjs` 保留 `RedisStore`、`IORedisStore` 和两个客户端注入令牌作为 deprecated 兼容包装器
+- 根包和 NestJS 包不再直接声明 `redis` / `ioredis` peer dependency；Redis 客户端依赖由 `@xlt-token/store-redis` 管理
+- 文档按快速开始、Core、Redis Store、框架适配、进阶指南和参考重新组织
+- 所有公共包版本统一升级到 `1.2.1`
+
+### Compatibility
+
+- 无破坏性变更。现有 NestJS DI 写法继续可用
+- 新项目推荐从 `@xlt-token/store-redis` 导入 Store，并使用构造函数传入 Redis 客户端
+
+---
+
 ## [1.2.0] - 2026-06-14
 
 ### Added
