@@ -1,9 +1,9 @@
 # xlt-token 源码参考文档
 
 > 版本：`1.0.0`（monorepo）
-> 包：`@xlt-token/core` · `@xlt-token/nestjs` · `@xlt-token/express`
+> 包：`@xlt-token/core` · `@xlt-token/store-redis` · `@xlt-token/nestjs` · `@xlt-token/express`
 > 简介：受 Sa-Token 启发的 Token 鉴权库，核心框架无关，NestJS / Express 一包接入。
-> 源码路径：`packages/core/` · `packages/nestjs/` · `packages/express/`
+> 源码路径：`packages/core/` · `packages/store-redis/` · `packages/nestjs/` · `packages/express/`
 
 > **提示**：日常查阅请优先使用分区文档（[指南](/guide/getting-started) / [核心](/core/core-api)）。本文档为单文件速查，部分路径可能滞后于 monorepo 演进。
 
@@ -46,11 +46,15 @@ packages/core/          @xlt-token/core
 ├── token/              TokenStrategy / UuidStrategy
 └── factory.ts          createXltToken()
 
+packages/store-redis/   @xlt-token/store-redis
+├── redis-store.ts      RedisStore
+└── ioredis-store.ts    IORedisStore
+
 packages/nestjs/        @xlt-token/nestjs
 ├── xlt-token.module.ts XltTokenModule.forRoot
 ├── guards/             XltTokenGuard / XltAbstractLoginGuard
 ├── decorators/         @LoginId / @XltIgnore / ...
-├── store/redis-store   RedisStore
+├── store/              deprecated Redis DI 包装器
 └── token/jwt-strategy  JwtStrategy
 ```
 
@@ -82,7 +86,7 @@ packages/nestjs/        @xlt-token/nestjs
 ```bash
 pnpm add @xlt-token/nestjs
 # 可选：使用 Redis 存储
-pnpm add redis
+pnpm add @xlt-token/store-redis redis
 ```
 
 ### 2.2 最简集成（内存存储 + 默认 UUID 策略）
@@ -146,23 +150,17 @@ export class AuthController {
 
 ```ts twoslash
 import { createClient } from 'redis';
-import { XltTokenModule, RedisStore, XLT_REDIS_CLIENT } from '@xlt-token/nestjs';
+import { RedisStore } from '@xlt-token/store-redis';
+import { XltTokenModule } from '@xlt-token/nestjs';
+
+const redisClient = createClient({ url: 'redis://localhost:6379' });
+await redisClient.connect();
 
 @Module({
   imports: [
     XltTokenModule.forRoot({
       isGlobal: true,
-      store: { useClass: RedisStore },
-      providers: [
-        {
-          provide: XLT_REDIS_CLIENT,
-          useFactory: async () => {
-            const client = createClient({ url: 'redis://localhost:6379' });
-            await client.connect();
-            return client;
-          },
-        },
-      ],
+      store: { useValue: new RedisStore(redisClient) },
     }),
   ],
 })
@@ -218,7 +216,6 @@ XltTokenModule.forRootAsync({
   useFactory: (cfg: ConfigService) => ({
     config: { timeout: cfg.get<number>('TOKEN_TTL') },
   }),
-  store: { useClass: RedisStore },
 });
 ```
 
@@ -362,9 +359,9 @@ interface XltTokenStore {
 
 ### 6.3 `RedisStore`
 
-来源：`@/packages/nestjs/src/store/redis-store.ts`
+来源：`@/packages/store-redis/src/redis-store.ts`
 
-- 需注入 `XLT_REDIS_CLIENT`，兼容 `redis@4` / `redis@5` 客户端 API。
+- 构造函数接收 node-redis 客户端，兼容 `redis@4` / `redis@5` API。
 - 语义映射：
   - `set(key, val, -1)` → `SET key val`
   - `set(key, val, n)` → `SET key val EX n`
@@ -638,29 +635,24 @@ packages/core/src/
 packages/nestjs/src/
 ├── xlt-token.module.ts
 ├── guards/, decorators/
-├── store/redis-store.ts
+├── store/              # deprecated Redis DI 包装器
 ├── token/jwt-strategy.ts
 ├── exceptions/          # NestJS 异常包装
 └── index.ts             # re-export core + Nest 集成
 ```
 
-构建与发布以 `packages/nestjs`、`packages/core` 两个 npm 包为准。
+构建与发布包含 `packages/core`、`packages/store-redis`、`packages/nestjs` 和
+`packages/express`。
 
 ---
 
 ## 附：公共 API 导出一览
 
-| 分类 | `@xlt-token/core` | `@xlt-token/nestjs` |
-| ---- | ----------------- | --------------------------------- |
-| 工厂 | `createXltToken`, `XltTokenContext` | re-export |
-| 核心 | `StpLogic`, `StpUtil`, `StpPermLogic`, `XltSession` | re-export |
-| 配置 | `XltTokenConfig`, `DEFAULT_XLT_TOKEN_CONFIG`, DI Tokens | re-export |
-| 存储 | `XltTokenStore`, `MemoryStore` | + `RedisStore`, `XLT_REDIS_CLIENT` |
-| 策略 | `TokenStrategy`, `UuidStrategy` | + `JwtStrategy` |
-| HTTP | `HttpContext`, `createExpressContext` | re-export |
-| Hooks | `XltHooks`, `XLT_TOKEN_HOOKS` | re-export |
-| 模块 | — | `XltTokenModule`, `XltTokenModuleOptions` |
-| 装饰器 | — | `@LoginId`, `@XltIgnore`, `@XltCheckPermission`, … |
-| 守卫 | — | `XltTokenGuard`, `XltAbstractLoginGuard` |
-| 异常 | `XltError`, `NotLoginException`（纯 Error） | Nest 包装版（`UnauthorizedException` 子类） |
-| 常量 | `NotLoginType`, `XltMode` | re-export |
+| 分类 | `@xlt-token/core` | `@xlt-token/store-redis` | `@xlt-token/nestjs` |
+| ---- | ----------------- | ------------------------ | --------------------- |
+| 工厂 | `createXltToken`, `XltTokenContext` | — | re-export |
+| 核心 | `StpLogic`, `StpUtil`, `StpPermLogic`, `XltSession` | — | re-export |
+| 存储 | `XltTokenStore`, `MemoryStore` | `RedisStore`, `IORedisStore` | deprecated DI 包装器 |
+| 策略 | `TokenStrategy`, `UuidStrategy` | — | `JwtStrategy` |
+| 模块 | — | — | `XltTokenModule`, `XltTokenModuleOptions` |
+| 装饰器与守卫 | — | — | `@LoginId`, `@XltIgnore`, `XltTokenGuard`, … |

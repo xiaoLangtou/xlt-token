@@ -18,7 +18,6 @@ export default defineConfig({
     'reflect-metadata',
     'rxjs',
     'express',
-    'redis',
     'jsonwebtoken',
     'uuid',
   ],

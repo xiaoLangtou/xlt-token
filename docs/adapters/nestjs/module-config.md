@@ -31,19 +31,18 @@ export class AppModule {}
 
 ## 使用 `RedisStore`
 
-多实例部署时应使用 Redis 存储。`RedisStore` 适配 `redis`（node-redis）客户端，
-并通过 `XLT_REDIS_CLIENT` 注入。
+多实例部署时应使用 Redis 存储。新项目从 `@xlt-token/store-redis` 创建 Store，
+并通过 `store.useValue` 注册。
 
 ```ts twoslash
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { createClient } from 'redis';
-import {
-  RedisStore,
-  XLT_REDIS_CLIENT,
-  XltTokenGuard,
-  XltTokenModule,
-} from '@xlt-token/nestjs';
+import { RedisStore } from '@xlt-token/store-redis';
+import { XltTokenGuard, XltTokenModule } from '@xlt-token/nestjs';
+
+const redisClient = createClient({ url: process.env.REDIS_URL });
+await redisClient.connect();
 
 @Module({
   imports: [
@@ -53,17 +52,7 @@ import {
         tokenName: 'authorization',
         timeout: 30 * 24 * 60 * 60,
       },
-      store: { useClass: RedisStore },
-      providers: [
-        {
-          provide: XLT_REDIS_CLIENT,
-          useFactory: async () => {
-            const client = createClient({ url: 'redis://localhost:6379' });
-            await client.connect();
-            return client;
-          },
-        },
-      ],
+      store: { useValue: new RedisStore(redisClient) },
     }),
   ],
   providers: [{ provide: APP_GUARD, useClass: XltTokenGuard }],
@@ -73,17 +62,15 @@ export class AppModule {}
 
 ## 使用 `IORedisStore`
 
-项目使用 ioredis 时，通过 `IORedisStore` 和独立的 `XLT_IOREDIS_CLIENT` 令牌注入
-客户端：
+项目使用 ioredis 时，直接实例化 `IORedisStore`：
 
 ```ts twoslash
 import { Module } from '@nestjs/common';
 import Redis from 'ioredis';
-import {
-  IORedisStore,
-  XLT_IOREDIS_CLIENT,
-  XltTokenModule,
-} from '@xlt-token/nestjs';
+import { IORedisStore } from '@xlt-token/store-redis';
+import { XltTokenModule } from '@xlt-token/nestjs';
+
+const redisClient = new Redis(process.env.REDIS_URL);
 
 @Module({
   imports: [
@@ -93,13 +80,7 @@ import {
         tokenName: 'authorization',
         timeout: 30 * 24 * 60 * 60,
       },
-      store: { useClass: IORedisStore },
-      providers: [
-        {
-          provide: XLT_IOREDIS_CLIENT,
-          useFactory: () => new Redis(process.env.REDIS_URL),
-        },
-      ],
+      store: { useValue: new IORedisStore(redisClient) },
     }),
   ],
 })
@@ -109,8 +90,14 @@ export class AppModule {}
 安装对应客户端：
 
 ```bash
-pnpm add ioredis
+pnpm add @xlt-token/store-redis ioredis
 ```
+
+## 兼容旧版 NestJS 注入令牌
+
+`@xlt-token/nestjs` 暂时保留 `RedisStore`、`IORedisStore`、
+`XLT_REDIS_CLIENT` 和 `XLT_IOREDIS_CLIENT`。这些导出已标记 deprecated，现有项目
+可以继续使用，后续大版本再迁移到 `store.useValue`。
 
 ## `forRootAsync`
 

@@ -1,12 +1,12 @@
 {
-  "name": "@xlt-token/nestjs",
+  "name": "@xlt-token/store-redis",
   "version": "1.2.0",
-  "description": "NestJS integration for xlt-token",
+  "description": "Framework-agnostic Redis stores for xlt-token",
   "keywords": [
-    "nestjs",
     "token",
     "auth",
-    "jwt",
+    "redis",
+    "ioredis",
     "session"
   ],
   "author": "xltorg",
@@ -14,7 +14,7 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/xiaoLangtou/xlt-token.git",
-    "directory": "packages/nestjs"
+    "directory": "packages/store-redis"
   },
   "bugs": {
     "url": "https://github.com/xiaoLangtou/xlt-token/issues"
@@ -51,48 +51,28 @@
     "build:watch": "tsdown --watch",
     "prepublishOnly": "pnpm run build",
     "test": "vitest run",
-    "test:cov": "vitest run --coverage",
-    "test:e2e": "vitest run --config vitest.e2e.config.ts",
-    "test:e2e:cov": "vitest run --config vitest.e2e.config.ts --coverage",
-    "test:e2e:junit": "vitest run --config vitest.e2e.config.ts --reporter=junit --outputFile=reports/junit-e2e.xml"
+    "test:types": "tsc --noEmit --target ES2020 --module NodeNext --moduleResolution NodeNext --strict --esModuleInterop --skipLibCheck --types vitest/globals test/client-types.spec.ts",
+    "test:cov": "vitest run --coverage"
   },
   "peerDependencies": {
-    "@nestjs/common": "^10.0.0 || ^11.0.0 || ^12.0.0",
-    "@nestjs/core": "^10.0.0 || ^11.0.0 || ^12.0.0",
-    "jsonwebtoken": "^9.0.0",
-    "reflect-metadata": "^0.1.13 || ^0.2.0",
-    "rxjs": "^7.0.0"
+    "ioredis": "^5.0.0",
+    "redis": "^4.0.0 || ^5.0.0"
   },
   "peerDependenciesMeta": {
-    "jsonwebtoken": {
+    "ioredis": {
+      "optional": true
+    },
+    "redis": {
       "optional": true
     }
   },
   "dependencies": {
-    "@xlt-token/core": "^1.2.0",
-    "@xlt-token/store-redis": "^1.2.0",
-    "uuid": "^10.0.0"
+    "@xlt-token/core": "^1.2.0"
   },
   "devDependencies": {
-    "@fastify/cookie": "^9.4.0",
-    "@nestjs/common": "^10.0.0",
-    "@nestjs/core": "^10.0.0",
-    "@nestjs/platform-express": "^10.0.0",
-    "@nestjs/platform-fastify": "^10.4.22",
-    "@nestjs/testing": "^10.0.0",
-    "@swc/core": "^1.15.30",
-    "@types/jsonwebtoken": "^9.0.10",
-    "@types/node": "^20.0.0",
-    "@types/supertest": "^7.2.0",
-    "@types/uuid": "^10.0.0",
     "@vitest/coverage-v8": "^2.1.9",
-    "jsonwebtoken": "^9.0.3",
-    "reflect-metadata": "^0.1.13",
-    "rxjs": "^7.8.0",
-    "supertest": "^7.2.2",
     "tsdown": "^0.20.0",
     "typescript": "^5.1.0",
-    "unplugin-swc": "^1.5.9",
     "vitest": "^2.0.0"
   }
 }

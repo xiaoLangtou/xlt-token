@@ -1,5 +1,6 @@
 import { RedisStore, XLT_REDIS_CLIENT } from '../src/store/redis-store';
 import { Test, TestingModule } from '@nestjs/testing';
+import { RedisStore as BaseRedisStore } from '@xlt-token/store-redis';
 
 describe('RedisStore', () => {
   let store: RedisStore;
@@ -30,6 +31,10 @@ describe('RedisStore', () => {
 
   afterEach(() => {
     vi.clearAllMocks();
+  });
+
+  it('应该继承框架无关的 RedisStore', () => {
+    expect(store).toBeInstanceOf(BaseRedisStore);
   });
 
   describe('get', () => {

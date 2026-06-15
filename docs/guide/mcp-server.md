@@ -8,7 +8,7 @@ MCP Server 适合把项目知识、API 索引、示例和诊断工具以结构�
 | --- | --- |
 | `xlt-token://overview` | 包结构、职责边界、推荐 import |
 | `xlt-token://core-api` | `StpLogic`、`StpUtil`、`StpPermLogic`、`XltSession` |
-| `xlt-token://nestjs-api` | `XltTokenModule`、Guard、Decorator、RedisStore、JwtStrategy |
+| `xlt-token://nestjs-api` | `XltTokenModule`、Guard、Decorator、JwtStrategy、Redis 兼容包装器 |
 | `xlt-token://express-api` | `xltMiddleware`、route helpers、错误处理器 |
 | `xlt-token://testing` | 常用测试命令、fixture 位置、E2E 入口 |
 

@@ -39,7 +39,8 @@ import { createXltToken, StpUtil, MemoryStore } from '@xlt-token/core';
 | 包 | 职责 |
 | --- | --- |
 | `@xlt-token/core` | 鉴权算法、HttpContext、Store/Strategy 契约、Hooks |
-| `@xlt-token/nestjs` | Module、Guard、Decorator、RedisStore、JwtStrategy、Nest 异常包装 |
+| `@xlt-token/store-redis` | 框架无关的 RedisStore、IORedisStore |
+| `@xlt-token/nestjs` | Module、Guard、Decorator、JwtStrategy、Nest 异常包装 |
 
 ## 行为变化（内部实现，对外 API 不变）
 
@@ -51,7 +52,7 @@ import { createXltToken, StpUtil, MemoryStore } from '@xlt-token/core';
 
 ```bash
 pnpm add @xlt-token/nestjs
-pnpm add redis              # 可选：RedisStore
+pnpm add @xlt-token/store-redis redis
 pnpm add jsonwebtoken       # 可选：JwtStrategy
 ```
 
@@ -59,7 +60,7 @@ pnpm add jsonwebtoken       # 可选：JwtStrategy
 
 - `@nestjs/common`、`@nestjs/core`
 - `reflect-metadata`、`rxjs`
-- 可选：`redis`、`jsonwebtoken`
+- 可选：`jsonwebtoken`
 
 ## 常见问题
 

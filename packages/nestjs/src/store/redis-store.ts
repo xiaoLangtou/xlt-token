@@ -1,87 +1,21 @@
-import type { XltTokenStore } from '@xlt-token/core';
 import { Inject, Injectable } from '@nestjs/common';
+import {
+  RedisStore as BaseRedisStore,
+  type RedisClient,
+} from '@xlt-token/store-redis';
 
+export const XLT_REDIS_CLIENT = 'XLT_REDIS_CLIENT';
 
-export  const XLT_REDIS_CLIENT = 'XLT_REDIS_CLIENT';
-
-
+/**
+ * @deprecated Import `RedisStore` from `@xlt-token/store-redis` and provide it
+ * through `store.useValue` for new applications.
+ */
 @Injectable()
-export  class RedisStore implements XltTokenStore {
-
+export class RedisStore extends BaseRedisStore {
   constructor(
     @Inject(XLT_REDIS_CLIENT)
-    private readonly redisClient: any,
+    redisClient: RedisClient,
   ) {
-
-  }
-
-
-  async get(key:string):Promise<string | null> {
-    return this.redisClient.get(key);
-  }
-
-
-  async set(key:string, value:string, timeoutSec:number):Promise<void> {
-    if (timeoutSec === -1){
-      await this.redisClient.set(key, value);
-    }else {
-      await this.redisClient.set(key, value, {EX: timeoutSec});
-    }
-  }
-
-
-  async delete(key:string):Promise<void> {
-    await this.redisClient.del(key);
-  }
-
-
-  async update(key:string, value:string):Promise<void> {
-    const result = await this.redisClient.set(key, value,{XX:true,KEEPTTL:true})
-    if (result ===null){
-      throw new Error(`Key not found: ${key}`);
-    }
-  }
-
-
-  async has(key:string):Promise<boolean> {
-    const result = await this.redisClient.exists(key);
-    return result === 1;
-  }
-
-
-  async updateTimeout(key:string, timeoutSec:number):Promise<void> {
-    const exists =  await  this.redisClient.exists(key);
-
-    if (!exists) {
-      throw new Error(`Key not found: ${key}`);
-    }
-
-    if (timeoutSec === -1) {
-      await this.redisClient.persist(key);
-    }else {
-      await this.redisClient.expire(key, timeoutSec);
-    }
-
-  }
-
-  async getTimeout(key:string):Promise<number> {
-    const result = await this.redisClient.ttl(key);
-    // Redis TTL 返回值约定：
-    // -2 = key 不存在
-    // -1 = key 存在但无过期时间（永久）
-    // >0 = 剩余秒数
-    // 恰好与 XltTokenStore 接口约定一致
-    return result;
-  }
-
-  async keys(pattern: string): Promise<string[]> {
-    const result: string[] = [];
-    let cursor = "0";
-    do {
-      const reply = await this.redisClient.scan(cursor, { MATCH: pattern, COUNT: 100 });
-      cursor = String(reply.cursor);
-      result.push(...reply.keys);
-    } while (cursor !== "0");
-    return result;
+    super(redisClient);
   }
 }

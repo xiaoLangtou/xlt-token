@@ -17,7 +17,7 @@
 ```bash
 pnpm add @xlt-token/nestjs
 # 使用 Redis 存储（可选）
-pnpm add redis
+pnpm add @xlt-token/store-redis redis
 ```
 
 ## 最小集成（内存存储）
@@ -118,25 +118,19 @@ curl -X POST http://localhost:3000/auth/logout \
 
 ```ts twoslash
 import { createClient } from 'redis';
-import { XltTokenModule, RedisStore, XLT_REDIS_CLIENT, XltTokenGuard } from '@xlt-token/nestjs';
+import { RedisStore } from '@xlt-token/store-redis';
+import { XltTokenModule, XltTokenGuard } from '@xlt-token/nestjs';
 import { APP_GUARD } from '@nestjs/core';
+
+const redisClient = createClient({ url: 'redis://localhost:6379' });
+await redisClient.connect();
 
 @Module({
   imports: [
     XltTokenModule.forRoot({
       isGlobal: true,
       config: { tokenName: 'authorization', timeout: 604800 },
-      store: { useClass: RedisStore },
-      providers: [
-        {
-          provide: XLT_REDIS_CLIENT,
-          useFactory: async () => {
-            const client = createClient({ url: 'redis://localhost:6379' });
-            await client.connect();
-            return client;
-          },
-        },
-      ],
+      store: { useValue: new RedisStore(redisClient) },
     }),
   ],
   providers: [{ provide: APP_GUARD, useClass: XltTokenGuard }],

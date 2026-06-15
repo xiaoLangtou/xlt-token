@@ -10,15 +10,5 @@ export default defineConfig({
   },
   clean: true,
   platform: 'node',
-  external: [
-    '@nestjs/common',
-    '@nestjs/core',
-    '@xlt-token/core',
-    '@xlt-token/store-redis',
-    'reflect-metadata',
-    'rxjs',
-    'express',
-    'jsonwebtoken',
-    'uuid',
-  ],
+  external: ['@xlt-token/core', 'redis', 'ioredis'],
 });

@@ -8,11 +8,11 @@
 
 📖 **在线文档**: https://xiaolangtou.github.io/xlt-token/
 
-xlt-token 是一个轻量级 token 认证库，提供灵活的 token 管理、会话控制、多端登录、权限校验，以及可插拔的存储与策略。鉴权语义集中在 `@xlt-token/core`；NestJS 集成（Module、Guard、Decorator、RedisStore、JwtStrategy）在 `@xlt-token/nestjs`。
+xlt-token 是一个轻量级 token 认证库，提供灵活的 token 管理、会话控制、多端登录、权限校验，以及可插拔的存储与策略。鉴权语义集中在 `@xlt-token/core`；Redis 实现在 `@xlt-token/store-redis`；NestJS 集成（Module、Guard、Decorator、JwtStrategy）在 `@xlt-token/nestjs`。
 
 ## 特性
 
-- 🧩 **核心 + 适配器** - monorepo 分层：`@xlt-token/core` 承载鉴权引擎，`@xlt-token/nestjs` 提供 NestJS 集成
+- 🧩 **核心 + 实现 + 适配器** - Core、Redis Store 与框架适配器按包解耦
 - 🔐 **灵活的 Token 管理** - 支持登录、登出、续签、踢人下线等完整生命周期
 - 🌐 **多端登录** - 支持按 `device` 独立会话，可配置互踢 / 顶号 / 共享 token
 - 💾 **内置存储** - 内置内存存储和 Redis 存储实现，开箱即用
@@ -46,11 +46,17 @@ npm install @xlt-token/nestjs
 pnpm add xlt-token
 ```
 
-可选依赖：
+Redis 存储按客户端选择安装：
 
 ```bash
-pnpm add redis              # RedisStore
-pnpm add ioredis            # IORedisStore
+pnpm add @xlt-token/store-redis redis
+# 或
+pnpm add @xlt-token/store-redis ioredis
+```
+
+其他可选依赖：
+
+```bash
 pnpm add jsonwebtoken       # JwtStrategy
 ```
 
@@ -59,7 +65,9 @@ pnpm add jsonwebtoken       # JwtStrategy
 | 包 | 职责 | 典型 import |
 | --- | --- | --- |
 | `@xlt-token/core` | 鉴权引擎、HttpContext、Store / Strategy 契约、Hooks | `createXltToken`, `StpLogic`, `MemoryStore` |
-| `@xlt-token/nestjs` | Module、Guard、Decorator、RedisStore、IORedisStore、JwtStrategy | `XltTokenModule`, `XltTokenGuard`, `@LoginId()` |
+| `@xlt-token/store-redis` | 框架无关的 node-redis / ioredis Store | `RedisStore`, `IORedisStore` |
+| `@xlt-token/nestjs` | Module、Guard、Decorator、JwtStrategy | `XltTokenModule`, `XltTokenGuard`, `@LoginId()` |
+| `@xlt-token/express` | Express 中间件、路由策略、错误处理 | `xltMiddleware`, `xltErrorHandler` |
 | `xlt-token` | 兼容包，等价于 `@xlt-token/nestjs` | `XltTokenModule`, `StpUtil` |
 
 - NestJS 集成 → `@xlt-token/nestjs`（或 `xlt-token`）
@@ -410,23 +418,17 @@ try {
 
 ```ts
 import { Module } from '@nestjs/common';
-import { XltTokenModule, RedisStore, XLT_REDIS_CLIENT } from '@xlt-token/nestjs';
+import { XltTokenModule } from '@xlt-token/nestjs';
+import { RedisStore } from '@xlt-token/store-redis';
 import { createClient } from 'redis';
+
+const redisClient = createClient({ url: 'redis://localhost:6379' });
+await redisClient.connect();
 
 @Module({
   imports: [
     XltTokenModule.forRoot({
-      store: { useClass: RedisStore },
-      providers: [
-        {
-          provide: XLT_REDIS_CLIENT,
-          useFactory: async () => {
-            const client = createClient({ url: 'redis://localhost:6379' });
-            await client.connect();
-            return client;
-          },
-        },
-      ],
+      store: { useValue: new RedisStore(redisClient) },
     }),
   ],
 })

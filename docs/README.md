@@ -1,6 +1,6 @@
 # xlt-token 文档
 
-> 框架无关 Token 鉴权库，灵感来源于 Sa-Token。核心 `@xlt-token/core` + NestJS 适配 `@xlt-token/nestjs` + Express 适配 `@xlt-token/express`。
+> 框架无关 Token 鉴权库。核心、Redis Store、NestJS 与 Express 适配器按包解耦。
 
 在线文档：[VitePress 站点](/)（本地：`pnpm docs:dev`）
 
@@ -28,27 +28,27 @@
 
 ## 包结构与 import
 
-| 能力 | `@xlt-token/core` | `@xlt-token/nestjs` | `@xlt-token/express` |
-| --- | --- | --- | --- |
-| `StpLogic` / `StpUtil` / `createXltToken` | ✅ | ✅ re-export | — |
-| `MemoryStore` / `UuidStrategy` | ✅ | ✅ re-export | — |
-| `HttpContext` / `XltHooks` | ✅ | ✅ re-export | — |
-| `XltTokenModule` / Guard / Decorator | — | ✅ | — |
-| `RedisStore` / `JwtStrategy` | — | ✅ | — |
-| `xltMiddleware` / route helper / `xltErrorHandler` | — | — | ✅ |
+| 能力 | `core` | `store-redis` | `nestjs` | `express` |
+| --- | --- | --- | --- | --- |
+| `StpLogic` / `createXltToken` | ✅ | — | ✅ re-export | ✅ re-export |
+| `MemoryStore` / `UuidStrategy` | ✅ | — | ✅ re-export | ✅ re-export |
+| `RedisStore` / `IORedisStore` | — | ✅ | deprecated 包装器 | — |
+| Module / Guard / Decorator / JWT | — | — | ✅ | — |
+| Middleware / route helper / error handler | — | — | — | ✅ |
 
 **安装**：
 
 ```bash
 pnpm add @xlt-token/nestjs
 pnpm add express @xlt-token/express
-pnpm add redis              # 可选：RedisStore
+pnpm add @xlt-token/store-redis redis
 pnpm add jsonwebtoken       # 可选：JwtStrategy
 ```
 
 **import 约定**：
 
-- NestJS 集成（Module、Guard、Decorator、Redis、JWT）→ `@xlt-token/nestjs`
+- Redis 存储实现 → `@xlt-token/store-redis`
+- NestJS 集成（Module、Guard、Decorator、JWT）→ `@xlt-token/nestjs`
 - Express 集成（Middleware、route helper、错误处理器）→ `@xlt-token/express`
 - 框架无关核心（`createXltToken`、类型、自定义 Store 接口）→ `@xlt-token/core`
 

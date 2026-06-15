@@ -1,6 +1,6 @@
 # 06 · 存储层
 
-> 接口与 `MemoryStore`：`@xlt-token/core`；`RedisStore` 和 `IORedisStore`：`@xlt-token/nestjs`。
+> 接口与 `MemoryStore`：`@xlt-token/core`；`RedisStore` 和 `IORedisStore`：`@xlt-token/store-redis`。
 
 `XltTokenStore` 接口 + 三种内置实现（`MemoryStore` / `RedisStore` / `IORedisStore`）+ 自定义存储。
 
@@ -61,11 +61,11 @@ XltTokenModule.forRoot({
 
 ## `RedisStore`（生产推荐）
 
-源码：`packages/nestjs/src/store/redis-store.ts`
+源码：`packages/store-redis/src/redis-store.ts`
 
 ### 特性
 
-- 依赖注入 `XLT_REDIS_CLIENT`
+- 构造函数直接接收 node-redis 客户端
 - 兼容 `redis@4` / `redis@5` 两套客户端 API
 - 多实例共享、天然支持分布式会话
 
@@ -88,32 +88,30 @@ XltTokenModule.forRoot({
 
 ### 基本用法
 
-```ts twoslash
-import { createClient } from 'redis';
-import { XltTokenModule, RedisStore, XLT_REDIS_CLIENT } from '@xlt-token/nestjs';
-
-@Module({
-  imports: [
-    XltTokenModule.forRoot({
-      isGlobal: true,
-      store: { useClass: RedisStore },
-      providers: [
-        {
-          provide: XLT_REDIS_CLIENT,
-          useFactory: async () => {
-            const client = createClient({ url: 'redis://localhost:6379' });
-            await client.connect();
-            return client;
-          },
-        },
-      ],
-    }),
-  ],
-})
-export class AppModule {}
+```bash
+pnpm add @xlt-token/store-redis redis
 ```
 
-### 从 `ConfigService` 读取连接信息（推荐）
+```ts twoslash
+import { createXltToken } from '@xlt-token/core';
+import { RedisStore } from '@xlt-token/store-redis';
+import { createClient } from 'redis';
+
+const client = createClient({ url: process.env.REDIS_URL });
+await client.connect();
+
+const xlt = createXltToken({
+  store: new RedisStore(client),
+});
+```
+
+### NestJS 兼容 DI 用法
+
+`@xlt-token/nestjs` 继续导出 `RedisStore` 和 `XLT_REDIS_CLIENT`，用于兼容已有项目。
+新项目应优先从 `@xlt-token/store-redis` 创建 Store，并通过 `store.useValue` 注册。
+
+以下 `forRootAsync` 示例保留旧注入方式，适合 Redis 客户端由 Nest Provider 创建的
+现有项目：
 
 ```ts twoslash
 XltTokenModule.forRootAsync({
@@ -188,28 +186,18 @@ redis-cli GET authorization:login:session:1001
 `SCAN` 返回值格式。先安装可选依赖：
 
 ```bash
-pnpm add ioredis
+pnpm add @xlt-token/store-redis ioredis
 ```
 
-通过独立的 `XLT_IOREDIS_CLIENT` 令牌注入客户端：
+直接把客户端传给 Store：
 
 ```ts twoslash
 import Redis from 'ioredis';
-import {
-  IORedisStore,
-  XLT_IOREDIS_CLIENT,
-  XltTokenModule,
-} from '@xlt-token/nestjs';
+import { createXltToken } from '@xlt-token/core';
+import { IORedisStore } from '@xlt-token/store-redis';
 
-XltTokenModule.forRoot({
-  isGlobal: true,
-  store: { useClass: IORedisStore },
-  providers: [
-    {
-      provide: XLT_IOREDIS_CLIENT,
-      useFactory: () => new Redis(process.env.REDIS_URL),
-    },
-  ],
+const xlt = createXltToken({
+  store: new IORedisStore(new Redis(process.env.REDIS_URL)),
 });
 ```
 

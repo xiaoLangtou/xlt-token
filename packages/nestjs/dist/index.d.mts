@@ -1,6 +1,7 @@
 import * as _nestjs_common0 from "@nestjs/common";
 import { CanActivate, ExecutionContext, ForbiddenException, ModuleMetadata, Provider, UnauthorizedException } from "@nestjs/common";
 import { AuthResult, CreateOptions, DEFAULT_XLT_TOKEN_CONFIG, DeviceInfo, DurationInput, HttpContext, MemoryStore, NotLoginType, NotLoginType as NotLoginType$1, StpInterface, StpInterface as StpInterface$1, StpLogic, StpLogic as StpLogic$1, StpPermLogic, StpPermLogic as StpPermLogic$1, StpUtil, TokenStrategy, TokenStrategy as TokenStrategy$1, UuidStrategy, XLT_STP_INTERFACE, XLT_TOKEN_CONFIG, XLT_TOKEN_HOOKS, XLT_TOKEN_STORE, XLT_TOKEN_STRATEGY, XltHooks, XltHooks as XltHooks$1, XltMode, XltMode as XltMode$1, XltSession, XltTokenConfig, XltTokenConfig as XltTokenConfig$1, XltTokenConfigInput, XltTokenContext, XltTokenStore, XltTokenStore as XltTokenStore$1, createExpressContext, createMockHttpContext, createXltToken, matchPermission, setStpLogic, setStpPermLogic } from "@xlt-token/core";
+import { IORedisClient, IORedisStore as IORedisStore$1, RedisClient, RedisStore as RedisStore$1 } from "@xlt-token/store-redis";
 import { Reflector } from "@nestjs/core";
 
 //#region src/xlt-token.module.d.ts
@@ -65,47 +66,22 @@ declare class XltTokenModule {
 //#endregion
 //#region src/store/redis-store.d.ts
 declare const XLT_REDIS_CLIENT = "XLT_REDIS_CLIENT";
-declare class RedisStore implements XltTokenStore$1 {
-  private readonly redisClient;
-  constructor(redisClient: any);
-  get(key: string): Promise<string | null>;
-  set(key: string, value: string, timeoutSec: number): Promise<void>;
-  delete(key: string): Promise<void>;
-  update(key: string, value: string): Promise<void>;
-  has(key: string): Promise<boolean>;
-  updateTimeout(key: string, timeoutSec: number): Promise<void>;
-  getTimeout(key: string): Promise<number>;
-  keys(pattern: string): Promise<string[]>;
+/**
+ * @deprecated Import `RedisStore` from `@xlt-token/store-redis` and provide it
+ * through `store.useValue` for new applications.
+ */
+declare class RedisStore extends RedisStore$1 {
+  constructor(redisClient: RedisClient);
 }
 //#endregion
 //#region src/store/ioredis-store.d.ts
 declare const XLT_IOREDIS_CLIENT = "XLT_IOREDIS_CLIENT";
-interface IORedisScanClient {
-  scan(cursor: string, matchToken: 'MATCH', pattern: string, countToken: 'COUNT', count: number): Promise<[string, string[]]>;
-}
-interface IORedisClient extends IORedisScanClient {
-  get(key: string): Promise<string | null>;
-  set(key: string, value: string): Promise<string | null>;
-  set(key: string, value: string, mode: 'EX', timeoutSec: number): Promise<string | null>;
-  set(key: string, value: string, condition: 'XX', keepTtl: 'KEEPTTL'): Promise<string | null>;
-  del(key: string): Promise<number>;
-  exists(key: string): Promise<number>;
-  persist(key: string): Promise<number>;
-  expire(key: string, timeoutSec: number): Promise<number>;
-  ttl(key: string): Promise<number>;
-  nodes?(role: 'master'): IORedisScanClient[];
-}
-declare class IORedisStore implements XltTokenStore$1 {
-  private readonly redisClient;
+/**
+ * @deprecated Import `IORedisStore` from `@xlt-token/store-redis` and provide it
+ * through `store.useValue` for new applications.
+ */
+declare class IORedisStore extends IORedisStore$1 {
   constructor(redisClient: IORedisClient);
-  get(key: string): Promise<string | null>;
-  set(key: string, value: string, timeoutSec: number): Promise<void>;
-  delete(key: string): Promise<void>;
-  update(key: string, value: string): Promise<void>;
-  has(key: string): Promise<boolean>;
-  updateTimeout(key: string, timeoutSec: number): Promise<void>;
-  getTimeout(key: string): Promise<number>;
-  keys(pattern: string): Promise<string[]>;
 }
 //#endregion
 //#region src/token/jwt-strategy.d.ts

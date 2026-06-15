@@ -15,6 +15,40 @@ pnpm add express @xlt-token/express
 pnpm add -D @types/express
 ```
 
+## Redis 存储
+
+Express 适配器可以直接使用框架无关的 `@xlt-token/store-redis`。应用负责创建和连接
+Redis 客户端，再把 Store 实例传给 `createXltToken`。
+
+```bash
+pnpm add @xlt-token/store-redis redis
+```
+
+```ts twoslash [src/xlt.ts]
+import { createXltToken } from '@xlt-token/express';
+import { RedisStore } from '@xlt-token/store-redis';
+import { createClient } from 'redis';
+
+const redisClient = createClient({ url: process.env.REDIS_URL });
+await redisClient.connect();
+
+export const xlt = createXltToken({
+  store: new RedisStore(redisClient),
+});
+```
+
+使用 ioredis 时，安装 `ioredis` 并替换 Store：
+
+```ts twoslash [src/xlt-ioredis.ts]
+import { createXltToken } from '@xlt-token/express';
+import { IORedisStore } from '@xlt-token/store-redis';
+import Redis from 'ioredis';
+
+export const xlt = createXltToken({
+  store: new IORedisStore(new Redis(process.env.REDIS_URL)),
+});
+```
+
 ## 最小应用
 
 先创建一个 `XltTokenContext`，再把 `xltMiddleware` 挂到 Router 或应用上。`xltErrorHandler()` 需要放在路由之后，用于把 core 异常转换为 JSON 响应。

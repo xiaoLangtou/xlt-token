@@ -1,5 +1,6 @@
 import { Test, type TestingModule } from '@nestjs/testing';
 import { IORedisStore, XLT_IOREDIS_CLIENT } from '../src/store/ioredis-store';
+import { IORedisStore as BaseIORedisStore } from '@xlt-token/store-redis';
 
 describe('IORedisStore', () => {
   let store: IORedisStore;
@@ -40,6 +41,10 @@ describe('IORedisStore', () => {
 
   afterEach(() => {
     vi.clearAllMocks();
+  });
+
+  it('extends the framework-agnostic IORedisStore', () => {
+    expect(store).toBeInstanceOf(BaseIORedisStore);
   });
 
   it('gets a value', async () => {

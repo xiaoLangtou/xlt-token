@@ -135,7 +135,7 @@ NestJS 用户通过 `StpLogic` / `StpUtil` 透明调用，无感知。
 | --- | --- | --- |
 | NestJS 项目 | `pnpm add @xlt-token/nestjs` | `@xlt-token/nestjs` |
 | Express / 脚本 / 自研框架 | `pnpm add @xlt-token/core` | `@xlt-token/core` |
-| Redis 存储 | 额外 `pnpm add redis` | `RedisStore` from nestjs 包 |
+| Redis 存储 | `pnpm add @xlt-token/store-redis redis` | 框架无关 `RedisStore` |
 | JWT Token | 额外 `pnpm add jsonwebtoken` | `JwtStrategy` from nestjs 包 |
 
 ### 2.2 NestJS 标准接入（3 步）

@@ -1,6 +1,6 @@
 # 02 · 架构设计
 
-xlt-token 采用 **「框架无关核心 + 框架适配器」** 的 monorepo 结构。鉴权语义集中在 `@xlt-token/core`；NestJS 集成在 `@xlt-token/nestjs`。
+xlt-token 采用 **「框架无关核心 + 可选实现 + 框架适配器」** 的 monorepo 结构。鉴权语义集中在 `@xlt-token/core`；Redis 实现在 `@xlt-token/store-redis`；NestJS 和 Express 只负责框架接入。
 
 > Express 适配器（`@xlt-token/express`）v1.0.0 已正式发布，提供中间件与路由策略覆盖。Hono / Fastify 等更多框架适配正在规划中。
 
@@ -9,7 +9,8 @@ xlt-token 采用 **「框架无关核心 + 框架适配器」** 的 monorepo 结
 | 包 | 职责 | 典型 import |
 | --- | --- | --- |
 | `@xlt-token/core` | 鉴权引擎、HttpContext、Store/Strategy 契约、Hooks、观测性 API | `createXltToken`, `StpLogic`, `MemoryStore` |
-| `@xlt-token/nestjs` | Module、Guard、Decorator、RedisStore、JwtStrategy、Nest 异常包装 | `XltTokenModule`, `XltTokenGuard`, `@LoginId()` |
+| `@xlt-token/store-redis` | node-redis / ioredis 的框架无关 Store 实现 | `RedisStore`, `IORedisStore` |
+| `@xlt-token/nestjs` | Module、Guard、Decorator、JwtStrategy、Nest 异常包装 | `XltTokenModule`, `XltTokenGuard`, `@LoginId()` |
 | `@xlt-token/express` | 中间件、路由策略、请求上下文适配 | `xltMiddleware`, `requireLogin`, `checkPermission` |
 
 ```
@@ -23,11 +24,15 @@ packages/
 │   ├── hooks/     # XltHooks
 │   └── factory.ts # createXltToken()
 │
+├── store-redis/   # @xlt-token/store-redis — 框架无关 Redis 实现
+│   ├── redis-store.ts
+│   └── ioredis-store.ts
+│
 ├── nestjs/        # @xlt-token/nestjs — NestJS 集成
 │   ├── xlt-token.module.ts
 │   ├── guards/
 │   ├── decorators/
-│   ├── store/redis-store.ts   # RedisStore（暂留 nestjs 包）
+│   ├── store/      # deprecated Redis DI 兼容包装器
 │   └── token/jwt-strategy.ts    # JwtStrategy（暂留 nestjs 包）
 │
 └── express/       # @xlt-token/express — Express 中间件

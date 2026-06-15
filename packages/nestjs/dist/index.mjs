@@ -1,6 +1,7 @@
 import { createRequire } from "node:module";
 import { ForbiddenException, Inject, Injectable, Module, Optional, SetMetadata, UnauthorizedException, createParamDecorator } from "@nestjs/common";
 import { DEFAULT_XLT_TOKEN_CONFIG, MemoryStore, MemoryStore as MemoryStore$1, NotLoginException as NotLoginException$1, NotLoginType, NotLoginType as NotLoginType$1, NotPermissionException as NotPermissionException$1, NotRoleException as NotRoleException$1, NotSafeException as NotSafeException$1, StpLogic, StpLogic as StpLogic$1, StpPermLogic, StpPermLogic as StpPermLogic$1, StpUtil, UuidStrategy, UuidStrategy as UuidStrategy$1, XLT_CHECK_LOGIN_KEY, XLT_IGNORE_KEY, XLT_PERMISSION_KEY, XLT_ROLE_KEY, XLT_STP_INTERFACE, XLT_STP_INTERFACE as XLT_STP_INTERFACE$1, XLT_TOKEN_CONFIG, XLT_TOKEN_CONFIG as XLT_TOKEN_CONFIG$1, XLT_TOKEN_HOOKS, XLT_TOKEN_HOOKS as XLT_TOKEN_HOOKS$1, XLT_TOKEN_STORE, XLT_TOKEN_STORE as XLT_TOKEN_STORE$1, XLT_TOKEN_STRATEGY, XLT_TOKEN_STRATEGY as XLT_TOKEN_STRATEGY$1, XltMode, XltMode as XltMode$1, XltSession, createExpressContext, createExpressContext as createExpressContext$1, createMockHttpContext, createXltToken, matchPermission, normalizeXltTokenConfig, setStpLogic, setStpLogic as setStpLogic$1, setStpPermLogic, setStpPermLogic as setStpPermLogic$1 } from "@xlt-token/core";
+import { IORedisStore as IORedisStore$1, RedisStore as RedisStore$1 } from "@xlt-token/store-redis";
 import { randomUUID } from "node:crypto";
 import { Reflector } from "@nestjs/core";
 
@@ -176,49 +177,9 @@ function __decorateParam(paramIndex, decorator) {
 //#endregion
 //#region src/store/redis-store.ts
 const XLT_REDIS_CLIENT = "XLT_REDIS_CLIENT";
-let RedisStore = class RedisStore {
+let RedisStore = class RedisStore extends RedisStore$1 {
 	constructor(redisClient) {
-		this.redisClient = redisClient;
-	}
-	async get(key) {
-		return this.redisClient.get(key);
-	}
-	async set(key, value, timeoutSec) {
-		if (timeoutSec === -1) await this.redisClient.set(key, value);
-		else await this.redisClient.set(key, value, { EX: timeoutSec });
-	}
-	async delete(key) {
-		await this.redisClient.del(key);
-	}
-	async update(key, value) {
-		if (await this.redisClient.set(key, value, {
-			XX: true,
-			KEEPTTL: true
-		}) === null) throw new Error(`Key not found: ${key}`);
-	}
-	async has(key) {
-		return await this.redisClient.exists(key) === 1;
-	}
-	async updateTimeout(key, timeoutSec) {
-		if (!await this.redisClient.exists(key)) throw new Error(`Key not found: ${key}`);
-		if (timeoutSec === -1) await this.redisClient.persist(key);
-		else await this.redisClient.expire(key, timeoutSec);
-	}
-	async getTimeout(key) {
-		return await this.redisClient.ttl(key);
-	}
-	async keys(pattern) {
-		const result = [];
-		let cursor = "0";
-		do {
-			const reply = await this.redisClient.scan(cursor, {
-				MATCH: pattern,
-				COUNT: 100
-			});
-			cursor = String(reply.cursor);
-			result.push(...reply.keys);
-		} while (cursor !== "0");
-		return result;
+		super(redisClient);
 	}
 };
 RedisStore = __decorate([
@@ -230,52 +191,9 @@ RedisStore = __decorate([
 //#endregion
 //#region src/store/ioredis-store.ts
 const XLT_IOREDIS_CLIENT = "XLT_IOREDIS_CLIENT";
-let IORedisStore = class IORedisStore {
+let IORedisStore = class IORedisStore extends IORedisStore$1 {
 	constructor(redisClient) {
-		this.redisClient = redisClient;
-	}
-	async get(key) {
-		return this.redisClient.get(key);
-	}
-	async set(key, value, timeoutSec) {
-		if (timeoutSec === -1) {
-			await this.redisClient.set(key, value);
-			return;
-		}
-		await this.redisClient.set(key, value, "EX", timeoutSec);
-	}
-	async delete(key) {
-		await this.redisClient.del(key);
-	}
-	async update(key, value) {
-		if (await this.redisClient.set(key, value, "XX", "KEEPTTL") === null) throw new Error(`Key not found: ${key}`);
-	}
-	async has(key) {
-		return await this.redisClient.exists(key) === 1;
-	}
-	async updateTimeout(key, timeoutSec) {
-		if (!await this.redisClient.exists(key)) throw new Error(`Key not found: ${key}`);
-		if (timeoutSec === -1) {
-			await this.redisClient.persist(key);
-			return;
-		}
-		await this.redisClient.expire(key, timeoutSec);
-	}
-	async getTimeout(key) {
-		return this.redisClient.ttl(key);
-	}
-	async keys(pattern) {
-		const result = [];
-		const clients = this.redisClient.nodes?.("master") ?? [this.redisClient];
-		for (const client of clients) {
-			let cursor = "0";
-			do {
-				const [nextCursor, keys] = await client.scan(cursor, "MATCH", pattern, "COUNT", 100);
-				cursor = nextCursor;
-				result.push(...keys);
-			} while (cursor !== "0");
-		}
-		return result;
+		super(redisClient);
 	}
 };
 IORedisStore = __decorate([

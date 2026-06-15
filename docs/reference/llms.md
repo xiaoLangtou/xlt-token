@@ -11,7 +11,8 @@
 | 包 | 职责 | 关键入口 |
 | --- | --- | --- |
 | `@xlt-token/core` | 框架无关鉴权引擎、Store 契约、Token 策略、权限、会话、Hooks、HTTP 上下文、异常 | `packages/core/src/index.ts` |
-| `@xlt-token/nestjs` | NestJS Module、Guard、Decorator、RedisStore、JwtStrategy，并 re-export Core | `packages/nestjs/src/index.ts` |
+| `@xlt-token/store-redis` | 框架无关的 RedisStore、IORedisStore | `packages/store-redis/src/index.ts` |
+| `@xlt-token/nestjs` | NestJS Module、Guard、Decorator、JwtStrategy，并 re-export Core | `packages/nestjs/src/index.ts` |
 | `@xlt-token/express` | Express middleware、route helper、请求状态同步、错误处理器 | `packages/express/src/index.ts` |
 | `xlt-token` | 兼容包，等价于 re-export `@xlt-token/nestjs` | `src/index.ts` |
 
@@ -42,7 +43,8 @@
 ## 编码边界
 
 - 框架无关行为放在 `@xlt-token/core`。
-- NestJS DI、Guard、Decorator、RedisStore、JwtStrategy 放在 `@xlt-token/nestjs`。
+- Redis Store 放在 `@xlt-token/store-redis`。
+- NestJS DI、Guard、Decorator、JwtStrategy 放在 `@xlt-token/nestjs`。
 - Express 中间件、route helper、错误处理器放在 `@xlt-token/express`。
 - 各包的 `src/index.ts` 是公共 API 边界，修改导出前要考虑兼容性。
 - NestJS decorators 和 Express route helpers 应描述路由鉴权元信息，不要复制 Core 鉴权逻辑。
