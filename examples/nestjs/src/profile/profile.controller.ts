@@ -1,6 +1,6 @@
-import { Controller, Get, Req, UseGuards } from '@nestjs/common';
-import { XltIgnore } from '@xlt-token/nestjs';
-import { ProfileLoginGuard } from '../guards/profile-login.guard';
+import { Controller, Get, Req, UseGuards } from "@nestjs/common";
+import { XltIgnore } from "@xlt-token/nestjs";
+import { ProfileLoginGuard } from "../guards/profile-login.guard";
 
 /**
  * XltAbstractLoginGuard 演示：
@@ -9,9 +9,9 @@ import { ProfileLoginGuard } from '../guards/profile-login.guard';
  */
 @XltIgnore()
 @UseGuards(ProfileLoginGuard)
-@Controller('profile')
+@Controller("profile")
 export class ProfileController {
-  @Get('me')
+  @Get("me")
   me(@Req() req: any) {
     return {
       stpLoginId: req.stpLoginId,

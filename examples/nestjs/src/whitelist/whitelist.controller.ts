@@ -1,5 +1,5 @@
-import { Controller, Get } from '@nestjs/common';
-import { LoginId, XltCheckLogin, XltIgnore } from '@xlt-token/nestjs';
+import { Controller, Get } from "@nestjs/common";
+import { LoginId, XltCheckLogin, XltIgnore } from "@xlt-token/nestjs";
 
 /**
  * 白名单模式（defaultCheck: false）专用控制器。
@@ -9,17 +9,17 @@ import { LoginId, XltCheckLogin, XltIgnore } from '@xlt-token/nestjs';
  * - 未标注的路由默认公开
  * - @XltCheckLogin 的路由需要登录
  */
-@Controller('whitelist')
+@Controller("whitelist")
 export class WhitelistController {
   @XltIgnore()
-  @Get('public')
+  @Get("public")
   publicRoute() {
-    return { mode: 'whitelist', access: 'public' };
+    return { mode: "whitelist", access: "public" };
   }
 
   @XltCheckLogin()
-  @Get('private')
+  @Get("private")
   privateRoute(@LoginId() loginId: string) {
-    return { mode: 'whitelist', access: 'private', loginId };
+    return { mode: "whitelist", access: "private", loginId };
   }
 }

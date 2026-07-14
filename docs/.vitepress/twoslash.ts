@@ -50,4 +50,4 @@ import {
   Req,
 } from '@nestjs/common'
 import { APP_GUARD } from '@nestjs/core'
-import { Reflector } from '@nestjs/core'`
+import { Reflector } from '@nestjs/core'`;

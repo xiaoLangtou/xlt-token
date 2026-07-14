@@ -1,5 +1,5 @@
-import type { Request } from 'express';
-import type { HttpContext } from '@xlt-token/core';
+import type { Request } from "express";
+import type { HttpContext } from "@xlt-token/core";
 
 /**
  * 将鉴权成功后写入 `ctx.state` 的登录态同步到 Express `req` 上。

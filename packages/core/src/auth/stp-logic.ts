@@ -1,15 +1,15 @@
 // 核心引擎
-import { isNull, isUndefined } from 'es-toolkit';
-import type { DeviceInfo, DurationInput, XltTokenConfig, XltTokenConfigInput } from '../config/xlt-token-config.js';
-import { NotLoginType } from '../const/index.js';
-import { XltTokenKeys } from '../config/xlt-token-keys.js';
-import { NotLoginException } from '../exceptions/not-login.exception.js';
-import { NotSafeException } from '../exceptions/not-safe.exception.js';
-import type { XltHooks } from '../hooks/xlt-hooks.interface.js';
-import type { HttpContext } from '../http/context.js';
-import { XltSession } from '../session/xlt-session.js';
-import type { XltTokenStore } from '../store/xlt-token-store.interface.js';
-import type { TokenStrategy } from '../token/token-strategy.interface.js';
+import { isNull, isUndefined } from "es-toolkit";
+import type { DeviceInfo, DurationInput, XltTokenConfig } from "../config/xlt-token-config.js";
+import { NotLoginType } from "../const/index.js";
+import { XltTokenKeys } from "../config/xlt-token-keys.js";
+import { NotLoginException } from "../exceptions/not-login.exception.js";
+import { NotSafeException } from "../exceptions/not-safe.exception.js";
+import type { XltHooks } from "../hooks/xlt-hooks.interface.js";
+import type { HttpContext } from "../http/context.js";
+import { XltSession } from "../session/xlt-session.js";
+import type { XltTokenStore } from "../store/xlt-token-store.interface.js";
+import type { TokenStrategy } from "../token/token-strategy.interface.js";
 import { normalizeDuration } from "../time/duration.js";
 
 export interface AuthResult {
@@ -40,18 +40,18 @@ export class StpLogic {
     loginId: string | number,
     options: { timeout?: DurationInput; device?: string; token?: string } = {},
   ): Promise<string> {
-    if (isNull(loginId) || isUndefined(loginId) || loginId === '') throw new Error('invalid loginId');
+    if (isNull(loginId) || isUndefined(loginId) || loginId === "")
+      throw new Error("invalid loginId");
 
     const _loginId = String(loginId);
 
-    if (_loginId.includes(':')) {
-      throw new Error('invalid loginId');
+    if (_loginId.includes(":")) {
+      throw new Error("invalid loginId");
     }
 
-
-    const device = options.device ?? 'default';
-    const timeout = normalizeDuration(options.timeout ?? this.config.timeout,{
-      field:"timeout",
+    const device = options.device ?? "default";
+    const timeout = normalizeDuration(options.timeout ?? this.config.timeout, {
+      field: "timeout",
       allowZero: true,
       allowNever: true,
     });
@@ -76,15 +76,17 @@ export class StpLogic {
     } else if (this.config.isShare && oldToken) {
       if (this._isJwtMode()) {
         const list = await this.getDeviceList(_loginId);
-        const info = list.find(d => d.device === device);
-        token = info?.token ?? options.token ?? this.strategy.createToken(_loginId, this.config, { timeout });
+        const info = list.find((d) => d.device === device);
+        token =
+          info?.token ??
+          options.token ??
+          this.strategy.createToken(_loginId, this.config, { timeout });
       } else {
         token = oldToken;
       }
     } else {
       token = options.token ?? this.strategy.createToken(_loginId, this.config, { timeout });
     }
-
 
     if (this._isJwtMode()) {
       const { jti } = this.strategy.verifyToken(token);
@@ -103,16 +105,14 @@ export class StpLogic {
     // 更新全设备索引
     await this._addToSessionList(_loginId, { device, token, loginTime: Date.now() }, timeout);
 
-
     // ── 触发钩子 ──
-    this.callHook('onLogin', _loginId, token, device);
+    this.callHook("onLogin", _loginId, token, device);
     if (replacedOldFullToken) {
-      this.callHook('onReplaced', _loginId, replacedOldFullToken, token);
+      this.callHook("onReplaced", _loginId, replacedOldFullToken, token);
     }
     // 返回纯 token，客户端请求时自行拼接前缀（如 "Bearer "）
     return token;
   }
-
 
   /**
    * 添加到 session-list
@@ -120,15 +120,23 @@ export class StpLogic {
    * @param info
    * @param timeout
    */
-  async _addToSessionList(loginId: string, info: DeviceInfo, timeout: DurationInput): Promise<void> {
+  async _addToSessionList(
+    loginId: string,
+    info: DeviceInfo,
+    timeout: DurationInput,
+  ): Promise<void> {
     const key = this.keys.sessionListKey(loginId);
     const raw = await this.store.get(key);
     const list: DeviceInfo[] = raw ? JSON.parse(raw) : [];
     // 同 device 去重
-    const idx = list.findIndex(d => d.device === info.device);
+    const idx = list.findIndex((d) => d.device === info.device);
     if (idx >= 0) list.splice(idx, 1);
     list.push(info);
-    await this.store.set(key, JSON.stringify(list), normalizeDuration(timeout, { field: 'timeout', allowZero: true, allowNever: true }));
+    await this.store.set(
+      key,
+      JSON.stringify(list),
+      normalizeDuration(timeout, { field: "timeout", allowZero: true, allowNever: true }),
+    );
   }
 
   /**
@@ -144,7 +152,11 @@ export class StpLogic {
     for (const deviceInfo of list) {
       if (this._isJwtMode()) {
         const { jti } = this.strategy.verifyToken(deviceInfo.token);
-        await this.store.set(this.keys.jwtBlacklistKey(jti), NotLoginType.KICK_OUT, this.config.timeout);
+        await this.store.set(
+          this.keys.jwtBlacklistKey(jti),
+          NotLoginType.KICK_OUT,
+          this.config.timeout,
+        );
       } else {
         await this.store.update(this.keys.tokenKey(deviceInfo.token), NotLoginType.KICK_OUT);
       }
@@ -156,16 +168,23 @@ export class StpLogic {
    * @param loginId
    * @param token
    */
-  async _replacedToken(loginId: string, oldSessionValue: string, device = 'default'): Promise<void> {
+  async _replacedToken(
+    loginId: string,
+    oldSessionValue: string,
+    device = "default",
+  ): Promise<void> {
     if (this._isJwtMode()) {
-      await this.store.set(this.keys.jwtBlacklistKey(oldSessionValue), NotLoginType.BE_REPLACED, this.config.timeout);
+      await this.store.set(
+        this.keys.jwtBlacklistKey(oldSessionValue),
+        NotLoginType.BE_REPLACED,
+        this.config.timeout,
+      );
     } else {
       await this.store.update(this.keys.tokenKey(oldSessionValue), NotLoginType.BE_REPLACED);
     }
     await this.store.delete(this.keys.sessionKey(loginId, device));
     this.writeOfflineRecord(oldSessionValue, NotLoginType.BE_REPLACED);
   }
-
 
   /**
    * 打开二级认证窗口
@@ -175,7 +194,11 @@ export class StpLogic {
    */
   async openSafe(token: string, business: string, timeout: DurationInput): Promise<void> {
     const safeKey = this.keys.safeKey(token, business);
-    await this.store.set(safeKey, String(Date.now()), normalizeDuration(timeout, { field: 'timeout' })  );
+    await this.store.set(
+      safeKey,
+      String(Date.now()),
+      normalizeDuration(timeout, { field: "timeout" }),
+    );
   }
 
   /**
@@ -185,12 +208,10 @@ export class StpLogic {
    * @returns 是否有效
    */
   async checkSafe(token: string, business: string): Promise<void> {
-
     const exists = await this.store.has(this.keys.safeKey(token, business));
 
     if (!exists) throw new NotSafeException(business);
   }
-
 
   /**
    * 主动关闭二级认证
@@ -201,7 +222,6 @@ export class StpLogic {
     await this.store.delete(this.keys.safeKey(token, business));
   }
 
-
   /**
    * 创建临时token
    * @param value  要关联的业务数据
@@ -209,9 +229,9 @@ export class StpLogic {
    * @returns 临时token字符串
    */
   async createTempToken(value: string, timeout: DurationInput): Promise<string> {
-    const tempToken = this.strategy.createToken('__temp__', this.config, { timeout });
+    const tempToken = this.strategy.createToken("__temp__", this.config, { timeout });
     const tempTokenKey = this.keys.tempTokenKey(tempToken);
-    await this.store.set(tempTokenKey, value, normalizeDuration(timeout, { field: 'timeout' }));
+    await this.store.set(tempTokenKey, value, normalizeDuration(timeout, { field: "timeout" }));
     return tempToken;
   }
 
@@ -295,10 +315,14 @@ export class StpLogic {
         const { sub: loginId, jti } = payload;
         if (!loginId || !jti) return null;
 
-        await this.store.set(this.keys.jwtBlacklistKey(jti), NotLoginType.INVALID_TOKEN, this.config.timeout);
+        await this.store.set(
+          this.keys.jwtBlacklistKey(jti),
+          NotLoginType.INVALID_TOKEN,
+          this.config.timeout,
+        );
 
         const list = await this.getDeviceList(loginId);
-        const info = list.find(d => d.token === token);
+        const info = list.find((d) => d.token === token);
         if (info) {
           await this.store.delete(this.keys.sessionKey(loginId, info.device));
           await this._removeFromSessionList(loginId, info.device);
@@ -308,8 +332,8 @@ export class StpLogic {
           await this.store.delete(this.keys.lastActiveKey(jti));
         }
 
-        this.writeOfflineRecord(token, 'LOGOUT');
-        this.callHook('onLogout', loginId, token, 'LOGOUT');
+        this.writeOfflineRecord(token, "LOGOUT");
+        this.callHook("onLogout", loginId, token, "LOGOUT");
         return true;
       } catch {
         return null;
@@ -324,10 +348,10 @@ export class StpLogic {
     await this.store.delete(this.keys.sessionKey(loginId));
     await this.store.delete(this.keys.sessionDataKey(loginId));
     const list = await this.getDeviceList(loginId);
-    const info = list.find(d => d.token === token);
+    const info = list.find((d) => d.token === token);
     if (info) await this._removeFromSessionList(loginId, info.device);
 
-    this.callHook('onLogout', loginId, token, 'LOGOUT');
+    this.callHook("onLogout", loginId, token, "LOGOUT");
     return true;
   }
 
@@ -345,7 +369,11 @@ export class StpLogic {
       if (this._isJwtMode()) {
         try {
           const { jti } = this.strategy.verifyToken(token);
-          await this.store.set(this.keys.jwtBlacklistKey(jti), NotLoginType.INVALID_TOKEN, this.config.timeout);
+          await this.store.set(
+            this.keys.jwtBlacklistKey(jti),
+            NotLoginType.INVALID_TOKEN,
+            this.config.timeout,
+          );
           if (this.config.activeTimeout > 0) {
             await this.store.delete(this.keys.lastActiveKey(jti));
           }
@@ -359,7 +387,7 @@ export class StpLogic {
         }
       }
       await this.store.delete(this.keys.sessionKey(loginId, device));
-      this.callHook('onLogout', loginId, token, 'LOGOUT_BY_LOGIN_ID');
+      this.callHook("onLogout", loginId, token, "LOGOUT_BY_LOGIN_ID");
     }
 
     await this.store.delete(this.keys.sessionListKey(loginId));
@@ -379,11 +407,15 @@ export class StpLogic {
     if (!sessionValue) return null;
 
     const list = await this.getDeviceList(loginId);
-    const info = list.find(d => d.device === device);
+    const info = list.find((d) => d.device === device);
     const fullToken = info?.token ?? sessionValue;
 
     if (this._isJwtMode()) {
-      await this.store.set(this.keys.jwtBlacklistKey(sessionValue), NotLoginType.KICK_OUT, this.config.timeout);
+      await this.store.set(
+        this.keys.jwtBlacklistKey(sessionValue),
+        NotLoginType.KICK_OUT,
+        this.config.timeout,
+      );
     } else {
       await this.store.update(this.keys.tokenKey(sessionValue), NotLoginType.KICK_OUT);
     }
@@ -391,7 +423,7 @@ export class StpLogic {
     await this.store.delete(sessionKey);
     await this.store.delete(this.keys.sessionDataKey(loginId));
     this.writeOfflineRecord(fullToken, NotLoginType.KICK_OUT);
-    this.callHook('onKickout', loginId, fullToken);
+    this.callHook("onKickout", loginId, fullToken);
     return true;
   }
 
@@ -421,19 +453,25 @@ export class StpLogic {
       });
 
       // 旧 jti 加入黑名单
-      await this.store.set(this.keys.jwtBlacklistKey(jti), 'REFRESHED', this.config.timeout);
+      await this.store.set(this.keys.jwtBlacklistKey(jti), "REFRESHED", this.config.timeout);
 
       // 签发新 JWT
-      const newToken = this.strategy.createToken(loginId, this.config, { timeout: resolvedTimeout });
+      const newToken = this.strategy.createToken(loginId, this.config, {
+        timeout: resolvedTimeout,
+      });
       const { jti: newJti } = this.strategy.verifyToken(newToken);
 
       // 在 session-list 中找到对应设备，更新 sessionKey
       const list = await this.getDeviceList(loginId);
-      const info = list.find(d => d.token === token);
-      const device = info?.device ?? 'default';
+      const info = list.find((d) => d.token === token);
+      const device = info?.device ?? "default";
 
       await this.store.set(this.keys.sessionKey(loginId, device), newJti, resolvedTimeout);
-      await this._addToSessionList(loginId, { device, token: newToken, loginTime: Date.now() }, resolvedTimeout);
+      await this._addToSessionList(
+        loginId,
+        { device, token: newToken, loginTime: Date.now() },
+        resolvedTimeout,
+      );
 
       // 清理旧 jti 的活跃记录
       if (this.config.activeTimeout > 0) {
@@ -441,7 +479,7 @@ export class StpLogic {
         await this.store.set(this.keys.lastActiveKey(newJti), String(Date.now()), resolvedTimeout);
       }
 
-      this.callHook('onLogin', loginId, newToken, device);
+      this.callHook("onLogin", loginId, newToken, device);
       return newToken;
     } catch {
       return null;
@@ -456,7 +494,11 @@ export class StpLogic {
   async renewTimeout(token: string, timeout: DurationInput): Promise<boolean | null> {
     if (!token) return null;
 
-    const timeoutSec = normalizeDuration(timeout, { field: 'timeout', allowZero: true, allowNever: true });
+    const timeoutSec = normalizeDuration(timeout, {
+      field: "timeout",
+      allowZero: true,
+      allowNever: true,
+    });
 
     if (this._isJwtMode()) {
       try {
@@ -468,8 +510,8 @@ export class StpLogic {
         if (blacklisted) return null;
 
         const list = await this.getDeviceList(loginId);
-        const info = list.find(d => d.token === token);
-        const device = info?.device ?? 'default';
+        const info = list.find((d) => d.token === token);
+        const device = info?.device ?? "default";
 
         await this.store.updateTimeout(this.keys.sessionKey(loginId, device), timeoutSec);
 
@@ -504,9 +546,7 @@ export class StpLogic {
   getSession(loginId: string) {
     const key = this.keys.sessionDataKey(loginId);
     return new XltSession(loginId, this.store, key, this.config.timeout);
-
   }
-
 
   /**
    * 获取下线记录
@@ -520,7 +560,7 @@ export class StpLogic {
 
     const raw = await this.store.get(key);
 
-    return raw ? JSON.parse(raw) : null as { reason: string; time: number } | null;
+    return raw ? JSON.parse(raw) : (null as { reason: string; time: number } | null);
   }
 
   /**
@@ -529,12 +569,10 @@ export class StpLogic {
    * @returns
    */
   async getDeviceList(loginId: string): Promise<DeviceInfo[]> {
-
     const sessionListKey = this.keys.sessionListKey(loginId);
     const raw = await this.store.get(sessionListKey);
 
     return raw ? JSON.parse(raw) : [];
-
   }
 
   /**
@@ -545,18 +583,22 @@ export class StpLogic {
     if (!sessionValue) return null;
 
     const list = await this.getDeviceList(loginId);
-    const info = list.find(d => d.device === device);
+    const info = list.find((d) => d.device === device);
     const fullToken = info?.token ?? sessionValue;
 
     if (this._isJwtMode()) {
-      await this.store.set(this.keys.jwtBlacklistKey(sessionValue), NotLoginType.INVALID_TOKEN, this.config.timeout);
+      await this.store.set(
+        this.keys.jwtBlacklistKey(sessionValue),
+        NotLoginType.INVALID_TOKEN,
+        this.config.timeout,
+      );
     } else {
       await this.store.delete(this.keys.tokenKey(sessionValue));
     }
     await this.store.delete(this.keys.sessionKey(loginId, device));
     await this._removeFromSessionList(loginId, device);
-    this.writeOfflineRecord(fullToken, 'LOGOUT');
-    this.callHook('onLogout', loginId, fullToken);
+    this.writeOfflineRecord(fullToken, "LOGOUT");
+    this.callHook("onLogout", loginId, fullToken, "LOGOUT_BY_DEVICE");
     return true;
   }
 
@@ -568,18 +610,22 @@ export class StpLogic {
     if (!sessionValue) return null;
 
     const list = await this.getDeviceList(loginId);
-    const info = list.find(d => d.device === device);
+    const info = list.find((d) => d.device === device);
     const fullToken = info?.token ?? sessionValue;
 
     if (this._isJwtMode()) {
-      await this.store.set(this.keys.jwtBlacklistKey(sessionValue), NotLoginType.KICK_OUT, this.config.timeout);
+      await this.store.set(
+        this.keys.jwtBlacklistKey(sessionValue),
+        NotLoginType.KICK_OUT,
+        this.config.timeout,
+      );
     } else {
       await this.store.update(this.keys.tokenKey(sessionValue), NotLoginType.KICK_OUT);
     }
     await this.store.delete(this.keys.sessionKey(loginId, device));
     await this._removeFromSessionList(loginId, device);
     this.writeOfflineRecord(fullToken, NotLoginType.KICK_OUT);
-    this.callHook('onKickout', loginId, fullToken);
+    this.callHook("onKickout", loginId, fullToken);
     return true;
   }
 
@@ -599,15 +645,19 @@ export class StpLogic {
         return null;
       }
 
-      await this.store.set(this.keys.jwtBlacklistKey(jti), NotLoginType.KICK_OUT, this.config.timeout);
+      await this.store.set(
+        this.keys.jwtBlacklistKey(jti),
+        NotLoginType.KICK_OUT,
+        this.config.timeout,
+      );
       const list = await this.getDeviceList(loginId);
-      const info = list.find(d => d.token === token);
+      const info = list.find((d) => d.token === token);
       if (info) {
         await this.store.delete(this.keys.sessionKey(loginId, info.device));
         await this._removeFromSessionList(loginId, info.device);
       }
       this.writeOfflineRecord(token, NotLoginType.KICK_OUT);
-      this.callHook('onKickout', loginId, token);
+      this.callHook("onKickout", loginId, token);
       return true;
     }
 
@@ -618,30 +668,27 @@ export class StpLogic {
 
     await this.store.update(this.keys.tokenKey(token), NotLoginType.KICK_OUT);
     const list = await this.getDeviceList(loginId);
-    const info = list.find(d => d.token === token);
+    const info = list.find((d) => d.token === token);
     if (info) {
       await this.store.delete(this.keys.sessionKey(loginId, info.device));
       await this._removeFromSessionList(loginId, info.device);
     }
     this.writeOfflineRecord(token, NotLoginType.KICK_OUT);
-    this.callHook('onKickout', loginId, token);
+    this.callHook("onKickout", loginId, token);
     return true;
   }
-
-
 
   /**
    * 查询所有在线loginIds
    */
-  async getOnlineLoginIds(opts: { page?: number, pageSize?: number } = {}): Promise<string[]> {
+  async getOnlineLoginIds(opts: { page?: number; pageSize?: number } = {}): Promise<string[]> {
     const { page = 0, pageSize = 100 } = opts;
 
     const pattern = `${this.config.tokenName}:login:session-list:*`;
     const keys = await this.store.keys(pattern);
     const prefix = `${this.config.tokenName}:login:session-list:`;
     const start = page * pageSize;
-    return keys.slice(start, start + pageSize).map(k => k.slice(prefix.length)) as string[];
-
+    return keys.slice(start, start + pageSize).map((k) => k.slice(prefix.length)) as string[];
   }
 
   /**
@@ -669,30 +716,29 @@ export class StpLogic {
    * @param req
    * @private
    */
-  private async _resolveLoginId(
-    ctx: HttpContext,
-  ): Promise<AuthResult> {
+  private async _resolveLoginId(ctx: HttpContext): Promise<AuthResult> {
     const token = await this.getTokenValue(ctx);
     if (!token) return { ok: false, reason: NotLoginType.NOT_TOKEN };
-
 
     if (this._isJwtMode()) {
       return this._resolveLoginIdJwt(token);
     }
 
-
     const loginId = await this.store.get(this.keys.tokenKey(token));
     if (!loginId) return { ok: false, reason: NotLoginType.INVALID_TOKEN, token };
 
-    if (loginId === NotLoginType.BE_REPLACED) return { ok: false, reason: NotLoginType.BE_REPLACED, token };
-    if (loginId === NotLoginType.KICK_OUT) return { ok: false, reason: NotLoginType.KICK_OUT, token };
+    if (loginId === NotLoginType.BE_REPLACED)
+      return { ok: false, reason: NotLoginType.BE_REPLACED, token };
+    if (loginId === NotLoginType.KICK_OUT)
+      return { ok: false, reason: NotLoginType.KICK_OUT, token };
 
     if (this.config.activeTimeout > 0) {
       const lastStr = await this.store.get(this.keys.lastActiveKey(token));
       if (!lastStr) return { ok: false, reason: NotLoginType.TOKEN_FREEZE, token };
 
       const idle = (Date.now() - Number(lastStr)) / 1000;
-      if (idle > this.config.activeTimeout) return { ok: false, reason: NotLoginType.TOKEN_TIMEOUT, token };
+      if (idle > this.config.activeTimeout)
+        return { ok: false, reason: NotLoginType.TOKEN_TIMEOUT, token };
 
       await this.store.update(this.keys.lastActiveKey(token), String(Date.now()));
     }
@@ -712,8 +758,10 @@ export class StpLogic {
       const jwtBlacklistKey = this.keys.jwtBlacklistKey(jti);
       const blacklisted = await this.store.get(jwtBlacklistKey);
 
-      if (blacklisted === NotLoginType.KICK_OUT) return { ok: false, reason: NotLoginType.KICK_OUT, token };
-      if (blacklisted === NotLoginType.BE_REPLACED) return { ok: false, reason: NotLoginType.BE_REPLACED, token };
+      if (blacklisted === NotLoginType.KICK_OUT)
+        return { ok: false, reason: NotLoginType.KICK_OUT, token };
+      if (blacklisted === NotLoginType.BE_REPLACED)
+        return { ok: false, reason: NotLoginType.BE_REPLACED, token };
       if (blacklisted) return { ok: false, reason: NotLoginType.INVALID_TOKEN, token };
 
       if (this.config.activeTimeout > 0) {
@@ -723,22 +771,26 @@ export class StpLogic {
         if (!lastStr) return { ok: false, reason: NotLoginType.TOKEN_FREEZE, token };
 
         const idle = (Date.now() - Number(lastStr)) / 1000;
-        if (idle > this.config.activeTimeout) return { ok: false, reason: NotLoginType.TOKEN_TIMEOUT, token };
+        if (idle > this.config.activeTimeout)
+          return { ok: false, reason: NotLoginType.TOKEN_TIMEOUT, token };
 
         await this.store.update(lastActiveKey, String(Date.now()));
       }
 
       return { ok: true, loginId, token };
-
     } catch (error: unknown) {
       // 只捕获 JWT 校验相关异常，意外错误往上抛
-      if (error instanceof Error && (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError' || error.name === 'NotBeforeError')) {
+      if (
+        error instanceof Error &&
+        (error.name === "JsonWebTokenError" ||
+          error.name === "TokenExpiredError" ||
+          error.name === "NotBeforeError")
+      ) {
         return { ok: false, reason: NotLoginType.INVALID_TOKEN, token };
       }
       throw error;
     }
   }
-
 
   /**
    * 处理被顶下线
@@ -751,7 +803,12 @@ export class StpLogic {
     if (oldToken) {
       if (this._isJwtMode()) {
         const jti = await this.store.get(sessionKey);
-        if (jti) await this.store.set(this.keys.jwtBlacklistKey(jti), NotLoginType.BE_REPLACED, this.config.timeout)
+        if (jti)
+          await this.store.set(
+            this.keys.jwtBlacklistKey(jti),
+            NotLoginType.BE_REPLACED,
+            this.config.timeout,
+          );
       } else {
         await this.store.update(this.keys.tokenKey(oldToken), NotLoginType.BE_REPLACED);
       }
@@ -759,7 +816,6 @@ export class StpLogic {
       await this.store.delete(sessionKey);
       this.writeOfflineRecord(oldToken, NotLoginType.BE_REPLACED);
     }
-
   }
 
   private async writeOfflineRecord(token: string, reason: string): Promise<void> {
@@ -775,7 +831,7 @@ export class StpLogic {
     const raw = await this.store.get(key);
     if (!raw) return;
     const list: DeviceInfo[] = JSON.parse(raw);
-    const filtered = list.filter(d => d.device !== device);
+    const filtered = list.filter((d) => d.device !== device);
     if (filtered.length === 0) {
       await this.store.delete(key);
     } else {
@@ -788,24 +844,30 @@ export class StpLogic {
    * @returns 是否为JWT模式
    */
   private _isJwtMode(): boolean {
-    return !!(this.config.jwt?.secret && typeof (this.strategy as any).verifyToken === 'function');
-
+    return !!(this.config.jwt?.secret && typeof (this.strategy as any).verifyToken === "function");
   }
 
   /** 钩子回调用完整 token（JWT 模式下 session 存的是 jti） */
-  private async _resolveHookToken(loginId: string, device: string, sessionValue: string): Promise<string> {
+  private async _resolveHookToken(
+    loginId: string,
+    device: string,
+    sessionValue: string,
+  ): Promise<string> {
     if (!this._isJwtMode()) return sessionValue;
     const list = await this.getDeviceList(loginId);
-    const info = list.find(d => d.device === device);
+    const info = list.find((d) => d.device === device);
     return info?.token ?? sessionValue;
   }
 
-  private callHook<K extends keyof XltHooks>(event: K, ...args: Parameters<NonNullable<XltHooks[K]>>): void {
+  private callHook<K extends keyof XltHooks>(
+    event: K,
+    ...args: Parameters<NonNullable<XltHooks[K]>>
+  ): void {
     if (!this.hooks?.[event]) return;
     try {
       const result = (this.hooks[event] as any)(...args);
       if (result instanceof Promise) {
-        result.catch(err => console.error(`[xlt-token] hook ${event} error:`, err));
+        result.catch((err) => console.error(`[xlt-token] hook ${event} error:`, err));
       }
     } catch (err) {
       console.error(`[xlt-token] hook ${event} error:`, err);

@@ -1,13 +1,13 @@
-import type { NextFunction, Request, RequestHandler, Response } from 'express';
-import type { XltTokenContext } from '@xlt-token/core';
-import type { XltMiddlewareOptions } from '../types.js';
-import { createExpressContext } from '../context.js';
-import { resolveRouteAuthMeta } from '../auth/resolve-route-auth-meta.js';
-import { shouldCheckLogin } from '../auth/should-check-login.js';
-import { runAuth } from '../auth/run-auth.js';
-import { syncExpressAuthState } from '../sync-state.js';
+import type { NextFunction, Request, RequestHandler, Response } from "express";
+import type { XltTokenContext } from "@xlt-token/core";
+import type { XltMiddlewareOptions } from "../types.js";
+import { createExpressContext } from "../context.js";
+import { resolveRouteAuthMeta } from "../auth/resolve-route-auth-meta.js";
+import { shouldCheckLogin } from "../auth/should-check-login.js";
+import { runAuth } from "../auth/run-auth.js";
+import { syncExpressAuthState } from "../sync-state.js";
 
-export type { XltMiddlewareOptions } from '../types.js';
+export type { XltMiddlewareOptions } from "../types.js";
 
 /**
  * 全局登录校验中间件。

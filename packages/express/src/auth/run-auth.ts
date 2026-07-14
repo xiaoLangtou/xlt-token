@@ -1,5 +1,5 @@
-import type { Request } from 'express';
-import type { AuthResult, HttpContext, XltTokenContext } from '@xlt-token/core';
+import type { Request } from "express";
+import type { AuthResult, HttpContext, XltTokenContext } from "@xlt-token/core";
 
 /**
  * 编排登录 + 权限 + 角色 + 二级认证校验。

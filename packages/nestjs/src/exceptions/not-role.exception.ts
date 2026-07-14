@@ -1,5 +1,5 @@
-import { ForbiddenException } from '@nestjs/common';
-import { XltMode } from '@xlt-token/core';
+import { ForbiddenException } from "@nestjs/common";
+import { XltMode } from "@xlt-token/core";
 
 export class NotRoleException extends ForbiddenException {
   public readonly role: string | string[];
@@ -8,8 +8,8 @@ export class NotRoleException extends ForbiddenException {
   constructor(role: string | string[], mode: XltMode) {
     super({
       statusCode: 403,
-      type: 'NOT_ROLE',
-      message: `缺少角色: ${Array.isArray(role) ? role.join(', ') : role}`,
+      type: "NOT_ROLE",
+      message: `缺少角色: ${Array.isArray(role) ? role.join(", ") : role}`,
     });
     this.role = role;
     this.mode = mode;

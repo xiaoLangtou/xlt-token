@@ -1,13 +1,13 @@
-import type { StpInterface } from '@xlt-token/nestjs';
+import type { StpInterface } from "@xlt-token/nestjs";
 
 export class MockStpInterface implements StpInterface {
   private readonly perms = new Map<string, string[]>([
-    ['1001', ['user:read', 'user:write', 'user:delete', 'order:*']],
-    ['1002', ['user:read']],
+    ["1001", ["user:read", "user:write", "user:delete", "order:*"]],
+    ["1002", ["user:read"]],
   ]);
   private readonly roles = new Map<string, string[]>([
-    ['1001', ['admin', 'super']],
-    ['1002', ['user']],
+    ["1001", ["admin", "super"]],
+    ["1002", ["user"]],
   ]);
 
   async getPermissionList(loginId: string) {

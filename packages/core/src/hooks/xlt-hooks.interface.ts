@@ -1,5 +1,4 @@
 export interface XltHooks {
-
   /**
    * 登录成功后触发
    * @param loginId 登录ID
@@ -32,8 +31,7 @@ export interface XltHooks {
   onReplaced?: (loginId: string, oldToken: string, newToken: string) => void | Promise<void>;
 }
 
-
 /**
  * 钩子注入 token
  */
-export const XLT_TOKEN_HOOKS = 'XLT_TOKEN_HOOKS';
+export const XLT_TOKEN_HOOKS = "XLT_TOKEN_HOOKS";

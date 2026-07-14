@@ -1,11 +1,11 @@
-import type { XltTokenStore } from '@xlt-token/core';
+import type { XltTokenStore } from "@xlt-token/core";
 
 export interface IORedisScanClient {
   scan(
     cursor: string,
-    matchToken: 'MATCH',
+    matchToken: "MATCH",
     pattern: string,
-    countToken: 'COUNT',
+    countToken: "COUNT",
     count: number,
   ): Promise<[string, string[]]>;
 }
@@ -18,7 +18,7 @@ export interface IORedisClient extends IORedisScanClient {
   persist(key: string): Promise<number>;
   expire(key: string, timeoutSec: number): Promise<number>;
   ttl(key: string): Promise<number>;
-  nodes?(role: 'master'): IORedisScanClient[];
+  nodes?(role: "master"): IORedisScanClient[];
 }
 
 export class IORedisStore implements XltTokenStore {
@@ -34,7 +34,7 @@ export class IORedisStore implements XltTokenStore {
       return;
     }
 
-    await this.redisClient.set(key, value, 'EX', timeoutSec);
+    await this.redisClient.set(key, value, "EX", timeoutSec);
   }
 
   async delete(key: string): Promise<void> {
@@ -42,7 +42,7 @@ export class IORedisStore implements XltTokenStore {
   }
 
   async update(key: string, value: string): Promise<void> {
-    const result = await this.redisClient.set(key, value, 'XX', 'KEEPTTL');
+    const result = await this.redisClient.set(key, value, "XX", "KEEPTTL");
     if (result === null) {
       throw new Error(`Key not found: ${key}`);
     }
@@ -71,22 +71,16 @@ export class IORedisStore implements XltTokenStore {
 
   async keys(pattern: string): Promise<string[]> {
     const result: string[] = [];
-    const clients = this.redisClient.nodes?.('master') ?? [this.redisClient];
+    const clients = this.redisClient.nodes?.("master") ?? [this.redisClient];
 
     for (const client of clients) {
-      let cursor = '0';
+      let cursor = "0";
 
       do {
-        const [nextCursor, keys] = await client.scan(
-          cursor,
-          'MATCH',
-          pattern,
-          'COUNT',
-          100,
-        );
+        const [nextCursor, keys] = await client.scan(cursor, "MATCH", pattern, "COUNT", 100);
         cursor = nextCursor;
         result.push(...keys);
-      } while (cursor !== '0');
+      } while (cursor !== "0");
     }
 
     return result;

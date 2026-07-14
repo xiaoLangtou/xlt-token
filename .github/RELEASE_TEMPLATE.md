@@ -45,9 +45,26 @@ pnpm add xlt-token@next
 
 ## ✅ Quality
 
-- Tests: N 单测 + N E2E
-- Unit coverage: XX% / XX% / XX%
-- E2E coverage: XX% / XX% / XX%
+- Typecheck: pass
+- Package boundaries: pass
+- Tests: core / store-redis / express / nestjs pass
+- Build: workspace pass
+- Docs build: pass
+- Coverage: core XX% / express XX% / nestjs XX%
+
+## 🚦 Release Gates
+
+- Channel: `next` / `rc` / `latest`
+- RC observation: N days
+- Blocking issues: 0
+- Migration notes: ready / not applicable
+- Security notes: ready / not applicable
+- Rollback target: `vPREV`
+
+## ↩️ Rollback Plan
+
+- If a blocking issue is found, publish a patch release or move the npm `latest` dist-tag back to `vPREV`.
+- Document the impact, workaround, and fixed version in this release and CHANGELOG.
 
 ## 🙏 Contributors
 
@@ -57,7 +74,8 @@ pnpm add xlt-token@next
 
 - [CHANGELOG](https://github.com/xiaoLangtou/xlt-token/blob/master/CHANGELOG.md)
 - [Documentation](https://xiaolangtou.github.io/xlt-token/)
-- [Migration Guide](https://xiaolangtou.github.io/xlt-token/guide/migration) <!-- 如适用 -->
+- [Engineering Gates](https://xiaolangtou.github.io/xlt-token/guide/engineering)
+- [Migration Guide](https://xiaolangtou.github.io/xlt-token/guide/migration-2-0) <!-- 如适用 -->
 
 ---
 

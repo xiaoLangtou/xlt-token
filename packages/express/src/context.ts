@@ -1,5 +1,5 @@
-import type { Request, Response } from 'express';
-import type { HttpContext } from '@xlt-token/core';
+import type { Request, Response } from "express";
+import type { HttpContext } from "@xlt-token/core";
 
 export interface ExpressLikeRequest {
   _xltState?: Record<string, unknown>;

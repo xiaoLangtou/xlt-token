@@ -3,7 +3,7 @@ import {
   NotPermissionException,
   NotRoleException,
   NotSafeException,
-} from '@xlt-token/core';
+} from "@xlt-token/core";
 
 export interface MappedXltError {
   status: number;

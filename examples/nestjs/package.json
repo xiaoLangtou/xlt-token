@@ -1,14 +1,15 @@
 {
   "name": "@xlt-token/example-nestjs",
-  "private": true,
   "version": "0.0.1",
+  "private": true,
   "description": "Full-feature NestJS example for @xlt-token/nestjs",
   "scripts": {
     "start": "tsx src/main.ts",
     "start:dev": "tsx watch src/main.ts",
     "start:jwt": "XLT_STRATEGY=jwt tsx src/main.ts",
     "start:redis": "XLT_STORE=redis tsx src/main.ts",
-    "start:whitelist": "XLT_DEFAULT_CHECK=false tsx src/main.ts"
+    "start:whitelist": "XLT_DEFAULT_CHECK=false tsx src/main.ts",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",

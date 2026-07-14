@@ -1,7 +1,7 @@
 // 全局守卫
 
-import { CanActivate, ExecutionContext, Inject, Injectable, Optional } from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
+import { CanActivate, ExecutionContext, Inject, Injectable, Optional } from "@nestjs/common";
+import { Reflector } from "@nestjs/core";
 import {
   type AuthResult,
   StpLogic,
@@ -12,9 +12,9 @@ import {
   XLT_ROLE_KEY,
   XLT_TOKEN_CONFIG,
   type XltTokenConfig,
-} from '@xlt-token/core';
-import { XLT_CHECK_SAFE_KEY } from '../decorators/xlt-check-safe.decorator.js';
-import { createNestHttpContext, rethrowCoreAuthException } from '../http/nest-bridge.js';
+} from "@xlt-token/core";
+import { XLT_CHECK_SAFE_KEY } from "../decorators/xlt-check-safe.decorator.js";
+import { createNestHttpContext, rethrowCoreAuthException } from "../http/nest-bridge.js";
 
 @Injectable()
 export class XltTokenGuard implements CanActivate {
@@ -23,8 +23,7 @@ export class XltTokenGuard implements CanActivate {
     @Inject(XLT_TOKEN_CONFIG) private readonly config: XltTokenConfig,
     private readonly stpLogic: StpLogic,
     @Optional() private readonly stpPermLogic?: StpPermLogic,
-  ) {
-  }
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     if (!this.requiresLogin(context)) return true;
@@ -50,7 +49,11 @@ export class XltTokenGuard implements CanActivate {
 
         const permMeta = this.reflector.getAllAndOverride(XLT_PERMISSION_KEY, [handler, cls]);
         if (permMeta) {
-          await this.stpPermLogic.checkPermission(result.loginId!, permMeta.permissions, permMeta.mode);
+          await this.stpPermLogic.checkPermission(
+            result.loginId!,
+            permMeta.permissions,
+            permMeta.mode,
+          );
         }
 
         const roleMeta = this.reflector.getAllAndOverride(XLT_ROLE_KEY, [handler, cls]);

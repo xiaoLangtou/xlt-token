@@ -1,1 +1,1 @@
-export * from '@xlt-token/nestjs';
+export * from "@xlt-token/nestjs";

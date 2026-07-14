@@ -1,16 +1,14 @@
-import type { XltTokenStore } from '@xlt-token/core';
+import type { XltTokenStore } from "@xlt-token/core";
 
 export class XltSession {
   private data: Record<string, unknown> | null = null;
-
 
   constructor(
     private loginId: string,
     private store: XltTokenStore,
     private storeKey: string,
     private timeout: number,
-  ) {
-  }
+  ) {}
 
   /**
    * 获取会话数据
@@ -18,7 +16,7 @@ export class XltSession {
    */
   async get<T = unknown>(key: string): Promise<T | null> {
     const data = await this.load();
-    return data ? (data[key] as T) ?? null : null;
+    return data ? ((data[key] as T) ?? null) : null;
   }
 
   /**
@@ -67,7 +65,6 @@ export class XltSession {
     return data ? Object.keys(data) : [];
   }
 
-
   /**
    * 加载会话数据
    * @returns The session data.
@@ -86,5 +83,4 @@ export class XltSession {
   private async save(): Promise<void> {
     await this.store.set(this.storeKey, JSON.stringify(this.data), this.timeout);
   }
-
 }

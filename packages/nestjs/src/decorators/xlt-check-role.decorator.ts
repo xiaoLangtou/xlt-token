@@ -1,6 +1,5 @@
-import { XLT_ROLE_KEY, XltMode } from '@xlt-token/core';
-import { SetMetadata } from '@nestjs/common';
-
+import { XLT_ROLE_KEY, XltMode } from "@xlt-token/core";
+import { SetMetadata } from "@nestjs/common";
 
 /**
  * 角色检查装饰器
@@ -9,9 +8,8 @@ import { SetMetadata } from '@nestjs/common';
  * @param {XltMode} [options.mode] 模式选项
  * @constructor
  */
-export const XltCheckRole = (roles: string | string[], options?: { mode: XltMode; }) => {
+export const XltCheckRole = (roles: string | string[], options?: { mode: XltMode }) => {
   const _roles = Array.isArray(roles) ? roles : [roles];
   const mode = options?.mode ?? XltMode.AND;
   return SetMetadata(XLT_ROLE_KEY, { roles: _roles, mode });
-
 };

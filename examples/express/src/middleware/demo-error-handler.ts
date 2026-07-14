@@ -1,4 +1,4 @@
-import type { ErrorRequestHandler } from 'express';
+import type { ErrorRequestHandler } from "express";
 
 export class HttpError extends Error {
   constructor(
@@ -20,9 +20,9 @@ export const demoErrorHandler: ErrorRequestHandler = (err, _req, res, _next) => 
     return;
   }
 
-  console.error('[example:error]', err);
+  console.error("[example:error]", err);
   res.status(500).json({
     statusCode: 500,
-    message: err instanceof Error ? err.message : 'Internal Server Error',
+    message: err instanceof Error ? err.message : "Internal Server Error",
   });
 };

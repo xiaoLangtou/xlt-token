@@ -10,6 +10,7 @@
 | --- | --- | --- |
 | **指南** | [选择接入方式](/guide/getting-started) | 在 Core、NestJS 和后续框架适配器之间选择入口 |
 | | [架构设计](/guide/architecture) | 了解 monorepo 分层、HttpContext、存储键 |
+| | [工程化门禁](/guide/engineering) | 查看支持矩阵、CI、包边界、发布与回退要求 |
 | | [迁移指南](/guide/migration-2-0) | 从旧版单包升级、包职责说明 |
 | **Core** | [Core 快速开始](/core/getting-started) | 框架无关地创建 `createXltToken` 实例 |
 | | [配置参考](/core/configuration) | 查阅 `XltTokenConfig` 与 `createXltToken` 选项 |

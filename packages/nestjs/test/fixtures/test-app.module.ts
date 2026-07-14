@@ -1,6 +1,6 @@
-import { Controller, Get, type Provider } from '@nestjs/common';
-import { APP_GUARD } from '@nestjs/core';
-import { Test } from '@nestjs/testing';
+import { Controller, Get, type Provider } from "@nestjs/common";
+import { APP_GUARD } from "@nestjs/core";
+import { Test } from "@nestjs/testing";
 import {
   LoginId,
   TokenValue,
@@ -13,63 +13,63 @@ import {
   type XltTokenConfig,
   XltTokenGuard,
   XltTokenModule,
-} from '@xlt-token/nestjs';
-import type { TokenStrategy, XltHooks } from '@xlt-token/core';
-import { MockStpInterface } from './mock-stp-interface';
+} from "@xlt-token/nestjs";
+import type { TokenStrategy, XltHooks } from "@xlt-token/core";
+import { MockStpInterface } from "./mock-stp-interface";
 
-@Controller('api')
+@Controller("api")
 export class DemoController {
   @XltIgnore()
-  @Get('public')
+  @Get("public")
   pub() {
     return { ok: true };
   }
 
-  @Get('me')
+  @Get("me")
   me(@LoginId() id: string, @TokenValue() token: string) {
     return { id, token };
   }
 
-  @XltCheckPermission('user:read')
-  @Get('read')
+  @XltCheckPermission("user:read")
+  @Get("read")
   read() {
-    return { action: 'read' };
+    return { action: "read" };
   }
 
-  @XltCheckPermission(['user:read', 'user:delete'], { mode: XltMode.AND })
-  @Get('delete')
+  @XltCheckPermission(["user:read", "user:delete"], { mode: XltMode.AND })
+  @Get("delete")
   del() {
-    return { action: 'delete' };
+    return { action: "delete" };
   }
 
-  @XltCheckPermission('order:create')
-  @Get('wildcard')
+  @XltCheckPermission("order:create")
+  @Get("wildcard")
   wild() {
-    return { action: 'wild' };
+    return { action: "wild" };
   }
 
-  @XltCheckRole('admin')
-  @Get('admin')
+  @XltCheckRole("admin")
+  @Get("admin")
   admin() {
-    return { action: 'admin' };
+    return { action: "admin" };
   }
 
-  @XltCheckRole(['admin', 'super'], { mode: XltMode.OR })
-  @Get('admin-or')
+  @XltCheckRole(["admin", "super"], { mode: XltMode.OR })
+  @Get("admin-or")
   adminOr() {
-    return { action: 'admin-or' };
+    return { action: "admin-or" };
   }
 
   @XltCheckLogin()
-  @Get('whitelisted')
+  @Get("whitelisted")
   whitelisted(@LoginId() id: string) {
     return { id };
   }
 
-  @XltCheckSafe('pay')
-  @Get('safe/pay')
+  @XltCheckSafe("pay")
+  @Get("safe/pay")
   safePay() {
-    return { action: 'pay' };
+    return { action: "pay" };
   }
 }
 
@@ -93,8 +93,8 @@ export async function buildTestApp(opts: BuildOpts = {}) {
         isGlobal: true,
         strategy: opts.strategy,
         config: {
-          tokenName: 'authorization',
-          tokenPrefix: '',
+          tokenName: "authorization",
+          tokenPrefix: "",
           defaultCheck: opts.defaultCheck ?? true,
           ...opts.config,
         },
@@ -103,10 +103,7 @@ export async function buildTestApp(opts: BuildOpts = {}) {
       }),
     ],
     controllers: [DemoController],
-    providers: [
-      { provide: APP_GUARD, useClass: guardClass },
-      ...(opts.extraProviders ?? []),
-    ],
+    providers: [{ provide: APP_GUARD, useClass: guardClass }, ...(opts.extraProviders ?? [])],
   }).compile();
 
   const app = moduleRef.createNestApplication();

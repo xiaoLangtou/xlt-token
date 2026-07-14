@@ -1,10 +1,7 @@
-import { Inject, Injectable } from '@nestjs/common';
-import {
-  RedisStore as BaseRedisStore,
-  type RedisClient,
-} from '@xlt-token/store-redis';
+import { Inject, Injectable } from "@nestjs/common";
+import { RedisStore as BaseRedisStore, type RedisClient } from "@xlt-token/store-redis";
 
-export const XLT_REDIS_CLIENT = 'XLT_REDIS_CLIENT';
+export const XLT_REDIS_CLIENT = "XLT_REDIS_CLIENT";
 
 /**
  * @deprecated Import `RedisStore` from `@xlt-token/store-redis` and provide it

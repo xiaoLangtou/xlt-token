@@ -1,7 +1,7 @@
-import { sign, verify, type JwtPayload } from 'jsonwebtoken';
-import { randomUUID } from 'node:crypto';
-import type { XltTokenConfig } from '../../src/config/xlt-token-config.js';
-import type { TokenStrategy } from '../../src/token/token-strategy.interface.js';
+import { sign, verify, type JwtPayload } from "jsonwebtoken";
+import { randomUUID } from "node:crypto";
+import type { XltTokenConfig } from "../../src/config/xlt-token-config.js";
+import type { TokenStrategy } from "../../src/token/token-strategy.interface.js";
 
 export class TestJwtStrategy implements TokenStrategy {
   constructor(private readonly config: XltTokenConfig) {}
@@ -10,7 +10,7 @@ export class TestJwtStrategy implements TokenStrategy {
     const jwt = config.jwt!;
     const jti = randomUUID();
     return sign({ sub: loginId, jti }, jwt.secret, {
-      algorithm: jwt.algorithm ?? 'HS256',
+      algorithm: jwt.algorithm ?? "HS256",
       ...(jwt.issuer && { issuer: jwt.issuer }),
       ...(jwt.audience && { audience: jwt.audience }),
       ...(config.timeout > 0 && { expiresIn: config.timeout }),

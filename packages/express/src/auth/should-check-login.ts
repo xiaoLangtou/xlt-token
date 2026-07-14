@@ -1,5 +1,5 @@
-import type { Request } from 'express';
-import type { XltTokenConfig } from '@xlt-token/core';
+import type { Request } from "express";
+import type { XltTokenConfig } from "@xlt-token/core";
 
 /**
  * 是否需要对当前请求执行登录校验。

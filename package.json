@@ -3,27 +3,30 @@
   "version": "1.2.1",
   "description": "Framework-agnostic token auth library with NestJS and Express integrations, inspired by Sa-Token",
   "keywords": [
-    "nestjs",
-    "token",
     "auth",
     "jwt",
-    "session"
+    "nestjs",
+    "session",
+    "token"
   ],
-  "author": "xltorg",
+  "homepage": "https://xiaolangtou.github.io/xlt-token/",
+  "bugs": {
+    "url": "https://github.com/xiaoLangtou/xlt-token/issues"
+  },
   "license": "MIT",
-  "packageManager": "pnpm@10.15.1",
+  "author": "xltorg",
   "repository": {
     "type": "git",
     "url": "https://github.com/xiaoLangtou/xlt-token.git"
   },
-  "bugs": {
-    "url": "https://github.com/xiaoLangtou/xlt-token/issues"
-  },
-  "homepage": "https://xiaolangtou.github.io/xlt-token/",
-  "publishConfig": {
-    "access": "public"
-  },
+  "files": [
+    "dist",
+    "skills",
+    "LICENSE",
+    "README.md"
+  ],
   "type": "module",
+  "sideEffects": false,
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.cts",
@@ -40,25 +43,28 @@
     },
     "./package.json": "./package.json"
   },
-  "sideEffects": false,
-  "files": [
-    "dist",
-    "skills",
-    "LICENSE",
-    "README.md"
-  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "prebuild": "pnpm --filter @xlt-token/core build && pnpm --filter @xlt-token/nestjs build",
     "build": "tsdown",
     "build:workspace": "turbo run build",
     "build:watch": "tsdown --watch",
+    "lint": "oxlint src packages examples docs/.vitepress scripts",
+    "lint:fix": "oxlint src packages examples docs/.vitepress scripts --fix",
+    "format": "oxfmt --write \"**/*.{ts,tsx,js,mjs,cjs,json,jsonc,yml,yaml}\"",
+    "format:check": "oxfmt --check \"**/*.{ts,tsx,js,mjs,cjs,json,jsonc,yml,yaml}\"",
+    "typecheck": "tsc --noEmit && pnpm --filter \"./packages/*\" --filter \"./examples/*\" --if-present typecheck",
+    "check:boundaries": "node scripts/check-package-boundaries.mjs",
+    "check:quality": "pnpm run format:check && pnpm run lint && pnpm run typecheck && pnpm run check:boundaries && pnpm run test:all && pnpm run build:workspace",
     "test": "pnpm --filter @xlt-token/nestjs test",
     "test:watch": "pnpm --filter @xlt-token/nestjs test -- --watch",
     "test:ui": "pnpm --filter @xlt-token/nestjs test -- --ui",
     "test:cov": "pnpm --filter @xlt-token/nestjs test:cov",
     "test:e2e": "pnpm --filter @xlt-token/nestjs test:e2e",
     "test:e2e:cov": "pnpm --filter @xlt-token/nestjs test:e2e:cov",
-    "test:all": "pnpm --filter @xlt-token/core test:cov && pnpm --filter @xlt-token/nestjs test:cov && pnpm --filter @xlt-token/nestjs test:e2e",
+    "test:all": "pnpm --filter @xlt-token/core test:cov && pnpm --filter @xlt-token/store-redis test:cov && pnpm --filter @xlt-token/express test:cov && pnpm --filter @xlt-token/express test:e2e && pnpm --filter @xlt-token/nestjs test:cov && pnpm --filter @xlt-token/nestjs test:e2e",
     "test:workspace": "turbo run test test:cov test:e2e",
     "test:junit": "vitest run --reporter=junit --outputFile=reports/junit.xml",
     "test:e2e:junit": "pnpm --filter @xlt-token/nestjs test:e2e:junit",
@@ -69,24 +75,6 @@
     "docs:preview": "vitepress preview docs",
     "docs:build": "pnpm build && vitepress build docs",
     "docs:build:workspace": "turbo run docs:build"
-  },
-  "peerDependencies": {
-    "@nestjs/common": "^10.0.0 || ^11.0.0 || ^12.0.0",
-    "@nestjs/core": "^10.0.0 || ^11.0.0 || ^12.0.0",
-    "jsonwebtoken": "^9.0.0",
-    "reflect-metadata": "^0.1.13 || ^0.2.0",
-    "rxjs": "^7.0.0"
-  },
-  "peerDependenciesMeta": {
-    "reflect-metadata": {
-      "optional": false
-    },
-    "rxjs": {
-      "optional": false
-    },
-    "jsonwebtoken": {
-      "optional": true
-    }
   },
   "dependencies": {
     "@xlt-token/core": "^1.2.1",
@@ -107,6 +95,8 @@
     "@vitest/coverage-v8": "^2.1.9",
     "@vitest/ui": "^2.1.9",
     "jsonwebtoken": "^9.0.3",
+    "oxfmt": "^0.59.0",
+    "oxlint": "^1.74.0",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.0",
     "supertest": "^7.2.2",
@@ -116,5 +106,24 @@
     "unplugin-swc": "^1.5.9",
     "vitepress": "^1.6.4",
     "vitest": "^2.0.0"
-  }
+  },
+  "peerDependencies": {
+    "@nestjs/common": "^10.0.0 || ^11.0.0 || ^12.0.0",
+    "@nestjs/core": "^10.0.0 || ^11.0.0 || ^12.0.0",
+    "jsonwebtoken": "^9.0.0",
+    "reflect-metadata": "^0.1.13 || ^0.2.0",
+    "rxjs": "^7.0.0"
+  },
+  "peerDependenciesMeta": {
+    "reflect-metadata": {
+      "optional": false
+    },
+    "rxjs": {
+      "optional": false
+    },
+    "jsonwebtoken": {
+      "optional": true
+    }
+  },
+  "packageManager": "pnpm@10.15.1"
 }

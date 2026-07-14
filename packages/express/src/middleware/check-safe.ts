@@ -1,4 +1,4 @@
-import type { RequestHandler } from 'express';
+import type { RequestHandler } from "express";
 
 /**
  * 路由级 helper：声明当前路由需要二级认证安全窗口。

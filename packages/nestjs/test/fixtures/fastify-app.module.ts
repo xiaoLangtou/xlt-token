@@ -1,10 +1,7 @@
-import { Controller, Get, type Provider } from '@nestjs/common';
-import { APP_GUARD } from '@nestjs/core';
-import {
-  FastifyAdapter,
-  type NestFastifyApplication,
-} from '@nestjs/platform-fastify';
-import { Test } from '@nestjs/testing';
+import { Controller, Get, type Provider } from "@nestjs/common";
+import { APP_GUARD } from "@nestjs/core";
+import { FastifyAdapter, type NestFastifyApplication } from "@nestjs/platform-fastify";
+import { Test } from "@nestjs/testing";
 import {
   LoginId,
   TokenValue,
@@ -12,18 +9,18 @@ import {
   type XltTokenConfig,
   XltTokenGuard,
   XltTokenModule,
-} from '@xlt-token/nestjs';
-import { MockStpInterface } from './mock-stp-interface';
+} from "@xlt-token/nestjs";
+import { MockStpInterface } from "./mock-stp-interface";
 
-@Controller('api')
+@Controller("api")
 export class FastifyDemoController {
   @XltIgnore()
-  @Get('public')
+  @Get("public")
   pub() {
     return { ok: true };
   }
 
-  @Get('me')
+  @Get("me")
   me(@LoginId() id: string, @TokenValue() token: string) {
     return { id, token };
   }
@@ -42,8 +39,8 @@ export async function buildFastifyTestApp(opts: FastifyBuildOpts = {}) {
       XltTokenModule.forRoot({
         isGlobal: true,
         config: {
-          tokenName: 'authorization',
-          tokenPrefix: '',
+          tokenName: "authorization",
+          tokenPrefix: "",
           defaultCheck: true,
           ...opts.config,
         },
@@ -51,18 +48,13 @@ export async function buildFastifyTestApp(opts: FastifyBuildOpts = {}) {
       }),
     ],
     controllers: [FastifyDemoController],
-    providers: [
-      { provide: APP_GUARD, useClass: XltTokenGuard },
-      ...(opts.extraProviders ?? []),
-    ],
+    providers: [{ provide: APP_GUARD, useClass: XltTokenGuard }, ...(opts.extraProviders ?? [])],
   }).compile();
 
-  const app = moduleRef.createNestApplication<NestFastifyApplication>(
-    new FastifyAdapter(),
-  );
+  const app = moduleRef.createNestApplication<NestFastifyApplication>(new FastifyAdapter());
 
   if (opts.withCookie) {
-    const cookie = await import('@fastify/cookie');
+    const cookie = await import("@fastify/cookie");
     await app.register(cookie.default ?? cookie);
   }
 

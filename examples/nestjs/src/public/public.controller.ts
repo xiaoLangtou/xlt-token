@@ -1,14 +1,14 @@
-import { Controller, Get, Param, Req } from '@nestjs/common';
-import { StpUtil, XltIgnore } from '@xlt-token/nestjs';
-import type { Request } from 'express';
+import { Controller, Get, Param, Req } from "@nestjs/common";
+import { StpUtil, XltIgnore } from "@xlt-token/nestjs";
+import type { Request } from "express";
 
-@Controller('public')
+@Controller("public")
 export class PublicController {
   /** @XltIgnore：黑名单模式下公开访问 */
   @XltIgnore()
-  @Get('health')
+  @Get("health")
   health() {
-    return { ok: true, service: 'xlt-token-example' };
+    return { ok: true, service: "xlt-token-example" };
   }
 
   /**
@@ -16,14 +16,14 @@ export class PublicController {
    * 对应 docs/09-recipes §8。
    */
   @XltIgnore()
-  @Get('product/:id')
-  async productDetail(@Param('id') id: string, @Req() req: Request) {
+  @Get("product/:id")
+  async productDetail(@Param("id") id: string, @Req() req: Request) {
     const loginId = await StpUtil.getLoginId(req);
     return {
       id,
       title: `Product ${id}`,
       myRating: loginId ? await this.mockUserRating(loginId, id) : null,
-      viewer: loginId ?? 'anonymous',
+      viewer: loginId ?? "anonymous",
     };
   }
 

@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Git tag to publish (e.g. v1.0.0-rc.3)'
+        description: "Git tag to publish (e.g. v1.0.0-rc.3)"
         required: true
 
 permissions:

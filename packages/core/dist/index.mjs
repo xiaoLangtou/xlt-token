@@ -483,12 +483,12 @@ function normalizeXltTokenConfig(input) {
 			allowZero: true,
 			allowNever: true
 		}),
-		permCacheTimeout: normalizeDuration(config.permCacheTimeout, {
+		permCacheTimeout: normalizeDuration(config.permCacheTimeout ?? DEFAULT_XLT_TOKEN_CONFIG.permCacheTimeout, {
 			field: "permCacheTimeout",
 			allowZero: true,
 			allowNever: true
 		}),
-		offlineRecordTimeout: normalizeDuration(config.offlineRecordTimeout, {
+		offlineRecordTimeout: normalizeDuration(config.offlineRecordTimeout ?? DEFAULT_XLT_TOKEN_CONFIG.offlineRecordTimeout, {
 			field: "offlineRecordTimeout",
 			allowZero: true,
 			allowNever: true
@@ -881,7 +881,7 @@ var StpLogic = class {
 		await this.store.delete(this.keys.sessionKey(loginId, device));
 		await this._removeFromSessionList(loginId, device);
 		this.writeOfflineRecord(fullToken, "LOGOUT");
-		this.callHook("onLogout", loginId, fullToken);
+		this.callHook("onLogout", loginId, fullToken, "LOGOUT_BY_DEVICE");
 		return true;
 	}
 	/**

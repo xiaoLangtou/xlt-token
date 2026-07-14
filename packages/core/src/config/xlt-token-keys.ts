@@ -1,5 +1,4 @@
 export class XltTokenKeys {
-
   constructor(readonly tokenName: string) {}
 
   /**
@@ -16,7 +15,7 @@ export class XltTokenKeys {
    * @param loginId
    * @
    */
-  sessionKey(loginId: string, device = 'default'): string {
+  sessionKey(loginId: string, device = "default"): string {
     return `${this.tokenName}:login:session:${loginId}:${device}`;
   }
 
@@ -76,5 +75,4 @@ export class XltTokenKeys {
   roleCacheKey(loginId: string): string {
     return `${this.tokenName}:perm-cache:role:${loginId}`;
   }
-
 }

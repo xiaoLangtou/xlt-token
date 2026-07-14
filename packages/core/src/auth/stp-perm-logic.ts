@@ -1,11 +1,11 @@
-import type { StpInterface } from '../perm/stp-interface.js';
-import type { XltTokenConfig, XltTokenConfigInput } from '../config/xlt-token-config.js';
-import { XltTokenKeys } from '../config/xlt-token-keys.js';
-import type { XltTokenStore } from '../store/xlt-token-store.interface.js';
-import { XltMode } from '../const/index.js';
-import { matchPermission } from '../perm/perm-pattern-match.js';
-import { NotPermissionException } from '../exceptions/not-permission.exception.js';
-import { NotRoleException } from '../exceptions/not-role.exception.js';
+import type { StpInterface } from "../perm/stp-interface.js";
+import type { XltTokenConfig } from "../config/xlt-token-config.js";
+import { XltTokenKeys } from "../config/xlt-token-keys.js";
+import type { XltTokenStore } from "../store/xlt-token-store.interface.js";
+import { XltMode } from "../const/index.js";
+import { matchPermission } from "../perm/perm-pattern-match.js";
+import { NotPermissionException } from "../exceptions/not-permission.exception.js";
+import { NotRoleException } from "../exceptions/not-role.exception.js";
 
 export class StpPermLogic {
   private readonly keys: XltTokenKeys;
@@ -19,7 +19,7 @@ export class StpPermLogic {
   }
 
   private permCacheTimeoutSec(): number {
-    return this.tokenConfig.permCacheTimeout  ?? 0;
+    return this.tokenConfig.permCacheTimeout ?? 0;
   }
 
   private async getPermissionList(loginId: string): Promise<string[]> {
@@ -61,7 +61,7 @@ export class StpPermLogic {
 
   async checkPermission(loginId: string, permissions: string[], mode: XltMode): Promise<void> {
     if (!loginId || !permissions) throw new NotPermissionException(permissions, mode);
-    const results = await Promise.all(permissions.map(p => this.hasPermission(loginId, p)));
+    const results = await Promise.all(permissions.map((p) => this.hasPermission(loginId, p)));
     const passed = mode === XltMode.AND ? results.every(Boolean) : results.some(Boolean);
     if (!passed) throw new NotPermissionException(permissions, mode);
   }
@@ -76,7 +76,7 @@ export class StpPermLogic {
 
   async checkRole(loginId: string, role: string[], mode: XltMode): Promise<void> {
     if (!loginId || !role) throw new NotRoleException(role, mode);
-    const results = await Promise.all(role.map(r => this.hasRole(loginId, r)));
+    const results = await Promise.all(role.map((r) => this.hasRole(loginId, r)));
     const passed = mode === XltMode.AND ? results.every(Boolean) : results.some(Boolean);
     if (!passed) throw new NotRoleException(role, mode);
   }

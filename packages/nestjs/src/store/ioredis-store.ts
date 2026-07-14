@@ -1,10 +1,7 @@
-import { Inject, Injectable } from '@nestjs/common';
-import {
-  IORedisStore as BaseIORedisStore,
-  type IORedisClient,
-} from '@xlt-token/store-redis';
+import { Inject, Injectable } from "@nestjs/common";
+import { IORedisStore as BaseIORedisStore, type IORedisClient } from "@xlt-token/store-redis";
 
-export const XLT_IOREDIS_CLIENT = 'XLT_IOREDIS_CLIENT';
+export const XLT_IOREDIS_CLIENT = "XLT_IOREDIS_CLIENT";
 
 /**
  * @deprecated Import `IORedisStore` from `@xlt-token/store-redis` and provide it

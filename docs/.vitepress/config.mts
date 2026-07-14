@@ -302,6 +302,7 @@ export default defineConfig({
         collapsed: true,
         items: [
           { text: '架构设计', link: '/guide/architecture' },
+          { text: '工程化门禁', link: '/guide/engineering' },
           { text: '迁移指南', link: '/guide/migration-2-0' },
           { text: 'LLMs.txt', link: '/guide/llms' },
           { text: 'Skills 指南', link: '/guide/skills' },

@@ -1,4 +1,4 @@
-import type { HttpContext } from './context.js';
+import type { HttpContext } from "./context.js";
 
 export interface MockHttpContextOptions {
   headers?: Record<string, string | string[] | undefined>;
@@ -15,7 +15,7 @@ export function createMockHttpContext(options: MockHttpContextOptions = {}): Htt
       get(name: string) {
         const value = options.headers?.[name.toLowerCase()];
         if (value == null) return null;
-        return Array.isArray(value) ? value[0] ?? null : value;
+        return Array.isArray(value) ? (value[0] ?? null) : value;
       },
     },
     cookies: {
@@ -31,6 +31,6 @@ export function createMockHttpContext(options: MockHttpContextOptions = {}): Htt
     state,
     setHeader() {},
     setCookie() {},
-    raw: () => options,
+    raw: <T = MockHttpContextOptions>() => options as T,
   };
 }

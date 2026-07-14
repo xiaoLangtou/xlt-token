@@ -1,5 +1,5 @@
-import { CanActivate, ExecutionContext, Inject, Injectable } from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
+import { CanActivate, ExecutionContext, Inject, Injectable } from "@nestjs/common";
+import { Reflector } from "@nestjs/core";
 import {
   NotLoginException as CoreNotLoginException,
   NotLoginType,
@@ -8,9 +8,9 @@ import {
   XLT_IGNORE_KEY,
   XLT_TOKEN_CONFIG,
   type XltTokenConfig,
-} from '@xlt-token/core';
-import { NotLoginException } from '../exceptions/not-login.exception.js';
-import { createNestHttpContext } from '../http/nest-bridge.js';
+} from "@xlt-token/core";
+import { NotLoginException } from "../exceptions/not-login.exception.js";
+import { createNestHttpContext } from "../http/nest-bridge.js";
 
 @Injectable()
 export abstract class XltAbstractLoginGuard implements CanActivate {
@@ -44,11 +44,19 @@ export abstract class XltAbstractLoginGuard implements CanActivate {
   }
 
   protected requiresLogin(ctx: ExecutionContext): boolean {
-    const isIgnored = this.reflector.getAllAndOverride<boolean>(XLT_IGNORE_KEY, [ctx.getHandler(), ctx.getClass()]);
+    const isIgnored = this.reflector.getAllAndOverride<boolean>(XLT_IGNORE_KEY, [
+      ctx.getHandler(),
+      ctx.getClass(),
+    ]);
 
     if (this.config.defaultCheck) return !isIgnored;
 
-    return this.reflector.getAllAndOverride<boolean>(XLT_CHECK_LOGIN_KEY, [ctx.getHandler(), ctx.getClass()]) ?? false;
+    return (
+      this.reflector.getAllAndOverride<boolean>(XLT_CHECK_LOGIN_KEY, [
+        ctx.getHandler(),
+        ctx.getClass(),
+      ]) ?? false
+    );
   }
 
   protected onAuthSuccess?(

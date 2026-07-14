@@ -1,4 +1,4 @@
-import type { XltHooks } from '@xlt-token/express';
+import type { XltHooks } from "@xlt-token/express";
 
 const events: Array<{ event: string; at: string; payload: Record<string, unknown> }> = [];
 
@@ -14,10 +14,12 @@ export function createAuditHooks(): XltHooks {
   };
 
   return {
-    onLogin: (loginId, token, device) => push('login', { loginId, device, token: token.slice(0, 8) }),
-    onLogout: (loginId, token, reason) => push('logout', { loginId, reason, token: token.slice(0, 8) }),
-    onKickout: (loginId, token) => push('kickout', { loginId, token: token.slice(0, 8) }),
+    onLogin: (loginId, token, device) =>
+      push("login", { loginId, device, token: token.slice(0, 8) }),
+    onLogout: (loginId, token, reason) =>
+      push("logout", { loginId, reason, token: token.slice(0, 8) }),
+    onKickout: (loginId, token) => push("kickout", { loginId, token: token.slice(0, 8) }),
     onReplaced: (loginId, oldToken, newToken) =>
-      push('replaced', { loginId, oldToken: oldToken.slice(0, 8), newToken: newToken.slice(0, 8) }),
+      push("replaced", { loginId, oldToken: oldToken.slice(0, 8), newToken: newToken.slice(0, 8) }),
   };
 }

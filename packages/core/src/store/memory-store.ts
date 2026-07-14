@@ -1,4 +1,4 @@
-import type { XltTokenStore } from './xlt-token-store.interface.js';
+import type { XltTokenStore } from "./xlt-token-store.interface.js";
 
 interface MemoryEntry {
   value: string;
@@ -62,7 +62,7 @@ export class MemoryStore implements XltTokenStore {
   }
 
   async keys(pattern: string): Promise<string[]> {
-    const prefix = pattern.endsWith('*') ? pattern.slice(0, -1) : pattern;
+    const prefix = pattern.endsWith("*") ? pattern.slice(0, -1) : pattern;
     const result: string[] = [];
     for (const [key] of this.store) {
       if (key.startsWith(prefix) && this.peek(key)) {
@@ -95,7 +95,9 @@ export class MemoryStore implements XltTokenStore {
     if (timeoutSec === -1) return;
     const delayMs = timeoutSec * 1000;
     if (delayMs > MemoryStore.MAX_TIMER_DELAY_MS) {
-      console.warn(`[MemoryStore] timeout ${timeoutSec}s exceeds max timer delay (${MemoryStore.MAX_TIMER_DELAY_MS}ms). Entry will be cleaned on next access.`);
+      console.warn(
+        `[MemoryStore] timeout ${timeoutSec}s exceeds max timer delay (${MemoryStore.MAX_TIMER_DELAY_MS}ms). Entry will be cleaned on next access.`,
+      );
       return;
     }
     entry.timer = setTimeout(() => {

@@ -1,1 +1,1 @@
-export { UuidStrategy } from '@xlt-token/core';
+export { UuidStrategy } from "@xlt-token/core";

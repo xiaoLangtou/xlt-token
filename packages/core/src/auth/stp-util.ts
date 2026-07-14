@@ -1,10 +1,14 @@
-import type { HttpContext } from '../http/context.js';
-import { createExpressContext, type ExpressLikeRequest, type ExpressLikeResponse } from '../http/express.js';
-import type { DeviceInfo } from '../config/xlt-token-config.js';
-import type { XltMode } from '../const/index.js';
-import type { XltSession } from '../session/xlt-session.js';
-import type { StpLogic } from './stp-logic.js';
-import type { StpPermLogic } from './stp-perm-logic.js';
+import type { HttpContext } from "../http/context.js";
+import {
+  createExpressContext,
+  type ExpressLikeRequest,
+  type ExpressLikeResponse,
+} from "../http/express.js";
+import type { DeviceInfo } from "../config/xlt-token-config.js";
+import type { XltMode } from "../const/index.js";
+import type { XltSession } from "../session/xlt-session.js";
+import type { StpLogic } from "./stp-logic.js";
+import type { StpPermLogic } from "./stp-perm-logic.js";
 
 const noopResponse: ExpressLikeResponse = {
   setHeader: () => {},
@@ -12,7 +16,7 @@ const noopResponse: ExpressLikeResponse = {
 };
 
 function toHttpContext(req: HttpContext | ExpressLikeRequest): HttpContext {
-  if (typeof (req as HttpContext).headers?.get === 'function') {
+  if (typeof (req as HttpContext).headers?.get === "function") {
     return req as HttpContext;
   }
   return createExpressContext(req as ExpressLikeRequest, noopResponse);
@@ -31,14 +35,18 @@ export function setStpPermLogic(stpPermLogic: StpPermLogic) {
 
 function getStpLogic(): StpLogic {
   if (!_stpLogic) {
-    throw new Error('StpLogic not initialized. Please ensure XltTokenModule is imported correctly.');
+    throw new Error(
+      "StpLogic not initialized. Please ensure XltTokenModule is imported correctly.",
+    );
   }
   return _stpLogic;
 }
 
 function getStpPermLogic(): StpPermLogic {
   if (!_stpPermLogic) {
-    throw new Error('StpPermLogic not initialized. Please ensure XltTokenModule is imported with stpInterface.');
+    throw new Error(
+      "StpPermLogic not initialized. Please ensure XltTokenModule is imported with stpInterface.",
+    );
   }
   return _stpPermLogic;
 }
@@ -136,7 +144,11 @@ export class StpUtil {
     return getStpPermLogic().hasPermission(loginId, permission);
   }
 
-  static async checkPermission(loginId: string, permissions: string[], mode: XltMode): Promise<void> {
+  static async checkPermission(
+    loginId: string,
+    permissions: string[],
+    mode: XltMode,
+  ): Promise<void> {
     return getStpPermLogic().checkPermission(loginId, permissions, mode);
   }
 

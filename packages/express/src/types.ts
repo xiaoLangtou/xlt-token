@@ -1,4 +1,4 @@
-import type { XltMode } from '@xlt-token/core';
+import type { XltMode } from "@xlt-token/core";
 
 export interface RouteAuthMeta {
   ignore?: boolean;
@@ -8,10 +8,7 @@ export interface RouteAuthMeta {
   safeBusiness?: string;
 }
 
-export type AuthMatcher =
-  | string
-  | RegExp
-  | ((req: import('express').Request) => boolean);
+export type AuthMatcher = string | RegExp | ((req: import("express").Request) => boolean);
 
 export interface RouteAuthPolicy extends RouteAuthMeta {
   match: AuthMatcher | AuthMatcher[];
@@ -24,7 +21,6 @@ export interface XltMiddlewareOptions {
   /** 路由级鉴权策略。xltMiddleware 会在鉴权前解析这些规则。 */
   policies?: RouteAuthPolicy[];
 }
-
 
 export interface ExpressRequest {
   _xltState?: Record<string, unknown>;

@@ -1,5 +1,5 @@
-import type { RequestHandler } from 'express';
-import { XltMode } from '@xlt-token/core';
+import type { RequestHandler } from "express";
+import { XltMode } from "@xlt-token/core";
 
 /**
  * 路由级 helper：声明当前路由所需角色。

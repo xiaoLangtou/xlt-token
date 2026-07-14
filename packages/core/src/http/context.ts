@@ -5,7 +5,7 @@ export interface CookieOptions {
   path?: string;
   domain?: string;
   secure?: boolean;
-  sameSite?: boolean | 'lax' | 'strict' | 'none';
+  sameSite?: boolean | "lax" | "strict" | "none";
   signed?: boolean;
 }
 

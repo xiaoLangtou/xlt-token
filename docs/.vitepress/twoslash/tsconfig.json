@@ -15,7 +15,5 @@
       "xlt-token": ["packages/nestjs/src/index.ts"]
     }
   },
-  "include": [
-    "../../../packages/nestjs/src/**/*.ts"
-  ]
+  "include": ["../../../packages/nestjs/src/**/*.ts"]
 }

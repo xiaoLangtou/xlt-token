@@ -1,6 +1,6 @@
-import { randomBytes, randomUUID } from 'node:crypto';
-import type { DurationInput, XltTokenConfig } from '../config/xlt-token-config.js';
-import type { TokenStrategy } from './token-strategy.interface.js';
+import { randomBytes, randomUUID } from "node:crypto";
+import type { DurationInput, XltTokenConfig } from "../config/xlt-token-config.js";
+import type { TokenStrategy } from "./token-strategy.interface.js";
 
 export class UuidStrategy implements TokenStrategy {
   generateToken(_payload: unknown): string {
@@ -11,19 +11,23 @@ export class UuidStrategy implements TokenStrategy {
     return token;
   }
 
-  createToken(_loginId: string, config: XltTokenConfig, _options?: { timeout?: DurationInput }): string {
+  createToken(
+    _loginId: string,
+    config: XltTokenConfig,
+    _options?: { timeout?: DurationInput },
+  ): string {
     return this.buildRaw(config.tokenStyle);
   }
 
-  private buildRaw(style: XltTokenConfig['tokenStyle']): string {
+  private buildRaw(style: XltTokenConfig["tokenStyle"]): string {
     switch (style) {
-      case 'uuid':
+      case "uuid":
         return randomUUID();
-      case 'simple-uuid':
-        return randomUUID().replace(/-/g, '');
-      case 'random-32':
+      case "simple-uuid":
+        return randomUUID().replace(/-/g, "");
+      case "random-32":
       default:
-        return randomBytes(16).toString('hex');
+        return randomBytes(16).toString("hex");
     }
   }
 }

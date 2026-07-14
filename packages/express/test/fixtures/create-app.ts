@@ -1,4 +1,4 @@
-import express, { type Express } from 'express';
+import express, { type Express } from "express";
 import {
   createXltToken,
   MemoryStore,
@@ -6,7 +6,7 @@ import {
   type StpInterface,
   type XltTokenConfig,
   type XltTokenContext,
-} from '@xlt-token/core';
+} from "@xlt-token/core";
 import {
   checkPermission,
   checkRole,
@@ -15,7 +15,7 @@ import {
   requireLogin,
   xltErrorHandler,
   xltMiddleware,
-} from '../../src/index.js';
+} from "../../src/index.js";
 
 /**
  * 权限/角色数据源：
@@ -23,9 +23,8 @@ import {
  * - 其他：无任何权限/角色
  */
 const stpInterface: StpInterface = {
-  getPermissionList: async (loginId) =>
-    loginId === '1001' ? ['user:read', 'order:*'] : [],
-  getRoleList: async (loginId) => (loginId === '1001' ? ['admin'] : []),
+  getPermissionList: async (loginId) => (loginId === "1001" ? ["user:read", "order:*"] : []),
+  getRoleList: async (loginId) => (loginId === "1001" ? ["admin"] : []),
 };
 
 export interface TestApp {
@@ -47,7 +46,7 @@ export interface TestApp {
  */
 export function createTestApp(config: Partial<XltTokenConfig> = {}): TestApp {
   const xlt = createXltToken({
-    config: { tokenPrefix: '', ...config },
+    config: { tokenPrefix: "", ...config },
     store: new MemoryStore(),
     stpInterface,
   });
@@ -58,69 +57,69 @@ export function createTestApp(config: Partial<XltTokenConfig> = {}): TestApp {
   const api = express.Router();
   api.use(
     xltMiddleware(xlt, {
-      ignore: ['/api/auth/login', '/api/public'],
+      ignore: ["/api/auth/login", "/api/public"],
       policies: [
-        { match: '/api/admin', permissions: { list: ['admin:write'], mode: XltMode.AND } },
-        { match: '/api/order', permissions: { list: ['order:read'], mode: XltMode.AND } },
-        { match: '/api/role-admin', roles: { list: ['admin'], mode: XltMode.AND } },
-        { match: '/api/pay', safeBusiness: 'pay' },
+        { match: "/api/admin", permissions: { list: ["admin:write"], mode: XltMode.AND } },
+        { match: "/api/order", permissions: { list: ["order:read"], mode: XltMode.AND } },
+        { match: "/api/role-admin", roles: { list: ["admin"], mode: XltMode.AND } },
+        { match: "/api/pay", safeBusiness: "pay" },
       ],
     }),
   );
 
-  api.post('/auth/login', async (req, res) => {
-    const { userId = '1001', device } = req.body ?? {};
+  api.post("/auth/login", async (req, res) => {
+    const { userId = "1001", device } = req.body ?? {};
     const token = await xlt.stpLogic.login(userId, device ? { device } : {});
     res.json({ token });
   });
 
-  api.get('/public', (_req, res) => {
+  api.get("/public", (_req, res) => {
     res.json({ ok: true });
   });
 
-  api.get('/publicity', (_req, res) => {
+  api.get("/publicity", (_req, res) => {
     res.json({ ok: true });
   });
 
-  api.get('/me', (req, res) => {
+  api.get("/me", (req, res) => {
     res.json({ id: req.stpLoginId, token: req.stpToken });
   });
 
-  api.get('/admin', (_req, res) => {
+  api.get("/admin", (_req, res) => {
     res.json({ ok: true });
   });
 
-  api.get('/order', (_req, res) => {
+  api.get("/order", (_req, res) => {
     res.json({ ok: true });
   });
 
-  api.get('/role-admin', (_req, res) => {
+  api.get("/role-admin", (_req, res) => {
     res.json({ ok: true });
   });
 
-  api.post('/pay', (_req, res) => {
+  api.post("/pay", (_req, res) => {
     res.json({ ok: true });
   });
 
-  app.use('/api', api);
+  app.use("/api", api);
 
-  app.get('/helper/public', ignoreAuth(), xltMiddleware(xlt), (_req, res) => {
+  app.get("/helper/public", ignoreAuth(), xltMiddleware(xlt), (_req, res) => {
     res.json({ ok: true });
   });
 
-  app.get('/helper/required', requireLogin(), xltMiddleware(xlt), (req, res) => {
+  app.get("/helper/required", requireLogin(), xltMiddleware(xlt), (req, res) => {
     res.json({ id: req.stpLoginId, token: req.stpToken });
   });
 
-  app.get('/helper/order', checkPermission('order:read'), xltMiddleware(xlt), (_req, res) => {
+  app.get("/helper/order", checkPermission("order:read"), xltMiddleware(xlt), (_req, res) => {
     res.json({ ok: true });
   });
 
-  app.get('/helper/role-admin', checkRole('admin'), xltMiddleware(xlt), (_req, res) => {
+  app.get("/helper/role-admin", checkRole("admin"), xltMiddleware(xlt), (_req, res) => {
     res.json({ ok: true });
   });
 
-  app.post('/helper/pay', checkSafe('pay'), xltMiddleware(xlt), (_req, res) => {
+  app.post("/helper/pay", checkSafe("pay"), xltMiddleware(xlt), (_req, res) => {
     res.json({ ok: true });
   });
 

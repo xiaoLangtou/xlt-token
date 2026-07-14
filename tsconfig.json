@@ -15,12 +15,6 @@
     "outDir": "./dist",
     "rootDir": "."
   },
-  "include": [
-    "src/**/*.ts",
-    "packages/nestjs/src/**/*.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist"
-  ]
+  "include": ["src/**/*.ts", "packages/nestjs/src/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
 }

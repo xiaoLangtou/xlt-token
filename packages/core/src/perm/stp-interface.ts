@@ -1,5 +1,4 @@
 export interface StpInterface {
-
   /**
    * 根据登录ID获取权限列表
    * @param loginId 登录ID
@@ -15,8 +14,6 @@ export interface StpInterface {
    * @returns 角色列表
    */
   getRoleList(loginId: string): Promise<string[]> | string[];
-
 }
 
-
-export const XLT_STP_INTERFACE = 'XLT_STP_INTERFACE';
+export const XLT_STP_INTERFACE = "XLT_STP_INTERFACE";

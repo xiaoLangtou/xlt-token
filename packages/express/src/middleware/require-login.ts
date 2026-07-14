@@ -1,4 +1,4 @@
-import type { RequestHandler } from 'express';
+import type { RequestHandler } from "express";
 
 /**
  * 路由级 helper：标记当前路由需要登录（白名单模式下开启校验）。

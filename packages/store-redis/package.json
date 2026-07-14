@@ -3,27 +3,33 @@
   "version": "1.2.1",
   "description": "Framework-agnostic Redis stores for xlt-token",
   "keywords": [
-    "token",
     "auth",
-    "redis",
     "ioredis",
-    "session"
+    "redis",
+    "session",
+    "token"
   ],
-  "author": "xltorg",
+  "homepage": "https://xiaolangtou.github.io/xlt-token/",
+  "bugs": {
+    "url": "https://github.com/xiaoLangtou/xlt-token/issues"
+  },
   "license": "MIT",
+  "author": "xltorg",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/xiaoLangtou/xlt-token.git",
     "directory": "packages/store-redis"
   },
-  "bugs": {
-    "url": "https://github.com/xiaoLangtou/xlt-token/issues"
-  },
-  "homepage": "https://xiaolangtou.github.io/xlt-token/",
-  "publishConfig": {
-    "access": "public"
-  },
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md"
+  ],
   "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.cts",
   "exports": {
     ".": {
       "import": {
@@ -37,22 +43,26 @@
     },
     "./package.json": "./package.json"
   },
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.mjs",
-  "types": "./dist/index.d.cts",
-  "sideEffects": false,
-  "files": [
-    "dist",
-    "LICENSE",
-    "README.md"
-  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsdown",
     "build:watch": "tsdown --watch",
     "prepublishOnly": "pnpm run build",
+    "typecheck": "tsc --noEmit && pnpm run test:types",
     "test": "vitest run",
     "test:types": "tsc --noEmit --target ES2020 --module NodeNext --moduleResolution NodeNext --strict --esModuleInterop --skipLibCheck --types vitest/globals test/client-types.spec.ts",
     "test:cov": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@xlt-token/core": "^1.2.1"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "^2.1.9",
+    "tsdown": "^0.20.0",
+    "typescript": "^5.1.0",
+    "vitest": "^2.0.0"
   },
   "peerDependencies": {
     "ioredis": "^5.0.0",
@@ -65,14 +75,5 @@
     "redis": {
       "optional": true
     }
-  },
-  "dependencies": {
-    "@xlt-token/core": "^1.2.1"
-  },
-  "devDependencies": {
-    "@vitest/coverage-v8": "^2.1.9",
-    "tsdown": "^0.20.0",
-    "typescript": "^5.1.0",
-    "vitest": "^2.0.0"
   }
 }

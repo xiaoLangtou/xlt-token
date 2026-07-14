@@ -1,1 +1,1 @@
-export { MemoryStore } from '@xlt-token/core';
+export { MemoryStore } from "@xlt-token/core";

@@ -3,27 +3,33 @@
   "version": "1.2.1",
   "description": "Express middleware adapter for xlt-token",
   "keywords": [
-    "express",
-    "token",
     "auth",
+    "express",
     "session",
+    "token",
     "xlt-token"
   ],
-  "author": "xltorg",
+  "homepage": "https://xiaolangtou.github.io/xlt-token/",
+  "bugs": {
+    "url": "https://github.com/xiaoLangtou/xlt-token/issues"
+  },
   "license": "MIT",
+  "author": "xltorg",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/xiaoLangtou/xlt-token.git",
     "directory": "packages/express"
   },
-  "bugs": {
-    "url": "https://github.com/xiaoLangtou/xlt-token/issues"
-  },
-  "homepage": "https://xiaolangtou.github.io/xlt-token/",
-  "publishConfig": {
-    "access": "public"
-  },
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md"
+  ],
   "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.cts",
   "exports": {
     ".": {
       "import": {
@@ -37,26 +43,18 @@
     },
     "./package.json": "./package.json"
   },
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.mjs",
-  "types": "./dist/index.d.cts",
-  "sideEffects": false,
-  "files": [
-    "dist",
-    "LICENSE",
-    "README.md"
-  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsdown",
     "build:watch": "tsdown --watch",
     "prepublishOnly": "pnpm run build",
+    "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:cov": "vitest run --coverage",
     "test:e2e": "vitest run --config vitest.e2e.config.ts",
     "test:e2e:cov": "vitest run --config vitest.e2e.config.ts --coverage"
-  },
-  "peerDependencies": {
-    "express": "^4.18.0 || ^5.0.0"
   },
   "dependencies": {
     "@xlt-token/core": "^1.2.1"
@@ -71,5 +69,8 @@
     "tsdown": "^0.20.0",
     "typescript": "^5.1.0",
     "vitest": "^2.0.0"
+  },
+  "peerDependencies": {
+    "express": "^4.18.0 || ^5.0.0"
   }
 }

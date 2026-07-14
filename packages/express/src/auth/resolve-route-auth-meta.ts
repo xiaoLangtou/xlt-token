@@ -1,9 +1,9 @@
-import type { Request } from 'express';
-import type { RouteAuthMeta, RouteAuthPolicy, XltMiddlewareOptions } from '../types.js';
+import type { Request } from "express";
+import type { RouteAuthMeta, RouteAuthPolicy, XltMiddlewareOptions } from "../types.js";
 
 function matchPathPrefix(path: string, prefix: string): boolean {
-  const pathname = path.split('?')[0] ?? path;
-  return prefix === '/' || pathname === prefix || pathname.startsWith(`${prefix}/`);
+  const pathname = path.split("?")[0] ?? path;
+  return prefix === "/" || pathname === prefix || pathname.startsWith(`${prefix}/`);
 }
 
 /**
@@ -41,8 +41,8 @@ export function matchPolicy(req: Request, policy: RouteAuthPolicy): boolean {
 
   const matchers = Array.isArray(policy.match) ? policy.match : [policy.match];
   return matchers.some((matcher) => {
-    if (typeof matcher === 'function') return matcher(req);
-    if (typeof matcher === 'string') {
+    if (typeof matcher === "function") return matcher(req);
+    if (typeof matcher === "string") {
       return matchPathPrefix(req.originalUrl, matcher);
     }
     return matcher.test(req.originalUrl);

@@ -1,6 +1,11 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
-import { StpLogic, XLT_TOKEN_CONFIG, XltAbstractLoginGuard, type XltTokenConfig } from '@xlt-token/nestjs';
+import { Inject, Injectable } from "@nestjs/common";
+import { Reflector } from "@nestjs/core";
+import {
+  StpLogic,
+  XLT_TOKEN_CONFIG,
+  XltAbstractLoginGuard,
+  type XltTokenConfig,
+} from "@xlt-token/nestjs";
 
 /** Shared counters accessible from test code */
 export const guardCounters = { success: 0, fail: 0 };
@@ -17,7 +22,7 @@ export class CustomLoginGuard extends XltAbstractLoginGuard {
 
   protected async onAuthSuccess(result: any, req: any) {
     guardCounters.success++;
-    req.user = { id: result.loginId, role: 'mocked' };
+    req.user = { id: result.loginId, role: "mocked" };
   }
 
   protected async onAuthFail() {

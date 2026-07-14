@@ -1,0 +1,26 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "unicorn", "oxc"],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "warn"
+  },
+  "ignorePatterns": [
+    "**/dist/**",
+    "**/coverage/**",
+    "**/reports/**",
+    "docs/.vitepress/cache/**",
+    "docs/.vitepress/dist/**"
+  ],
+  "rules": {
+    "no-underscore-dangle": "off",
+    "no-shadow": "off",
+    "typescript/no-extraneous-class": "off",
+    "unicorn/consistent-function-scoping": "off",
+    "oxc/no-async-endpoint-handlers": "off"
+  },
+  "env": {
+    "builtin": true,
+    "node": true
+  }
+}

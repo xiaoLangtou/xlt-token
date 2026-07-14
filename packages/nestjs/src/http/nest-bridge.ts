@@ -6,11 +6,11 @@ import {
   NotPermissionException as CoreNotPermissionException,
   NotRoleException as CoreNotRoleException,
   NotSafeException as CoreNotSafeException,
-} from '@xlt-token/core';
-import { NotLoginException } from '../exceptions/not-login.exception.js';
-import { NotPermissionException } from '../exceptions/not-permission.exception.js';
-import { NotRoleException } from '../exceptions/not-role.exception.js';
-import { NotSafeException } from '../exceptions/not-safe.exception.js';
+} from "@xlt-token/core";
+import { NotLoginException } from "../exceptions/not-login.exception.js";
+import { NotPermissionException } from "../exceptions/not-permission.exception.js";
+import { NotRoleException } from "../exceptions/not-role.exception.js";
+import { NotSafeException } from "../exceptions/not-safe.exception.js";
 
 /**
  * Fastify reply 的写回 API 与 Express response 不同：
@@ -24,29 +24,29 @@ import { NotSafeException } from '../exceptions/not-safe.exception.js';
 function normalizeResponse(res: any): ExpressLikeResponse {
   return {
     setHeader(name: string, value: string): void {
-      if (typeof res?.setHeader === 'function') {
+      if (typeof res?.setHeader === "function") {
         // Express response / 原生 Node 响应
         res.setHeader(name, value);
-      } else if (typeof res?.header === 'function') {
+      } else if (typeof res?.header === "function") {
         // Fastify reply
         res.header(name, value);
       } else {
         throw new Error(
-          'xlt-token: 当前 response 不支持写入 header（既无 setHeader 也无 header 方法）',
+          "xlt-token: 当前 response 不支持写入 header（既无 setHeader 也无 header 方法）",
         );
       }
     },
     cookie(name: string, value: string, options?: CookieOptions): void {
-      if (typeof res?.cookie === 'function') {
+      if (typeof res?.cookie === "function") {
         // Express response（或已注册 @fastify/cookie 暴露的 cookie 别名）
         res.cookie(name, value, options);
-      } else if (typeof res?.setCookie === 'function') {
+      } else if (typeof res?.setCookie === "function") {
         // Fastify reply + @fastify/cookie 插件
         res.setCookie(name, value, options);
       } else {
         throw new Error(
-          'xlt-token: 当前 response 不支持写入 cookie。'
-            + '若使用 Fastify，请先注册 @fastify/cookie 插件。',
+          "xlt-token: 当前 response 不支持写入 cookie。" +
+            "若使用 Fastify，请先注册 @fastify/cookie 插件。",
         );
       }
     },

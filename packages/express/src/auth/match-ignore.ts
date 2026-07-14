@@ -1,9 +1,9 @@
-import type { Request } from 'express';
-import type { AuthMatcher } from '../types.js';
+import type { Request } from "express";
+import type { AuthMatcher } from "../types.js";
 
 function matchPathPrefix(path: string, prefix: string): boolean {
-  const pathname = path.split('?')[0] ?? path;
-  return prefix === '/' || pathname === prefix || pathname.startsWith(`${prefix}/`);
+  const pathname = path.split("?")[0] ?? path;
+  return prefix === "/" || pathname === prefix || pathname.startsWith(`${prefix}/`);
 }
 
 /**
@@ -14,8 +14,8 @@ export function matchIgnore(req: Request, rules?: AuthMatcher[]): boolean {
   if (!rules?.length) return false;
 
   return rules.some((rule) => {
-    if (typeof rule === 'function') return rule(req);
-    if (typeof rule === 'string') {
+    if (typeof rule === "function") return rule(req);
+    if (typeof rule === "string") {
       return matchPathPrefix(req.originalUrl, rule);
     }
     return rule.test(req.originalUrl);

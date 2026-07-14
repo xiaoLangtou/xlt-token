@@ -1,33 +1,33 @@
-import { describe, expect, it } from 'vitest';
-import { createExpressContext } from '../../src/http/express.js';
+import { describe, expect, it } from "vitest";
+import { createExpressContext } from "../../src/http/express.js";
 
-describe('createExpressContext', () => {
-  it('读取 header / cookie / query（大小写不敏感）', () => {
+describe("createExpressContext", () => {
+  it("读取 header / cookie / query（大小写不敏感）", () => {
     const req = {
-      headers: { authorization: 'Bearer t1' },
-      cookies: { sid: 'c1' },
-      query: { token: 'q1' },
+      headers: { authorization: "Bearer t1" },
+      cookies: { sid: "c1" },
+      query: { token: "q1" },
     };
     const res = { setHeader: () => {}, cookie: () => {} };
     const ctx = createExpressContext(req, res);
 
-    expect(ctx.headers.get('Authorization')).toBe('Bearer t1');
-    expect(ctx.cookies.get('sid')).toBe('c1');
-    expect(ctx.query.get('token')).toBe('q1');
+    expect(ctx.headers.get("Authorization")).toBe("Bearer t1");
+    expect(ctx.cookies.get("sid")).toBe("c1");
+    expect(ctx.query.get("token")).toBe("q1");
   });
 
-  it('同一 req 多次创建共享 state', () => {
+  it("同一 req 多次创建共享 state", () => {
     const req = { headers: {} };
     const res = { setHeader: () => {}, cookie: () => {} };
 
     const ctx1 = createExpressContext(req, res);
     const ctx2 = createExpressContext(req, res);
 
-    ctx1.state.stpLoginId = '1001';
-    expect(ctx2.state.stpLoginId).toBe('1001');
+    ctx1.state.stpLoginId = "1001";
+    expect(ctx2.state.stpLoginId).toBe("1001");
   });
 
-  it('setHeader / setCookie 委托到 response', () => {
+  it("setHeader / setCookie 委托到 response", () => {
     const headers: Record<string, string> = {};
     const cookies: Array<{ name: string; value: string; options?: unknown }> = [];
     const req = { headers: {} };
@@ -41,15 +41,15 @@ describe('createExpressContext', () => {
     };
 
     const ctx = createExpressContext(req, res);
-    ctx.setHeader('X-Test', '1');
-    ctx.setCookie('sid', 'v', { httpOnly: true });
+    ctx.setHeader("X-Test", "1");
+    ctx.setCookie("sid", "v", { httpOnly: true });
 
-    expect(headers['X-Test']).toBe('1');
-    expect(cookies).toEqual([{ name: 'sid', value: 'v', options: { httpOnly: true } }]);
+    expect(headers["X-Test"]).toBe("1");
+    expect(cookies).toEqual([{ name: "sid", value: "v", options: { httpOnly: true } }]);
   });
 
-  it('raw() 返回原始 request', () => {
-    const req = { headers: { a: '1' } };
+  it("raw() 返回原始 request", () => {
+    const req = { headers: { a: "1" } };
     const res = { setHeader: () => {}, cookie: () => {} };
     expect(createExpressContext(req, res).raw()).toBe(req);
   });
