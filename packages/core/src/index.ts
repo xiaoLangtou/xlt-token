@@ -25,7 +25,15 @@ export {
 
 export { XltTokenKeys } from "./config/xlt-token-keys.js";
 
-export type { XltTokenStore } from "./store/xlt-token-store.interface.js";
+export type {
+  StoreEntry,
+  StoreScanOptions,
+  StoreScanResult,
+  StoreTtl,
+  StoreTtlUpdate,
+  XltTokenStore,
+} from "./store/xlt-token-store.interface.js";
+export { finiteTtl, keepTtl, persistentTtl } from "./store/xlt-token-store.interface.js";
 export { MemoryStore } from "./store/memory-store.js";
 
 export type { TokenStrategy } from "./token/token-strategy.interface.js";

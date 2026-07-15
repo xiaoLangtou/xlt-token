@@ -1,22 +1,56 @@
-export interface XltTokenStore {
-  get(key: string): Promise<string | null>;
+export type StoreTtl = { kind: "finite"; seconds: number } | { kind: "persistent" };
 
-  // timeoutSec = -1 表示永不过期；同 key 已存在则覆盖（含过期时间）
-  set(key: string, value: string, timeoutSec: number): Promise<void>;
+export type StoreTtlUpdate = StoreTtl | { kind: "keep" };
+
+export interface StoreEntry {
+  value: string;
+  expiresAt: number | null;
+}
+
+export interface StoreScanOptions {
+  cursor?: string | null;
+  count?: number;
+}
+
+export interface StoreScanResult {
+  keys: string[];
+  cursor: string | null;
+}
+
+export interface XltTokenStore {
+  get(key: string): Promise<StoreEntry | null>;
+
+  set(key: string, value: string, ttl: StoreTtl): Promise<void>;
 
   delete(key: string): Promise<void>;
 
-  has(key: string): Promise<boolean>;
+  setIfAbsent(key: string, value: string, ttl: StoreTtl): Promise<boolean>;
 
-  // 只改值，不动过期时间；key 不存在时抛出异常
-  update(key: string, value: string): Promise<void>;
+  compareAndSet(
+    key: string,
+    expectedValue: string,
+    nextValue: string,
+    ttl: StoreTtlUpdate,
+  ): Promise<boolean>;
 
-  // 只改过期时间，不动值；用于续签
-  updateTimeout(key: string, timeoutSec: number): Promise<void>;
+  compareAndDelete(key: string, expectedValue: string): Promise<boolean>;
 
-  // -1 = 永久，-2 = key 不存在
-  getTimeout(key: string): Promise<number>;
+  touch(key: string, ttl: StoreTtl): Promise<boolean>;
 
-  //返回所有匹配 pattern 的 key 列表 pattern 语义：前缀匹配，以 '*' 结尾，如 'authorization:login:session-list:*'
-  keys(pattern: string): Promise<string[]>;
+  scan(pattern: string, options?: StoreScanOptions): Promise<StoreScanResult>;
+}
+
+export function finiteTtl(seconds: number): StoreTtl {
+  if (!Number.isFinite(seconds) || seconds < 0) {
+    throw new Error(`finite ttl seconds must be a non-negative finite number: ${seconds}`);
+  }
+  return { kind: "finite", seconds };
+}
+
+export function persistentTtl(): StoreTtl {
+  return { kind: "persistent" };
+}
+
+export function keepTtl(): StoreTtlUpdate {
+  return { kind: "keep" };
 }

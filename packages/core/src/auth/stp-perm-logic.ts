@@ -6,6 +6,7 @@ import { XltMode } from "../const/index.js";
 import { matchPermission } from "../perm/perm-pattern-match.js";
 import { NotPermissionException } from "../exceptions/not-permission.exception.js";
 import { NotRoleException } from "../exceptions/not-role.exception.js";
+import { getStoreValue, setStoreValue } from "../store/store-helpers.js";
 
 export class StpPermLogic {
   private readonly keys: XltTokenKeys;
@@ -28,12 +29,12 @@ export class StpPermLogic {
       return this.stpInterface.getPermissionList(loginId);
     }
     const key = this.keys.permCacheKey(loginId);
-    const cached = await this.tokenStore.get(key);
+    const cached = await getStoreValue(this.tokenStore, key);
     if (cached !== null) {
       return JSON.parse(cached) as string[];
     }
     const list = await this.stpInterface.getPermissionList(loginId);
-    await this.tokenStore.set(key, JSON.stringify(list), timeout);
+    await setStoreValue(this.tokenStore, key, JSON.stringify(list), timeout);
     return list;
   }
 
@@ -43,12 +44,12 @@ export class StpPermLogic {
       return this.stpInterface.getRoleList(loginId);
     }
     const key = this.keys.roleCacheKey(loginId);
-    const cached = await this.tokenStore.get(key);
+    const cached = await getStoreValue(this.tokenStore, key);
     if (cached !== null) {
       return JSON.parse(cached) as string[];
     }
     const list = await this.stpInterface.getRoleList(loginId);
-    await this.tokenStore.set(key, JSON.stringify(list), timeout);
+    await setStoreValue(this.tokenStore, key, JSON.stringify(list), timeout);
     return list;
   }
 

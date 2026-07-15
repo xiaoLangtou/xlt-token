@@ -1,4 +1,5 @@
-import type { XltTokenStore } from "@xlt-token/core";
+import type { XltTokenStore } from "../store/xlt-token-store.interface.js";
+import { getStoreValue, setStoreValue } from "../store/store-helpers.js";
 
 export class XltSession {
   private data: Record<string, unknown> | null = null;
@@ -71,7 +72,7 @@ export class XltSession {
    */
   private async load(): Promise<Record<string, unknown> | null> {
     if (this.data !== null) return this.data;
-    const raw = await this.store.get(this.storeKey);
+    const raw = await getStoreValue(this.store, this.storeKey);
     this.data = raw ? JSON.parse(raw) : {};
 
     return this.data;
@@ -81,6 +82,6 @@ export class XltSession {
    * 保存会话数据
    */
   private async save(): Promise<void> {
-    await this.store.set(this.storeKey, JSON.stringify(this.data), this.timeout);
+    await setStoreValue(this.store, this.storeKey, JSON.stringify(this.data), this.timeout);
   }
 }
