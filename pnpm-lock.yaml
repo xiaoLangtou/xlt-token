@@ -298,6 +298,25 @@ importers:
         specifier: ^2.0.0
         version: 2.1.9(@types/node@20.19.39)(@vitest/ui@2.1.9)(terser@5.48.0)
 
+  packages/store-contract:
+    dependencies:
+      '@xlt-token/core':
+        specifier: ^1.2.1
+        version: link:../core
+      vitest:
+        specifier: ^2.0.0
+        version: 2.1.9(@types/node@20.19.39)(@vitest/ui@2.1.9)(terser@5.48.0)
+    devDependencies:
+      '@vitest/coverage-v8':
+        specifier: ^2.1.9
+        version: 2.1.9(vitest@2.1.9)
+      tsdown:
+        specifier: ^0.20.0
+        version: 0.20.3(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(synckit@0.11.13)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.1.0
+        version: 5.9.3
+
   packages/store-redis:
     dependencies:
       '@xlt-token/core':
@@ -313,6 +332,9 @@ importers:
       '@vitest/coverage-v8':
         specifier: ^2.1.9
         version: 2.1.9(vitest@2.1.9)
+      '@xlt-token/store-contract':
+        specifier: ^1.2.1
+        version: link:../store-contract
       tsdown:
         specifier: ^0.20.0
         version: 0.20.3(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(synckit@0.11.13)(typescript@5.9.3)

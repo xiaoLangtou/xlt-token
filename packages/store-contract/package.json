@@ -1,12 +1,11 @@
 {
-  "name": "@xlt-token/store-redis",
+  "name": "@xlt-token/store-contract",
   "version": "1.2.1",
-  "description": "Framework-agnostic Redis stores for xlt-token",
+  "description": "Shared XltTokenStore contract tests for xlt-token stores",
   "keywords": [
     "auth",
-    "ioredis",
-    "redis",
-    "session",
+    "contract",
+    "store",
     "token"
   ],
   "homepage": "https://xiaolangtou.github.io/xlt-token/",
@@ -18,7 +17,7 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/xiaoLangtou/xlt-token.git",
-    "directory": "packages/store-redis"
+    "directory": "packages/store-contract"
   },
   "files": [
     "dist",
@@ -50,31 +49,17 @@
     "build": "tsdown",
     "build:watch": "tsdown --watch",
     "prepublishOnly": "pnpm run build",
-    "typecheck": "tsc --noEmit && tsc --noEmit --target ES2020 --module NodeNext --moduleResolution NodeNext --strict --esModuleInterop --skipLibCheck --types vitest/globals test/client-types.spec.ts",
+    "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:types": "tsc --noEmit --target ES2020 --module NodeNext --moduleResolution NodeNext --strict --esModuleInterop --skipLibCheck --types vitest/globals test/client-types.spec.ts",
     "test:cov": "vitest run --coverage"
   },
   "dependencies": {
-    "@xlt-token/core": "^1.2.1"
+    "@xlt-token/core": "^1.2.1",
+    "vitest": "^2.0.0"
   },
   "devDependencies": {
     "@vitest/coverage-v8": "^2.1.9",
-    "@xlt-token/store-contract": "^1.2.1",
     "tsdown": "^0.20.0",
-    "typescript": "^5.1.0",
-    "vitest": "^2.0.0"
-  },
-  "peerDependencies": {
-    "ioredis": "^5.0.0",
-    "redis": "^4.0.0 || ^5.0.0"
-  },
-  "peerDependenciesMeta": {
-    "ioredis": {
-      "optional": true
-    },
-    "redis": {
-      "optional": true
-    }
+    "typescript": "^5.1.0"
   }
 }

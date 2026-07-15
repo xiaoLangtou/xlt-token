@@ -6,6 +6,7 @@ const packagesRoot = path.join(repoRoot, "packages");
 
 const packageRules = new Map([
   ["@xlt-token/core", new Set(["@xlt-token/core"])],
+  ["@xlt-token/store-contract", new Set(["@xlt-token/core", "@xlt-token/store-contract"])],
   ["@xlt-token/store-redis", new Set(["@xlt-token/core", "@xlt-token/store-redis"])],
   ["@xlt-token/express", new Set(["@xlt-token/core", "@xlt-token/express"])],
   [

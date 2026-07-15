@@ -1,5 +1,3 @@
-import { XltTokenStore as XltTokenStore$1 } from "@xlt-token/core";
-
 //#region src/const/index.d.ts
 /**
  * 登录状态
@@ -22,17 +20,17 @@ declare const XltMode: {
   readonly AND: "AND";
   readonly OR: "OR";
 };
-type XltMode = typeof XltMode[keyof typeof XltMode];
+type XltMode = (typeof XltMode)[keyof typeof XltMode];
 declare const XLT_PERMISSION_KEY = "XltCheckPermission";
 declare const XLT_ROLE_KEY = "xltCheckRole";
 //#endregion
 //#region src/config/xlt-token-config.d.ts
-type DurationUnit = 's' | 'm' | 'h' | 'd' | 'w';
+type DurationUnit = "s" | "m" | "h" | "d" | "w";
 type DurationString = `${number}${DurationUnit}`;
 type DurationInput = number | DurationString;
 interface JwtConfig {
   secret: string;
-  algorithm?: 'HS256' | 'HS384' | 'HS512' | 'RS256' | 'RS384' | 'RS512';
+  algorithm?: "HS256" | "HS384" | "HS512" | "RS256" | "RS384" | "RS512";
   issuer?: string;
   audience?: string;
 }
@@ -47,7 +45,7 @@ interface XltTokenConfig {
   activeTimeout: number;
   isConcurrent: boolean;
   isShare: boolean;
-  tokenStyle: 'uuid' | 'simple-uuid' | 'random-32';
+  tokenStyle: "uuid" | "simple-uuid" | "random-32";
   isReadHeader: boolean;
   isReadCookie: boolean;
   isReadQuery: boolean;
@@ -59,7 +57,7 @@ interface XltTokenConfig {
   deviceConcurrent?: boolean;
   jwt?: JwtConfig;
 }
-interface XltTokenConfigInput extends Omit<XltTokenConfig, 'timeout' | 'activeTimeout' | 'permCacheTimeout' | 'offlineRecordTimeout'> {
+interface XltTokenConfigInput extends Omit<XltTokenConfig, "timeout" | "activeTimeout" | "permCacheTimeout" | "offlineRecordTimeout"> {
   timeout: DurationInput;
   activeTimeout: DurationInput;
   permCacheTimeout?: DurationInput;
@@ -119,31 +117,57 @@ declare class XltTokenKeys {
 }
 //#endregion
 //#region src/store/xlt-token-store.interface.d.ts
-interface XltTokenStore {
-  get(key: string): Promise<string | null>;
-  set(key: string, value: string, timeoutSec: number): Promise<void>;
-  delete(key: string): Promise<void>;
-  has(key: string): Promise<boolean>;
-  update(key: string, value: string): Promise<void>;
-  updateTimeout(key: string, timeoutSec: number): Promise<void>;
-  getTimeout(key: string): Promise<number>;
-  keys(pattern: string): Promise<string[]>;
+type StoreTtl = {
+  kind: "finite";
+  seconds: number;
+} | {
+  kind: "persistent";
+};
+type StoreTtlUpdate = StoreTtl | {
+  kind: "keep";
+};
+interface StoreEntry {
+  value: string;
+  expiresAt: number | null;
 }
+interface StoreScanOptions {
+  cursor?: string | null;
+  count?: number;
+}
+interface StoreScanResult {
+  keys: string[];
+  cursor: string | null;
+}
+interface XltTokenStore {
+  get(key: string): Promise<StoreEntry | null>;
+  set(key: string, value: string, ttl: StoreTtl): Promise<void>;
+  delete(key: string): Promise<void>;
+  setIfAbsent(key: string, value: string, ttl: StoreTtl): Promise<boolean>;
+  compareAndSet(key: string, expectedValue: string, nextValue: string, ttl: StoreTtlUpdate): Promise<boolean>;
+  compareAndDelete(key: string, expectedValue: string): Promise<boolean>;
+  touch(key: string, ttl: StoreTtl): Promise<boolean>;
+  scan(pattern: string, options?: StoreScanOptions): Promise<StoreScanResult>;
+}
+declare function finiteTtl(seconds: number): StoreTtl;
+declare function persistentTtl(): StoreTtl;
+declare function keepTtl(): StoreTtlUpdate;
 //#endregion
 //#region src/store/memory-store.d.ts
 declare class MemoryStore implements XltTokenStore {
   private static readonly MAX_TIMER_DELAY_MS;
   private readonly store;
-  get(key: string): Promise<string | null>;
-  set(key: string, value: string, timeoutSec: number): Promise<void>;
+  get(key: string): Promise<StoreEntry | null>;
+  set(key: string, value: string, ttl: StoreTtl): Promise<void>;
   delete(key: string): Promise<void>;
-  has(key: string): Promise<boolean>;
-  update(key: string, value: string): Promise<void>;
-  updateTimeout(key: string, timeoutSec: number): Promise<void>;
-  getTimeout(key: string): Promise<number>;
-  keys(pattern: string): Promise<string[]>;
+  setIfAbsent(key: string, value: string, ttl: StoreTtl): Promise<boolean>;
+  compareAndSet(key: string, expectedValue: string, nextValue: string, ttl: StoreTtlUpdate): Promise<boolean>;
+  compareAndDelete(key: string, expectedValue: string): Promise<boolean>;
+  touch(key: string, ttl: StoreTtl): Promise<boolean>;
+  scan(pattern: string, options?: StoreScanOptions): Promise<StoreScanResult>;
+  getTtl(key: string): Promise<number>;
   private peek;
   private clearTimer;
+  private write;
   private scheduleExpire;
 }
 //#endregion
@@ -236,7 +260,7 @@ interface CookieOptions {
   path?: string;
   domain?: string;
   secure?: boolean;
-  sameSite?: boolean | 'lax' | 'strict' | 'none';
+  sameSite?: boolean | "lax" | "strict" | "none";
   signed?: boolean;
 }
 interface HttpHeaders {
@@ -331,7 +355,7 @@ declare class XltSession {
   private storeKey;
   private timeout;
   private data;
-  constructor(loginId: string, store: XltTokenStore$1, storeKey: string, timeout: number);
+  constructor(loginId: string, store: XltTokenStore, storeKey: string, timeout: number);
   /**
    * 获取会话数据
    * @returns The session data.
@@ -657,5 +681,5 @@ declare function normalizeDuration(value: DurationInput, options: NormalizeDurat
  */
 declare function normalizeXltTokenConfig(input?: Partial<XltTokenConfigInput>): XltTokenConfig;
 //#endregion
-export { type AuthResult, type CookieOptions, type CreateOptions, DEFAULT_XLT_TOKEN_CONFIG, type DeviceInfo, type DurationInput, type DurationString, type DurationUnit, type ExpressLikeRequest, type ExpressLikeResponse, type HttpContext, type HttpCookies, type HttpHeaders, type HttpQuery, type JwtConfig, MemoryStore, type MockHttpContextOptions, type NormalizeDurationOptions, NotLoginException, NotLoginType, NotPermissionException, NotRoleException, NotSafeException, type StpInterface, StpLogic, StpPermLogic, StpUtil, type TokenStrategy, UuidStrategy, XLT_CHECK_LOGIN_KEY, XLT_IGNORE_KEY, XLT_PERMISSION_KEY, XLT_ROLE_KEY, XLT_STP_INTERFACE, XLT_TOKEN_CONFIG, XLT_TOKEN_HOOKS, XLT_TOKEN_STORE, XLT_TOKEN_STRATEGY, XltError, type XltHooks, XltMode, XltSession, type XltTokenConfig, type XltTokenConfigInput, type XltTokenContext, XltTokenKeys, type XltTokenStore, createExpressContext, createMockHttpContext, createXltToken, matchPermission, normalizeDuration, normalizeXltTokenConfig, setStpLogic, setStpPermLogic };
+export { type AuthResult, type CookieOptions, type CreateOptions, DEFAULT_XLT_TOKEN_CONFIG, type DeviceInfo, type DurationInput, type DurationString, type DurationUnit, type ExpressLikeRequest, type ExpressLikeResponse, type HttpContext, type HttpCookies, type HttpHeaders, type HttpQuery, type JwtConfig, MemoryStore, type MockHttpContextOptions, type NormalizeDurationOptions, NotLoginException, NotLoginType, NotPermissionException, NotRoleException, NotSafeException, type StoreEntry, type StoreScanOptions, type StoreScanResult, type StoreTtl, type StoreTtlUpdate, type StpInterface, StpLogic, StpPermLogic, StpUtil, type TokenStrategy, UuidStrategy, XLT_CHECK_LOGIN_KEY, XLT_IGNORE_KEY, XLT_PERMISSION_KEY, XLT_ROLE_KEY, XLT_STP_INTERFACE, XLT_TOKEN_CONFIG, XLT_TOKEN_HOOKS, XLT_TOKEN_STORE, XLT_TOKEN_STRATEGY, XltError, type XltHooks, XltMode, XltSession, type XltTokenConfig, type XltTokenConfigInput, type XltTokenContext, XltTokenKeys, type XltTokenStore, createExpressContext, createMockHttpContext, createXltToken, finiteTtl, keepTtl, matchPermission, normalizeDuration, normalizeXltTokenConfig, persistentTtl, setStpLogic, setStpPermLogic };
 //# sourceMappingURL=index.d.mts.map

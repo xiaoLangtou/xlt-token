@@ -122,6 +122,22 @@ var XltTokenKeys = class {
 };
 
 //#endregion
+//#region src/store/xlt-token-store.interface.ts
+function finiteTtl(seconds) {
+	if (!Number.isFinite(seconds) || seconds < 0) throw new Error(`finite ttl seconds must be a non-negative finite number: ${seconds}`);
+	return {
+		kind: "finite",
+		seconds
+	};
+}
+function persistentTtl() {
+	return { kind: "persistent" };
+}
+function keepTtl() {
+	return { kind: "keep" };
+}
+
+//#endregion
 //#region src/store/memory-store.ts
 var MemoryStore = class MemoryStore {
 	constructor() {
@@ -132,54 +148,71 @@ var MemoryStore = class MemoryStore {
 	}
 	async get(key) {
 		const entry = this.peek(key);
-		return entry ? entry.value : null;
+		return entry ? {
+			value: entry.value,
+			expiresAt: entry.expiresAt
+		} : null;
 	}
-	async set(key, value, timeoutSec) {
-		this.clearTimer(key);
-		const entry = {
-			value,
-			expireAt: timeoutSec === -1 ? -1 : Date.now() + timeoutSec * 1e3,
-			timer: null
-		};
-		this.scheduleExpire(key, entry, timeoutSec);
-		this.store.set(key, entry);
+	async set(key, value, ttl) {
+		this.write(key, value, ttl);
 	}
 	async delete(key) {
 		this.clearTimer(key);
 		this.store.delete(key);
 	}
-	async has(key) {
-		return this.peek(key) !== null;
+	async setIfAbsent(key, value, ttl) {
+		if (this.peek(key)) return false;
+		this.write(key, value, ttl);
+		return true;
 	}
-	async update(key, value) {
+	async compareAndSet(key, expectedValue, nextValue, ttl) {
 		const entry = this.peek(key);
-		if (!entry) throw new Error(`key not found: ${key}`);
-		entry.value = value;
+		if (!entry || entry.value !== expectedValue) return false;
+		if (ttl.kind === "keep") {
+			entry.value = nextValue;
+			return true;
+		}
+		this.write(key, nextValue, ttl);
+		return true;
 	}
-	async updateTimeout(key, timeoutSec) {
+	async compareAndDelete(key, expectedValue) {
 		const entry = this.peek(key);
-		if (!entry) throw new Error(`key not found: ${key}`);
+		if (!entry || entry.value !== expectedValue) return false;
 		this.clearTimer(key);
-		entry.expireAt = timeoutSec === -1 ? -1 : Date.now() + timeoutSec * 1e3;
-		this.scheduleExpire(key, entry, timeoutSec);
+		this.store.delete(key);
+		return true;
 	}
-	async getTimeout(key) {
+	async touch(key, ttl) {
+		const entry = this.peek(key);
+		if (!entry) return false;
+		this.write(key, entry.value, ttl);
+		return true;
+	}
+	async scan(pattern, options = {}) {
+		const prefix = pattern.endsWith("*") ? pattern.slice(0, -1) : pattern;
+		const keys = [];
+		for (const [key] of this.store) if (key.startsWith(prefix) && this.peek(key)) keys.push(key);
+		keys.sort();
+		const count = options.count ?? keys.length;
+		const start = options.cursor ? Number(options.cursor) : 0;
+		const selected = keys.slice(start, start + count);
+		const next = start + selected.length;
+		return {
+			keys: selected,
+			cursor: next < keys.length ? String(next) : null
+		};
+	}
+	async getTtl(key) {
 		const entry = this.peek(key);
 		if (!entry) return -2;
-		if (entry.expireAt === -1) return -1;
-		const remainMs = entry.expireAt - Date.now();
+		if (entry.expiresAt === null) return -1;
+		const remainMs = entry.expiresAt - Date.now();
 		return remainMs <= 0 ? -2 : Math.floor(remainMs / 1e3);
-	}
-	async keys(pattern) {
-		const prefix = pattern.endsWith("*") ? pattern.slice(0, -1) : pattern;
-		const result = [];
-		for (const [key] of this.store) if (key.startsWith(prefix) && this.peek(key)) result.push(key);
-		return result;
 	}
 	peek(key) {
 		const entry = this.store.get(key);
 		if (!entry) return null;
-		if (entry.expireAt !== -1 && entry.expireAt <= Date.now()) {
+		if (entry.expiresAt !== null && entry.expiresAt <= Date.now()) {
 			this.clearTimer(key);
 			this.store.delete(key);
 			return null;
@@ -193,11 +226,21 @@ var MemoryStore = class MemoryStore {
 			entry.timer = null;
 		}
 	}
-	scheduleExpire(key, entry, timeoutSec) {
-		if (timeoutSec === -1) return;
-		const delayMs = timeoutSec * 1e3;
+	write(key, value, ttl) {
+		this.clearTimer(key);
+		const entry = {
+			value,
+			expiresAt: ttl.kind === "persistent" ? null : Date.now() + ttl.seconds * 1e3,
+			timer: null
+		};
+		this.scheduleExpire(key, entry, ttl);
+		this.store.set(key, entry);
+	}
+	scheduleExpire(key, entry, ttl) {
+		if (ttl.kind === "persistent") return;
+		const delayMs = ttl.seconds * 1e3;
 		if (delayMs > MemoryStore.MAX_TIMER_DELAY_MS) {
-			console.warn(`[MemoryStore] timeout ${timeoutSec}s exceeds max timer delay (${MemoryStore.MAX_TIMER_DELAY_MS}ms). Entry will be cleaned on next access.`);
+			console.warn(`[MemoryStore] timeout ${ttl.seconds}s exceeds max timer delay (${MemoryStore.MAX_TIMER_DELAY_MS}ms). Entry will be cleaned on next access.`);
 			return;
 		}
 		entry.timer = setTimeout(() => {
@@ -364,6 +407,42 @@ var NotSafeException = class extends XltError {
 };
 
 //#endregion
+//#region src/store/store-helpers.ts
+function ttlFromSeconds(seconds) {
+	return seconds === -1 ? persistentTtl() : finiteTtl(seconds);
+}
+async function getStoreValue(store, key) {
+	return (await store.get(key))?.value ?? null;
+}
+async function hasStoreValue(store, key) {
+	return await store.get(key) !== null;
+}
+async function setStoreValue(store, key, value, timeoutSec) {
+	await store.set(key, value, ttlFromSeconds(timeoutSec));
+}
+async function replaceStoreValueKeepingTtl(store, key, value) {
+	const current = await getStoreValue(store, key);
+	if (current === null) throw new Error(`key not found: ${key}`);
+	await store.compareAndSet(key, current, value, keepTtl());
+}
+async function touchStoreValue(store, key, timeoutSec) {
+	if (!await store.touch(key, ttlFromSeconds(timeoutSec))) throw new Error(`key not found: ${key}`);
+}
+async function scanStoreKeys(store, pattern) {
+	const keys = [];
+	let cursor = null;
+	do {
+		const result = await store.scan(pattern, {
+			cursor,
+			count: 100
+		});
+		keys.push(...result.keys);
+		cursor = result.cursor;
+	} while (cursor !== null);
+	return keys;
+}
+
+//#endregion
 //#region src/session/xlt-session.ts
 var XltSession = class {
 	constructor(loginId, store, storeKey, timeout) {
@@ -428,7 +507,7 @@ var XltSession = class {
 	*/
 	async load() {
 		if (this.data !== null) return this.data;
-		const raw = await this.store.get(this.storeKey);
+		const raw = await getStoreValue(this.store, this.storeKey);
 		this.data = raw ? JSON.parse(raw) : {};
 		return this.data;
 	}
@@ -436,7 +515,7 @@ var XltSession = class {
 	* 保存会话数据
 	*/
 	async save() {
-		await this.store.set(this.storeKey, JSON.stringify(this.data), this.timeout);
+		await setStoreValue(this.store, this.storeKey, JSON.stringify(this.data), this.timeout);
 	}
 };
 
@@ -522,7 +601,7 @@ var StpLogic = class {
 			allowNever: true
 		});
 		const sessionKey = this.keys.sessionKey(_loginId, device);
-		const oldToken = await this.store.get(sessionKey);
+		const oldToken = await getStoreValue(this.store, sessionKey);
 		let replacedOldFullToken;
 		let token;
 		if (!this.config.deviceConcurrent) {
@@ -539,12 +618,12 @@ var StpLogic = class {
 		else token = options.token ?? this.strategy.createToken(_loginId, this.config, { timeout });
 		if (this._isJwtMode()) {
 			const { jti } = this.strategy.verifyToken(token);
-			await this.store.set(sessionKey, jti, timeout);
-			if (this.config.activeTimeout > 0) await this.store.set(this.keys.lastActiveKey(jti), String(Date.now()), timeout);
+			await setStoreValue(this.store, sessionKey, jti, timeout);
+			if (this.config.activeTimeout > 0) await setStoreValue(this.store, this.keys.lastActiveKey(jti), String(Date.now()), timeout);
 		} else {
-			await this.store.set(this.keys.tokenKey(token), _loginId, timeout);
-			await this.store.set(sessionKey, token, timeout);
-			if (this.config.activeTimeout > 0) await this.store.set(this.keys.lastActiveKey(token), String(Date.now()), timeout);
+			await setStoreValue(this.store, this.keys.tokenKey(token), _loginId, timeout);
+			await setStoreValue(this.store, sessionKey, token, timeout);
+			if (this.config.activeTimeout > 0) await setStoreValue(this.store, this.keys.lastActiveKey(token), String(Date.now()), timeout);
 		}
 		await this._addToSessionList(_loginId, {
 			device,
@@ -563,12 +642,12 @@ var StpLogic = class {
 	*/
 	async _addToSessionList(loginId, info, timeout) {
 		const key = this.keys.sessionListKey(loginId);
-		const raw = await this.store.get(key);
+		const raw = await getStoreValue(this.store, key);
 		const list = raw ? JSON.parse(raw) : [];
 		const idx = list.findIndex((d) => d.device === info.device);
 		if (idx >= 0) list.splice(idx, 1);
 		list.push(info);
-		await this.store.set(key, JSON.stringify(list), normalizeDuration(timeout, {
+		await setStoreValue(this.store, key, JSON.stringify(list), normalizeDuration(timeout, {
 			field: "timeout",
 			allowZero: true,
 			allowNever: true
@@ -581,13 +660,13 @@ var StpLogic = class {
 	*/
 	async _kickoutAllDevices(loginId) {
 		const key = this.keys.sessionListKey(loginId);
-		const raw = await this.store.get(key);
+		const raw = await getStoreValue(this.store, key);
 		if (!raw) return;
 		const list = JSON.parse(raw);
 		for (const deviceInfo of list) if (this._isJwtMode()) {
 			const { jti } = this.strategy.verifyToken(deviceInfo.token);
-			await this.store.set(this.keys.jwtBlacklistKey(jti), NotLoginType.KICK_OUT, this.config.timeout);
-		} else await this.store.update(this.keys.tokenKey(deviceInfo.token), NotLoginType.KICK_OUT);
+			await setStoreValue(this.store, this.keys.jwtBlacklistKey(jti), NotLoginType.KICK_OUT, this.config.timeout);
+		} else await replaceStoreValueKeepingTtl(this.store, this.keys.tokenKey(deviceInfo.token), NotLoginType.KICK_OUT);
 	}
 	/**
 	* 被顶下线
@@ -595,8 +674,8 @@ var StpLogic = class {
 	* @param token
 	*/
 	async _replacedToken(loginId, oldSessionValue, device = "default") {
-		if (this._isJwtMode()) await this.store.set(this.keys.jwtBlacklistKey(oldSessionValue), NotLoginType.BE_REPLACED, this.config.timeout);
-		else await this.store.update(this.keys.tokenKey(oldSessionValue), NotLoginType.BE_REPLACED);
+		if (this._isJwtMode()) await setStoreValue(this.store, this.keys.jwtBlacklistKey(oldSessionValue), NotLoginType.BE_REPLACED, this.config.timeout);
+		else await replaceStoreValueKeepingTtl(this.store, this.keys.tokenKey(oldSessionValue), NotLoginType.BE_REPLACED);
 		await this.store.delete(this.keys.sessionKey(loginId, device));
 		this.writeOfflineRecord(oldSessionValue, NotLoginType.BE_REPLACED);
 	}
@@ -608,7 +687,7 @@ var StpLogic = class {
 	*/
 	async openSafe(token, business, timeout) {
 		const safeKey = this.keys.safeKey(token, business);
-		await this.store.set(safeKey, String(Date.now()), normalizeDuration(timeout, { field: "timeout" }));
+		await setStoreValue(this.store, safeKey, String(Date.now()), normalizeDuration(timeout, { field: "timeout" }));
 	}
 	/**
 	* 检查二级认证是否有效
@@ -617,7 +696,7 @@ var StpLogic = class {
 	* @returns 是否有效
 	*/
 	async checkSafe(token, business) {
-		if (!await this.store.has(this.keys.safeKey(token, business))) throw new NotSafeException(business);
+		if (!await hasStoreValue(this.store, this.keys.safeKey(token, business))) throw new NotSafeException(business);
 	}
 	/**
 	* 主动关闭二级认证
@@ -636,7 +715,7 @@ var StpLogic = class {
 	async createTempToken(value, timeout) {
 		const tempToken = this.strategy.createToken("__temp__", this.config, { timeout });
 		const tempTokenKey = this.keys.tempTokenKey(tempToken);
-		await this.store.set(tempTokenKey, value, normalizeDuration(timeout, { field: "timeout" }));
+		await setStoreValue(this.store, tempTokenKey, value, normalizeDuration(timeout, { field: "timeout" }));
 		return tempToken;
 	}
 	/**
@@ -645,7 +724,7 @@ var StpLogic = class {
 	* @returns 要关联的业务数据
 	*/
 	async parseTempToken(tempToken) {
-		return this.store.get(this.keys.tempTokenKey(tempToken));
+		return getStoreValue(this.store, this.keys.tempTokenKey(tempToken));
 	}
 	/**
 	* 销毁临时token
@@ -703,7 +782,7 @@ var StpLogic = class {
 		if (this._isJwtMode()) try {
 			const { sub: loginId, jti } = this.strategy.verifyToken(token);
 			if (!loginId || !jti) return null;
-			await this.store.set(this.keys.jwtBlacklistKey(jti), NotLoginType.INVALID_TOKEN, this.config.timeout);
+			await setStoreValue(this.store, this.keys.jwtBlacklistKey(jti), NotLoginType.INVALID_TOKEN, this.config.timeout);
 			const info = (await this.getDeviceList(loginId)).find((d) => d.token === token);
 			if (info) {
 				await this.store.delete(this.keys.sessionKey(loginId, info.device));
@@ -716,7 +795,7 @@ var StpLogic = class {
 		} catch {
 			return null;
 		}
-		const loginId = await this.store.get(this.keys.tokenKey(token));
+		const loginId = await getStoreValue(this.store, this.keys.tokenKey(token));
 		if (!loginId) return null;
 		await this.store.delete(this.keys.tokenKey(token));
 		await this.store.delete(this.keys.lastActiveKey(token));
@@ -738,7 +817,7 @@ var StpLogic = class {
 		for (const { device, token } of list) {
 			if (this._isJwtMode()) try {
 				const { jti } = this.strategy.verifyToken(token);
-				await this.store.set(this.keys.jwtBlacklistKey(jti), NotLoginType.INVALID_TOKEN, this.config.timeout);
+				await setStoreValue(this.store, this.keys.jwtBlacklistKey(jti), NotLoginType.INVALID_TOKEN, this.config.timeout);
 				if (this.config.activeTimeout > 0) await this.store.delete(this.keys.lastActiveKey(jti));
 			} catch {
 				continue;
@@ -761,11 +840,11 @@ var StpLogic = class {
 	async kickout(loginId, device = "default") {
 		if (!loginId) return null;
 		const sessionKey = this.keys.sessionKey(loginId, device);
-		const sessionValue = await this.store.get(sessionKey);
+		const sessionValue = await getStoreValue(this.store, sessionKey);
 		if (!sessionValue) return null;
 		const fullToken = (await this.getDeviceList(loginId)).find((d) => d.device === device)?.token ?? sessionValue;
-		if (this._isJwtMode()) await this.store.set(this.keys.jwtBlacklistKey(sessionValue), NotLoginType.KICK_OUT, this.config.timeout);
-		else await this.store.update(this.keys.tokenKey(sessionValue), NotLoginType.KICK_OUT);
+		if (this._isJwtMode()) await setStoreValue(this.store, this.keys.jwtBlacklistKey(sessionValue), NotLoginType.KICK_OUT, this.config.timeout);
+		else await replaceStoreValueKeepingTtl(this.store, this.keys.tokenKey(sessionValue), NotLoginType.KICK_OUT);
 		await this.store.delete(sessionKey);
 		await this.store.delete(this.keys.sessionDataKey(loginId));
 		this.writeOfflineRecord(fullToken, NotLoginType.KICK_OUT);
@@ -784,17 +863,17 @@ var StpLogic = class {
 		try {
 			const { sub: loginId, jti } = this.strategy.verifyToken(token);
 			if (!loginId || !jti) return null;
-			if (await this.store.get(this.keys.jwtBlacklistKey(jti))) return null;
+			if (await getStoreValue(this.store, this.keys.jwtBlacklistKey(jti))) return null;
 			const resolvedTimeout = normalizeDuration(timeout ?? this.config.timeout, {
 				field: "timeout",
 				allowZero: true,
 				allowNever: true
 			});
-			await this.store.set(this.keys.jwtBlacklistKey(jti), "REFRESHED", this.config.timeout);
+			await setStoreValue(this.store, this.keys.jwtBlacklistKey(jti), "REFRESHED", this.config.timeout);
 			const newToken = this.strategy.createToken(loginId, this.config, { timeout: resolvedTimeout });
 			const { jti: newJti } = this.strategy.verifyToken(newToken);
 			const device = (await this.getDeviceList(loginId)).find((d) => d.token === token)?.device ?? "default";
-			await this.store.set(this.keys.sessionKey(loginId, device), newJti, resolvedTimeout);
+			await setStoreValue(this.store, this.keys.sessionKey(loginId, device), newJti, resolvedTimeout);
 			await this._addToSessionList(loginId, {
 				device,
 				token: newToken,
@@ -802,7 +881,7 @@ var StpLogic = class {
 			}, resolvedTimeout);
 			if (this.config.activeTimeout > 0) {
 				await this.store.delete(this.keys.lastActiveKey(jti));
-				await this.store.set(this.keys.lastActiveKey(newJti), String(Date.now()), resolvedTimeout);
+				await setStoreValue(this.store, this.keys.lastActiveKey(newJti), String(Date.now()), resolvedTimeout);
 			}
 			this.callHook("onLogin", loginId, newToken, device);
 			return newToken;
@@ -825,19 +904,19 @@ var StpLogic = class {
 		if (this._isJwtMode()) try {
 			const { sub: loginId, jti } = this.strategy.verifyToken(token);
 			if (!loginId || !jti) return null;
-			if (await this.store.get(this.keys.jwtBlacklistKey(jti))) return null;
+			if (await getStoreValue(this.store, this.keys.jwtBlacklistKey(jti))) return null;
 			const device = (await this.getDeviceList(loginId)).find((d) => d.token === token)?.device ?? "default";
-			await this.store.updateTimeout(this.keys.sessionKey(loginId, device), timeoutSec);
-			if (this.config.activeTimeout > 0) await this.store.updateTimeout(this.keys.lastActiveKey(jti), timeoutSec);
+			await touchStoreValue(this.store, this.keys.sessionKey(loginId, device), timeoutSec);
+			if (this.config.activeTimeout > 0) await touchStoreValue(this.store, this.keys.lastActiveKey(jti), timeoutSec);
 			return true;
 		} catch {
 			return null;
 		}
-		const loginId = await this.store.get(this.keys.tokenKey(token));
+		const loginId = await getStoreValue(this.store, this.keys.tokenKey(token));
 		if (!loginId) return null;
-		await this.store.updateTimeout(this.keys.tokenKey(token), timeoutSec);
-		await this.store.updateTimeout(this.keys.sessionKey(loginId), timeoutSec);
-		if (this.config.activeTimeout > 0) await this.store.updateTimeout(this.keys.lastActiveKey(token), timeoutSec);
+		await touchStoreValue(this.store, this.keys.tokenKey(token), timeoutSec);
+		await touchStoreValue(this.store, this.keys.sessionKey(loginId), timeoutSec);
+		if (this.config.activeTimeout > 0) await touchStoreValue(this.store, this.keys.lastActiveKey(token), timeoutSec);
 		return true;
 	}
 	/**
@@ -856,7 +935,7 @@ var StpLogic = class {
 		if (!token) return null;
 		if (!this.config.offlineRecordEnabled) return null;
 		const key = this.keys.offlineRecordKey(token);
-		const raw = await this.store.get(key);
+		const raw = await getStoreValue(this.store, key);
 		return raw ? JSON.parse(raw) : null;
 	}
 	/**
@@ -866,17 +945,17 @@ var StpLogic = class {
 	*/
 	async getDeviceList(loginId) {
 		const sessionListKey = this.keys.sessionListKey(loginId);
-		const raw = await this.store.get(sessionListKey);
+		const raw = await getStoreValue(this.store, sessionListKey);
 		return raw ? JSON.parse(raw) : [];
 	}
 	/**
 	* 登出指定设备（自愿登出，非强制踢下线）
 	*/
 	async logoutByDevice(loginId, device) {
-		const sessionValue = await this.store.get(this.keys.sessionKey(loginId, device));
+		const sessionValue = await getStoreValue(this.store, this.keys.sessionKey(loginId, device));
 		if (!sessionValue) return null;
 		const fullToken = (await this.getDeviceList(loginId)).find((d) => d.device === device)?.token ?? sessionValue;
-		if (this._isJwtMode()) await this.store.set(this.keys.jwtBlacklistKey(sessionValue), NotLoginType.INVALID_TOKEN, this.config.timeout);
+		if (this._isJwtMode()) await setStoreValue(this.store, this.keys.jwtBlacklistKey(sessionValue), NotLoginType.INVALID_TOKEN, this.config.timeout);
 		else await this.store.delete(this.keys.tokenKey(sessionValue));
 		await this.store.delete(this.keys.sessionKey(loginId, device));
 		await this._removeFromSessionList(loginId, device);
@@ -888,11 +967,11 @@ var StpLogic = class {
 	* 踢掉指定设备
 	*/
 	async kickoutByDevice(loginId, device) {
-		const sessionValue = await this.store.get(this.keys.sessionKey(loginId, device));
+		const sessionValue = await getStoreValue(this.store, this.keys.sessionKey(loginId, device));
 		if (!sessionValue) return null;
 		const fullToken = (await this.getDeviceList(loginId)).find((d) => d.device === device)?.token ?? sessionValue;
-		if (this._isJwtMode()) await this.store.set(this.keys.jwtBlacklistKey(sessionValue), NotLoginType.KICK_OUT, this.config.timeout);
-		else await this.store.update(this.keys.tokenKey(sessionValue), NotLoginType.KICK_OUT);
+		if (this._isJwtMode()) await setStoreValue(this.store, this.keys.jwtBlacklistKey(sessionValue), NotLoginType.KICK_OUT, this.config.timeout);
+		else await replaceStoreValueKeepingTtl(this.store, this.keys.tokenKey(sessionValue), NotLoginType.KICK_OUT);
 		await this.store.delete(this.keys.sessionKey(loginId, device));
 		await this._removeFromSessionList(loginId, device);
 		this.writeOfflineRecord(fullToken, NotLoginType.KICK_OUT);
@@ -914,7 +993,7 @@ var StpLogic = class {
 			} catch {
 				return null;
 			}
-			await this.store.set(this.keys.jwtBlacklistKey(jti), NotLoginType.KICK_OUT, this.config.timeout);
+			await setStoreValue(this.store, this.keys.jwtBlacklistKey(jti), NotLoginType.KICK_OUT, this.config.timeout);
 			const info = (await this.getDeviceList(loginId)).find((d) => d.token === token);
 			if (info) {
 				await this.store.delete(this.keys.sessionKey(loginId, info.device));
@@ -924,9 +1003,9 @@ var StpLogic = class {
 			this.callHook("onKickout", loginId, token);
 			return true;
 		}
-		const loginId = await this.store.get(this.keys.tokenKey(token));
+		const loginId = await getStoreValue(this.store, this.keys.tokenKey(token));
 		if (!loginId || [NotLoginType.KICK_OUT, NotLoginType.BE_REPLACED].includes(loginId)) return null;
-		await this.store.update(this.keys.tokenKey(token), NotLoginType.KICK_OUT);
+		await replaceStoreValueKeepingTtl(this.store, this.keys.tokenKey(token), NotLoginType.KICK_OUT);
 		const info = (await this.getDeviceList(loginId)).find((d) => d.token === token);
 		if (info) {
 			await this.store.delete(this.keys.sessionKey(loginId, info.device));
@@ -942,7 +1021,7 @@ var StpLogic = class {
 	async getOnlineLoginIds(opts = {}) {
 		const { page = 0, pageSize = 100 } = opts;
 		const pattern = `${this.config.tokenName}:login:session-list:*`;
-		const keys = await this.store.keys(pattern);
+		const keys = await scanStoreKeys(this.store, pattern);
 		const prefix = `${this.config.tokenName}:login:session-list:`;
 		const start = page * pageSize;
 		return keys.slice(start, start + pageSize).map((k) => k.slice(prefix.length));
@@ -952,7 +1031,7 @@ var StpLogic = class {
 	*/
 	async getOnlineCount() {
 		const pattern = `${this.config.tokenName}:login:session-list:*`;
-		return (await this.store.keys(pattern)).length;
+		return (await scanStoreKeys(this.store, pattern)).length;
 	}
 	/**
 	* 强制某账号所有设备下线
@@ -974,7 +1053,7 @@ var StpLogic = class {
 			reason: NotLoginType.NOT_TOKEN
 		};
 		if (this._isJwtMode()) return this._resolveLoginIdJwt(token);
-		const loginId = await this.store.get(this.keys.tokenKey(token));
+		const loginId = await getStoreValue(this.store, this.keys.tokenKey(token));
 		if (!loginId) return {
 			ok: false,
 			reason: NotLoginType.INVALID_TOKEN,
@@ -991,7 +1070,7 @@ var StpLogic = class {
 			token
 		};
 		if (this.config.activeTimeout > 0) {
-			const lastStr = await this.store.get(this.keys.lastActiveKey(token));
+			const lastStr = await getStoreValue(this.store, this.keys.lastActiveKey(token));
 			if (!lastStr) return {
 				ok: false,
 				reason: NotLoginType.TOKEN_FREEZE,
@@ -1002,7 +1081,7 @@ var StpLogic = class {
 				reason: NotLoginType.TOKEN_TIMEOUT,
 				token
 			};
-			await this.store.update(this.keys.lastActiveKey(token), String(Date.now()));
+			await replaceStoreValueKeepingTtl(this.store, this.keys.lastActiveKey(token), String(Date.now()));
 		}
 		ctx.state.stpLoginId = loginId;
 		ctx.state.stpToken = token;
@@ -1021,7 +1100,7 @@ var StpLogic = class {
 				token
 			};
 			const jwtBlacklistKey = this.keys.jwtBlacklistKey(jti);
-			const blacklisted = await this.store.get(jwtBlacklistKey);
+			const blacklisted = await getStoreValue(this.store, jwtBlacklistKey);
 			if (blacklisted === NotLoginType.KICK_OUT) return {
 				ok: false,
 				reason: NotLoginType.KICK_OUT,
@@ -1039,7 +1118,7 @@ var StpLogic = class {
 			};
 			if (this.config.activeTimeout > 0) {
 				const lastActiveKey = this.keys.lastActiveKey(jti);
-				const lastStr = await this.store.get(lastActiveKey);
+				const lastStr = await getStoreValue(this.store, lastActiveKey);
 				if (!lastStr) return {
 					ok: false,
 					reason: NotLoginType.TOKEN_FREEZE,
@@ -1050,7 +1129,7 @@ var StpLogic = class {
 					reason: NotLoginType.TOKEN_TIMEOUT,
 					token
 				};
-				await this.store.update(lastActiveKey, String(Date.now()));
+				await replaceStoreValueKeepingTtl(this.store, lastActiveKey, String(Date.now()));
 			}
 			return {
 				ok: true,
@@ -1073,12 +1152,12 @@ var StpLogic = class {
 	*/
 	async replaced(loginId, device = "default") {
 		const sessionKey = this.keys.sessionKey(loginId, device);
-		const oldToken = await this.store.get(sessionKey);
+		const oldToken = await getStoreValue(this.store, sessionKey);
 		if (oldToken) {
 			if (this._isJwtMode()) {
-				const jti = await this.store.get(sessionKey);
-				if (jti) await this.store.set(this.keys.jwtBlacklistKey(jti), NotLoginType.BE_REPLACED, this.config.timeout);
-			} else await this.store.update(this.keys.tokenKey(oldToken), NotLoginType.BE_REPLACED);
+				const jti = await getStoreValue(this.store, sessionKey);
+				if (jti) await setStoreValue(this.store, this.keys.jwtBlacklistKey(jti), NotLoginType.BE_REPLACED, this.config.timeout);
+			} else await replaceStoreValueKeepingTtl(this.store, this.keys.tokenKey(oldToken), NotLoginType.BE_REPLACED);
 			await this.store.delete(sessionKey);
 			this.writeOfflineRecord(oldToken, NotLoginType.BE_REPLACED);
 		}
@@ -1091,15 +1170,15 @@ var StpLogic = class {
 			reason,
 			time: Date.now()
 		});
-		await this.store.set(key, record, this.config.offlineRecordTimeout ?? 3600);
+		await setStoreValue(this.store, key, record, this.config.offlineRecordTimeout ?? 3600);
 	}
 	async _removeFromSessionList(loginId, device) {
 		const key = this.keys.sessionListKey(loginId);
-		const raw = await this.store.get(key);
+		const raw = await getStoreValue(this.store, key);
 		if (!raw) return;
 		const filtered = JSON.parse(raw).filter((d) => d.device !== device);
 		if (filtered.length === 0) await this.store.delete(key);
-		else await this.store.set(key, JSON.stringify(filtered), -1);
+		else await setStoreValue(this.store, key, JSON.stringify(filtered), -1);
 	}
 	/**
 	* 是否为JWT模式
@@ -1140,20 +1219,20 @@ var StpPermLogic = class {
 		const timeout = this.permCacheTimeoutSec();
 		if (timeout === 0) return this.stpInterface.getPermissionList(loginId);
 		const key = this.keys.permCacheKey(loginId);
-		const cached = await this.tokenStore.get(key);
+		const cached = await getStoreValue(this.tokenStore, key);
 		if (cached !== null) return JSON.parse(cached);
 		const list = await this.stpInterface.getPermissionList(loginId);
-		await this.tokenStore.set(key, JSON.stringify(list), timeout);
+		await setStoreValue(this.tokenStore, key, JSON.stringify(list), timeout);
 		return list;
 	}
 	async getRoleList(loginId) {
 		const timeout = this.permCacheTimeoutSec();
 		if (timeout === 0) return this.stpInterface.getRoleList(loginId);
 		const key = this.keys.roleCacheKey(loginId);
-		const cached = await this.tokenStore.get(key);
+		const cached = await getStoreValue(this.tokenStore, key);
 		if (cached !== null) return JSON.parse(cached);
 		const list = await this.stpInterface.getRoleList(loginId);
-		await this.tokenStore.set(key, JSON.stringify(list), timeout);
+		await setStoreValue(this.tokenStore, key, JSON.stringify(list), timeout);
 		return list;
 	}
 	async hasPermission(loginId, permission) {
@@ -1319,5 +1398,5 @@ function createXltToken(options = {}) {
 }
 
 //#endregion
-export { DEFAULT_XLT_TOKEN_CONFIG, MemoryStore, NotLoginException, NotLoginType, NotPermissionException, NotRoleException, NotSafeException, StpLogic, StpPermLogic, StpUtil, UuidStrategy, XLT_CHECK_LOGIN_KEY, XLT_IGNORE_KEY, XLT_PERMISSION_KEY, XLT_ROLE_KEY, XLT_STP_INTERFACE, XLT_TOKEN_CONFIG, XLT_TOKEN_HOOKS, XLT_TOKEN_STORE, XLT_TOKEN_STRATEGY, XltError, XltMode, XltSession, XltTokenKeys, createExpressContext, createMockHttpContext, createXltToken, matchPermission, normalizeDuration, normalizeXltTokenConfig, setStpLogic, setStpPermLogic };
+export { DEFAULT_XLT_TOKEN_CONFIG, MemoryStore, NotLoginException, NotLoginType, NotPermissionException, NotRoleException, NotSafeException, StpLogic, StpPermLogic, StpUtil, UuidStrategy, XLT_CHECK_LOGIN_KEY, XLT_IGNORE_KEY, XLT_PERMISSION_KEY, XLT_ROLE_KEY, XLT_STP_INTERFACE, XLT_TOKEN_CONFIG, XLT_TOKEN_HOOKS, XLT_TOKEN_STORE, XLT_TOKEN_STRATEGY, XltError, XltMode, XltSession, XltTokenKeys, createExpressContext, createMockHttpContext, createXltToken, finiteTtl, keepTtl, matchPermission, normalizeDuration, normalizeXltTokenConfig, persistentTtl, setStpLogic, setStpPermLogic };
 //# sourceMappingURL=index.mjs.map
