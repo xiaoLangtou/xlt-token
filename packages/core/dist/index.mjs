@@ -1,5 +1,5 @@
 import ms from "ms";
-import { randomBytes, randomUUID } from "node:crypto";
+import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { isNull, isUndefined } from "es-toolkit";
 
 //#region src/const/index.ts
@@ -365,11 +365,8 @@ var UuidStrategy = class {
 };
 
 //#endregion
-//#region src/hooks/xlt-hooks.interface.ts
-/**
-* 钩子注入 token
-*/
-const XLT_TOKEN_HOOKS = "XLT_TOKEN_HOOKS";
+//#region src/events/xlt-event-sink.ts
+const XLT_EVENT_SINK = "XLT_EVENT_SINK";
 
 //#endregion
 //#region src/perm/stp-interface.ts
@@ -438,11 +435,12 @@ function createMockHttpContext(options = {}) {
 //#endregion
 //#region src/exceptions/xlt-error.ts
 var XltError = class extends Error {
-	constructor(message, code, status) {
+	constructor(message, code, status, details = {}) {
 		super(message);
 		this.name = new.target.name;
 		this.code = code;
 		this.status = status;
+		this.details = details;
 	}
 };
 
@@ -450,10 +448,20 @@ var XltError = class extends Error {
 //#region src/exceptions/not-login.exception.ts
 var NotLoginException = class NotLoginException extends XltError {
 	constructor(type, token) {
-		super(NotLoginException.describeType(type), "NOT_LOGIN", 401);
+		super(NotLoginException.describeType(type), NotLoginException.codeForType(type), 401, { type });
 		this.status = 401;
 		this.type = type;
 		this.token = token;
+	}
+	static codeForType(type) {
+		return {
+			[NotLoginType.NOT_TOKEN]: "TOKEN_MISSING",
+			[NotLoginType.INVALID_TOKEN]: "TOKEN_INVALID",
+			[NotLoginType.TOKEN_TIMEOUT]: "TOKEN_TIMEOUT",
+			[NotLoginType.TOKEN_FREEZE]: "TOKEN_FREEZE",
+			[NotLoginType.BE_REPLACED]: "TOKEN_REPLACED",
+			[NotLoginType.KICK_OUT]: "TOKEN_KICKED_OUT"
+		}[type] ?? "TOKEN_INVALID";
 	}
 	static describeType(type) {
 		return {
@@ -471,7 +479,10 @@ var NotLoginException = class NotLoginException extends XltError {
 //#region src/exceptions/not-permission.exception.ts
 var NotPermissionException = class extends XltError {
 	constructor(permission, mode) {
-		super(`缺少权限: ${Array.isArray(permission) ? permission.join(", ") : permission}`, "NOT_PERMISSION", 403);
+		super(`缺少权限: ${Array.isArray(permission) ? permission.join(", ") : permission}`, "PERMISSION_DENIED", 403, {
+			permission,
+			mode
+		});
 		this.status = 403;
 		this.permission = permission;
 		this.mode = mode;
@@ -482,7 +493,10 @@ var NotPermissionException = class extends XltError {
 //#region src/exceptions/not-role.exception.ts
 var NotRoleException = class extends XltError {
 	constructor(role, mode) {
-		super(`缺少角色: ${Array.isArray(role) ? role.join(", ") : role}`, "NOT_ROLE", 403);
+		super(`缺少角色: ${Array.isArray(role) ? role.join(", ") : role}`, "ROLE_DENIED", 403, {
+			role,
+			mode
+		});
 		this.status = 403;
 		this.role = role;
 		this.mode = mode;
@@ -493,7 +507,7 @@ var NotRoleException = class extends XltError {
 //#region src/exceptions/not-safe.exception.ts
 var NotSafeException = class extends XltError {
 	constructor(business) {
-		super(`二级认证未开启：${business}`, "NOT_SAFE", 403);
+		super(`二级认证未开启：${business}`, "SAFE_REQUIRED", 403, { business });
 		this.status = 403;
 		this.business = business;
 	}
@@ -615,11 +629,11 @@ var XltSession = class {
 //#endregion
 //#region src/auth/stp-logic.ts
 var StpLogic = class {
-	constructor(config, store, strategy, hooks = {}) {
+	constructor(config, store, strategy, eventSink = {}) {
 		this.config = config;
 		this.store = store;
 		this.strategy = strategy;
-		this.hooks = hooks;
+		this.eventSink = eventSink;
 		this.keys = new XltTokenKeys(this.config.tokenName);
 	}
 	/**
@@ -668,8 +682,17 @@ var StpLogic = class {
 			loginTime: Date.now()
 		}, timeout);
 		await this.createTokenFamily(_loginId, device, token);
-		this.callHook("onLogin", _loginId, token, device);
-		if (replacedOldFullToken) this.callHook("onReplaced", _loginId, replacedOldFullToken, token);
+		this.emitAuditEvent("token.logged_in", {
+			loginId: _loginId,
+			device,
+			tokenFingerprint: fingerprintToken(token)
+		});
+		if (replacedOldFullToken) this.emitAuditEvent("token.replaced", {
+			loginId: _loginId,
+			device,
+			previousTokenFingerprint: fingerprintToken(replacedOldFullToken),
+			nextTokenFingerprint: fingerprintToken(token)
+		});
 		return token;
 	}
 	/**
@@ -828,7 +851,11 @@ var StpLogic = class {
 			}
 			if (this.config.activeTimeout > 0) await this.store.delete(this.keys.lastActiveKey(jti));
 			this.writeOfflineRecord(token, "LOGOUT");
-			this.callHook("onLogout", loginId, token, "LOGOUT");
+			this.emitAuditEvent("token.logged_out", {
+				loginId,
+				reason: "LOGOUT",
+				tokenFingerprint: fingerprintToken(token)
+			});
 			return true;
 		} catch {
 			return null;
@@ -841,7 +868,11 @@ var StpLogic = class {
 		await this.store.delete(this.keys.sessionDataKey(loginId));
 		const info = (await this.getDeviceList(loginId)).find((d) => d.token === token);
 		if (info) await this._removeFromSessionList(loginId, info.device);
-		this.callHook("onLogout", loginId, token, "LOGOUT");
+		this.emitAuditEvent("token.logged_out", {
+			loginId,
+			reason: "LOGOUT",
+			tokenFingerprint: fingerprintToken(token)
+		});
 		return true;
 	}
 	/**
@@ -865,7 +896,12 @@ var StpLogic = class {
 				if (this.config.activeTimeout > 0) await this.store.delete(this.keys.lastActiveKey(token));
 			}
 			await this.store.delete(this.keys.sessionKey(loginId, device));
-			this.callHook("onLogout", loginId, token, "LOGOUT_BY_LOGIN_ID");
+			this.emitAuditEvent("token.logged_out", {
+				loginId,
+				device,
+				reason: "LOGOUT_BY_LOGIN_ID",
+				tokenFingerprint: fingerprintToken(token)
+			});
 		}
 		await this.store.delete(this.keys.sessionListKey(loginId));
 		await this.store.delete(this.keys.sessionDataKey(loginId));
@@ -886,7 +922,11 @@ var StpLogic = class {
 		await this.store.delete(sessionKey);
 		await this.store.delete(this.keys.sessionDataKey(loginId));
 		this.writeOfflineRecord(fullToken, NotLoginType.KICK_OUT);
-		this.callHook("onKickout", loginId, fullToken);
+		this.emitAuditEvent("token.kicked_out", {
+			loginId,
+			device,
+			tokenFingerprint: fingerprintToken(fullToken)
+		});
 		return true;
 	}
 	async refreshToken(token, timeout) {
@@ -943,7 +983,12 @@ var StpLogic = class {
 			token: nextToken,
 			loginTime: now
 		}, resolvedTimeout);
-		this.callHook("onLogin", state.loginId, nextToken, state.device);
+		this.emitAuditEvent("token.refreshed", {
+			loginId: state.loginId,
+			device: state.device,
+			previousTokenFingerprint: fingerprintToken(token),
+			nextTokenFingerprint: fingerprintToken(nextToken)
+		});
 		return {
 			ok: true,
 			accessToken: nextToken,
@@ -1050,7 +1095,12 @@ var StpLogic = class {
 		await this.store.delete(this.keys.sessionKey(loginId, device));
 		await this._removeFromSessionList(loginId, device);
 		this.writeOfflineRecord(fullToken, "LOGOUT");
-		this.callHook("onLogout", loginId, fullToken, "LOGOUT_BY_DEVICE");
+		this.emitAuditEvent("token.logged_out", {
+			loginId,
+			device,
+			reason: "LOGOUT_BY_DEVICE",
+			tokenFingerprint: fingerprintToken(fullToken)
+		});
 		return true;
 	}
 	/**
@@ -1065,7 +1115,11 @@ var StpLogic = class {
 		await this.store.delete(this.keys.sessionKey(loginId, device));
 		await this._removeFromSessionList(loginId, device);
 		this.writeOfflineRecord(fullToken, NotLoginType.KICK_OUT);
-		this.callHook("onKickout", loginId, fullToken);
+		this.emitAuditEvent("token.kicked_out", {
+			loginId,
+			device,
+			tokenFingerprint: fingerprintToken(fullToken)
+		});
 		return true;
 	}
 	/**
@@ -1090,7 +1144,10 @@ var StpLogic = class {
 				await this._removeFromSessionList(loginId, info.device);
 			}
 			this.writeOfflineRecord(token, NotLoginType.KICK_OUT);
-			this.callHook("onKickout", loginId, token);
+			this.emitAuditEvent("token.kicked_out", {
+				loginId,
+				tokenFingerprint: fingerprintToken(token)
+			});
 			return true;
 		}
 		const loginId = await getStoreValue(this.store, this.keys.tokenKey(token));
@@ -1102,7 +1159,10 @@ var StpLogic = class {
 			await this._removeFromSessionList(loginId, info.device);
 		}
 		this.writeOfflineRecord(token, NotLoginType.KICK_OUT);
-		this.callHook("onKickout", loginId, token);
+		this.emitAuditEvent("token.kicked_out", {
+			loginId,
+			tokenFingerprint: fingerprintToken(token)
+		});
 		return true;
 	}
 	/**
@@ -1313,16 +1373,25 @@ var StpLogic = class {
 		if (!this._isJwtMode()) return sessionValue;
 		return (await this.getDeviceList(loginId)).find((d) => d.device === device)?.token ?? sessionValue;
 	}
-	callHook(event, ...args) {
-		if (!this.hooks?.[event]) return;
+	emitAuditEvent(type, event) {
+		if (!this.eventSink?.emit) return;
+		const payload = {
+			schemaVersion: 1,
+			type,
+			occurredAt: Date.now(),
+			...event
+		};
 		try {
-			const result = this.hooks[event](...args);
-			if (result instanceof Promise) result.catch((err) => console.error(`[xlt-token] hook ${event} error:`, err));
+			const result = this.eventSink.emit(payload);
+			if (result instanceof Promise) result.catch((err) => console.error(`[xlt-token] event ${type} error:`, err));
 		} catch (err) {
-			console.error(`[xlt-token] hook ${event} error:`, err);
+			console.error(`[xlt-token] event ${type} error:`, err);
 		}
 	}
 };
+function fingerprintToken(token) {
+	return createHash("sha256").update(token).digest("hex").slice(0, 16);
+}
 
 //#endregion
 //#region src/auth/stp-perm-logic.ts
@@ -1504,7 +1573,7 @@ function createXltToken(options = {}) {
 			throw new Error("StpInterface not registered: getRoleList");
 		}
 	};
-	const stpLogic = new StpLogic(config, store, strategy, options.hooks ?? {});
+	const stpLogic = new StpLogic(config, store, strategy, options.eventSink ?? {});
 	const stpPermLogic = new StpPermLogic(stpInterface, store, config);
 	setStpLogic(stpLogic);
 	setStpPermLogic(stpPermLogic);
@@ -1519,5 +1588,5 @@ function createXltToken(options = {}) {
 }
 
 //#endregion
-export { DEFAULT_XLT_TOKEN_CONFIG, MemoryStore, NotLoginException, NotLoginType, NotPermissionException, NotRoleException, NotSafeException, StpLogic, StpPermLogic, StpUtil, UuidStrategy, XLT_CHECK_LOGIN_KEY, XLT_IGNORE_KEY, XLT_PERMISSION_KEY, XLT_ROLE_KEY, XLT_STP_INTERFACE, XLT_TOKEN_CONFIG, XLT_TOKEN_HOOKS, XLT_TOKEN_STORE, XLT_TOKEN_STRATEGY, XltError, XltMode, XltSession, XltTokenKeys, createExpressContext, createMockHttpContext, createXltToken, finiteTtl, keepTtl, matchPermission, normalizeDuration, normalizeTokenLifecycleConfig, normalizeXltTokenConfig, persistentTtl, setStpLogic, setStpPermLogic };
+export { DEFAULT_XLT_TOKEN_CONFIG, MemoryStore, NotLoginException, NotLoginType, NotPermissionException, NotRoleException, NotSafeException, StpLogic, StpPermLogic, StpUtil, UuidStrategy, XLT_CHECK_LOGIN_KEY, XLT_EVENT_SINK, XLT_IGNORE_KEY, XLT_PERMISSION_KEY, XLT_ROLE_KEY, XLT_STP_INTERFACE, XLT_TOKEN_CONFIG, XLT_TOKEN_STORE, XLT_TOKEN_STRATEGY, XltError, XltMode, XltSession, XltTokenKeys, createExpressContext, createMockHttpContext, createXltToken, finiteTtl, keepTtl, matchPermission, normalizeDuration, normalizeTokenLifecycleConfig, normalizeXltTokenConfig, persistentTtl, setStpLogic, setStpPermLogic };
 //# sourceMappingURL=index.mjs.map

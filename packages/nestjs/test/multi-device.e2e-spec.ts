@@ -225,37 +225,43 @@ describe("观测性 API (e2e)", () => {
   });
 });
 
-describe("Hooks (e2e)", () => {
-  it("forRoot hooks.onLogin 在登录时触发", async () => {
-    const onLogin = vi.fn();
-    const { app, moduleRef } = await buildTestApp({ hooks: { onLogin } });
+describe("Audit events (e2e)", () => {
+  it("forRoot eventSink 在登录时触发 token.logged_in", async () => {
+    const emit = vi.fn();
+    const { app, moduleRef } = await buildTestApp({ eventSink: { emit } });
     const stp = moduleRef.get(StpLogic);
 
     const token = await stp.login("9001", { device: "pc" });
-    expect(onLogin).toHaveBeenCalledWith("9001", token, "pc");
+    expect(JSON.stringify(emit.mock.calls)).not.toContain(token);
+    expect(emit).toHaveBeenCalledWith(
+      expect.objectContaining({ type: "token.logged_in", loginId: "9001", device: "pc" }),
+    );
 
     await app.close();
   });
 
-  it("forRoot hooks.onKickout 在 kickoutByDevice 时触发", async () => {
-    const onKickout = vi.fn();
-    const { app, moduleRef } = await buildTestApp({ hooks: { onKickout } });
+  it("forRoot eventSink 在 kickoutByDevice 时触发 token.kicked_out", async () => {
+    const emit = vi.fn();
+    const { app, moduleRef } = await buildTestApp({ eventSink: { emit } });
     const stp = moduleRef.get(StpLogic);
 
     const token = await stp.login("9002", { device: "pc" });
     await stp.kickoutByDevice("9002", "pc");
-    expect(onKickout).toHaveBeenCalledWith("9002", token);
+    expect(JSON.stringify(emit.mock.calls)).not.toContain(token);
+    expect(emit).toHaveBeenCalledWith(
+      expect.objectContaining({ type: "token.kicked_out", loginId: "9002", device: "pc" }),
+    );
 
     await app.close();
   });
 
-  it("钩子异常不影响登录主流程", async () => {
-    const onLogin = vi.fn(() => {
-      throw new Error("hook failed");
+  it("事件投递异常不影响登录主流程", async () => {
+    const emit = vi.fn(() => {
+      throw new Error("event failed");
     });
     const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
-    const { app, moduleRef } = await buildTestApp({ hooks: { onLogin } });
+    const { app, moduleRef } = await buildTestApp({ eventSink: { emit } });
     const stp = moduleRef.get(StpLogic);
 
     const token = await stp.login("9003");

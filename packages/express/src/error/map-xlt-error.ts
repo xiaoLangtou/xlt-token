@@ -21,9 +21,8 @@ export function mapXltError(err: unknown): MappedXltError | null {
       body: {
         statusCode: 401,
         code: err.code,
-        type: err.type,
+        ...err.details,
         message: err.message,
-        token: err.token,
       },
     };
   }
@@ -34,8 +33,7 @@ export function mapXltError(err: unknown): MappedXltError | null {
       body: {
         statusCode: 403,
         code: err.code,
-        permission: err.permission,
-        mode: err.mode,
+        ...err.details,
         message: err.message,
       },
     };
@@ -47,8 +45,7 @@ export function mapXltError(err: unknown): MappedXltError | null {
       body: {
         statusCode: 403,
         code: err.code,
-        role: err.role,
-        mode: err.mode,
+        ...err.details,
         message: err.message,
       },
     };
@@ -60,7 +57,7 @@ export function mapXltError(err: unknown): MappedXltError | null {
       body: {
         statusCode: 403,
         code: err.code,
-        business: err.business,
+        ...err.details,
         message: err.message,
       },
     };

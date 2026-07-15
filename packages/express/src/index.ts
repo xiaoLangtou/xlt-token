@@ -22,7 +22,7 @@ export {
   XLT_TOKEN_STORE,
   XLT_TOKEN_STRATEGY,
   XLT_STP_INTERFACE,
-  XLT_TOKEN_HOOKS,
+  XLT_EVENT_SINK,
   NotLoginType,
   XltMode,
   matchPermission,
@@ -35,7 +35,8 @@ export type {
   JwtConfig,
   StpInterface,
   TokenStrategy,
-  XltHooks,
+  XltAuditEvent,
+  XltEventSink,
   XltTokenConfig,
   XltTokenStore,
 } from "@xlt-token/core";

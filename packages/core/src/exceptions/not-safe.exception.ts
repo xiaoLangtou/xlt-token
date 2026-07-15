@@ -5,7 +5,7 @@ export class NotSafeException extends XltError {
   readonly business: string;
 
   constructor(business: string) {
-    super(`二级认证未开启：${business}`, "NOT_SAFE", 403);
+    super(`二级认证未开启：${business}`, "SAFE_REQUIRED", 403, { business });
     this.business = business;
   }
 }

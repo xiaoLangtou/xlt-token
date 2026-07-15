@@ -25,7 +25,8 @@ export type {
   XltTokenStore,
   TokenStrategy,
   StpInterface,
-  XltHooks,
+  XltAuditEvent,
+  XltEventSink,
   HttpContext,
 } from "@xlt-token/core";
 export {
@@ -37,7 +38,7 @@ export {
   XltMode,
   XLT_STP_INTERFACE,
   matchPermission,
-  XLT_TOKEN_HOOKS,
+  XLT_EVENT_SINK,
   createExpressContext,
   createMockHttpContext,
 } from "@xlt-token/core";

@@ -3,7 +3,7 @@ import { Module } from "@nestjs/common";
 import type {
   StpInterface,
   TokenStrategy,
-  XltHooks,
+  XltEventSink,
   XltTokenConfig,
   XltTokenConfigInput,
   XltTokenStore,
@@ -16,8 +16,8 @@ import {
   StpPermLogic,
   UuidStrategy,
   XLT_STP_INTERFACE,
+  XLT_EVENT_SINK,
   XLT_TOKEN_CONFIG,
-  XLT_TOKEN_HOOKS,
   XLT_TOKEN_STORE,
   XLT_TOKEN_STRATEGY,
   normalizeXltTokenConfig,
@@ -30,7 +30,7 @@ export interface XltTokenModuleOptions {
   isGlobal?: boolean;
   providers?: Provider[];
   stpInterface?: new (...args: any[]) => StpInterface;
-  hooks?: XltHooks;
+  eventSink?: XltEventSink;
 }
 
 export interface XltTokenModuleAsyncOptions extends Pick<ModuleMetadata, "imports"> {
@@ -41,7 +41,7 @@ export interface XltTokenModuleAsyncOptions extends Pick<ModuleMetadata, "import
   isGlobal?: boolean;
   providers?: Provider[];
   stpInterface?: new (...args: any[]) => StpInterface;
-  hooks?: XltHooks;
+  eventSink?: XltEventSink;
 }
 
 @Module({})
@@ -52,9 +52,9 @@ export class XltTokenModule {
       config: XltTokenConfig,
       store: XltTokenStore,
       strategy: TokenStrategy,
-      hooks: XltHooks,
-    ) => new StpLogic(config, store, strategy, hooks),
-    inject: [XLT_TOKEN_CONFIG, XLT_TOKEN_STORE, XLT_TOKEN_STRATEGY, XLT_TOKEN_HOOKS],
+      eventSink: XltEventSink,
+    ) => new StpLogic(config, store, strategy, eventSink),
+    inject: [XLT_TOKEN_CONFIG, XLT_TOKEN_STORE, XLT_TOKEN_STRATEGY, XLT_EVENT_SINK],
   };
   private static readonly stpPermLogicProvider: Provider = {
     provide: StpPermLogic,
@@ -96,7 +96,7 @@ export class XltTokenModule {
         XltTokenModule.createStoreProvider(store),
         XltTokenModule.createStrategyProvider(strategy),
         XltTokenModule.createStpInterfaceProvider(stpInterface),
-        XltTokenModule.createHooksProvider(options.hooks),
+        XltTokenModule.createEventSinkProvider(options.eventSink),
         XltTokenModule.stpLogicProvider,
         XltTokenModule.stpPermLogicProvider,
         XltTokenModule.initProvider,
@@ -134,7 +134,7 @@ export class XltTokenModule {
         XltTokenModule.createStoreProvider(store),
         XltTokenModule.createStrategyProvider(strategy),
         XltTokenModule.createStpInterfaceProvider(stpInterface),
-        XltTokenModule.createHooksProvider(options.hooks),
+        XltTokenModule.createEventSinkProvider(options.eventSink),
         XltTokenModule.stpLogicProvider,
         XltTokenModule.stpPermLogicProvider,
         XltTokenModule.initProvider,
@@ -176,7 +176,7 @@ export class XltTokenModule {
     };
   }
 
-  private static createHooksProvider(hooks?: XltTokenModuleOptions["hooks"]): Provider {
-    return { provide: XLT_TOKEN_HOOKS, useValue: hooks ?? {} };
+  private static createEventSinkProvider(eventSink?: XltTokenModuleOptions["eventSink"]): Provider {
+    return { provide: XLT_EVENT_SINK, useValue: eventSink ?? {} };
   }
 }

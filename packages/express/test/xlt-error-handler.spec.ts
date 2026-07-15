@@ -40,10 +40,10 @@ describe("xltErrorHandler", () => {
     expect(res._status).toBe(401);
     expect(res._body).toMatchObject({
       statusCode: 401,
-      code: "NOT_LOGIN",
+      code: "TOKEN_INVALID",
       type: NotLoginType.INVALID_TOKEN,
-      token: "tok",
     });
+    expect(res._body).not.toHaveProperty("token");
     expect(next).not.toHaveBeenCalled();
   });
 
@@ -57,7 +57,7 @@ describe("xltErrorHandler", () => {
     );
     expect(res._status).toBe(403);
     expect(res._body).toMatchObject({
-      code: "NOT_PERMISSION",
+      code: "PERMISSION_DENIED",
       permission: ["admin:*"],
       mode: XltMode.AND,
     });
@@ -72,14 +72,14 @@ describe("xltErrorHandler", () => {
       vi.fn() as unknown as NextFunction,
     );
     expect(res._status).toBe(403);
-    expect(res._body).toMatchObject({ code: "NOT_ROLE", role: "admin", mode: XltMode.OR });
+    expect(res._body).toMatchObject({ code: "ROLE_DENIED", role: "admin", mode: XltMode.OR });
   });
 
   it("NotSafeException → 403", () => {
     const res = mockRes();
     xltErrorHandler()(new NotSafeException("pay"), req, res, vi.fn() as unknown as NextFunction);
     expect(res._status).toBe(403);
-    expect(res._body).toMatchObject({ code: "NOT_SAFE", business: "pay" });
+    expect(res._body).toMatchObject({ code: "SAFE_REQUIRED", business: "pay" });
   });
 
   it("非 xlt-token 异常透传给 next(err)", () => {

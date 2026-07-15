@@ -6,7 +6,7 @@ import {
   XLT_REDIS_CLIENT,
   type XltTokenModuleAsyncOptions,
 } from "@xlt-token/nestjs";
-import { createAuditHooks } from "./audit.hooks";
+import { createAuditEventSink } from "./audit.hooks";
 import { DemoStpInterface } from "../stp/demo-stp-interface";
 
 export type StoreKind = "memory" | "redis";
@@ -40,16 +40,16 @@ export class AppConfigService {
 /** 在模块装饰器阶段读取 env，组装 forRootAsync 顶层选项 */
 export function buildAsyncModuleOptions(): Pick<
   XltTokenModuleAsyncOptions,
-  "stpInterface" | "hooks" | "store" | "strategy" | "providers" | "isGlobal"
+  "stpInterface" | "eventSink" | "store" | "strategy" | "providers" | "isGlobal"
 > {
   const cfg = new AppConfigService();
   const options: Pick<
     XltTokenModuleAsyncOptions,
-    "stpInterface" | "hooks" | "store" | "strategy" | "providers" | "isGlobal"
+    "stpInterface" | "eventSink" | "store" | "strategy" | "providers" | "isGlobal"
   > = {
     isGlobal: true,
     stpInterface: DemoStpInterface,
-    hooks: createAuditHooks(),
+    eventSink: createAuditEventSink(),
   };
 
   if (cfg.strategy === "jwt") {

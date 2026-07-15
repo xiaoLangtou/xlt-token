@@ -5,7 +5,7 @@ import {
   type RouteAuthPolicy,
   type XltTokenConfig,
 } from "@xlt-token/express";
-import { createAuditHooks } from "./audit-hooks";
+import { createAuditEventSink } from "./audit-hooks";
 import { DemoStpInterface } from "../stp/demo-stp-interface";
 
 export class AppConfig {
@@ -33,7 +33,7 @@ export function createExampleXlt() {
     config: config.getTokenConfig(),
     store: new MemoryStore(),
     stpInterface: new DemoStpInterface(),
-    hooks: createAuditHooks(),
+    eventSink: createAuditEventSink(),
   });
 
   return { config, xlt };

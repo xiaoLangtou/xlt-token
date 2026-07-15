@@ -56,8 +56,9 @@ export { MemoryStore } from "./store/memory-store.js";
 export type { TokenStrategy } from "./token/token-strategy.interface.js";
 export { UuidStrategy } from "./token/uuid-strategy.js";
 
-export type { XltHooks } from "./hooks/xlt-hooks.interface.js";
-export { XLT_TOKEN_HOOKS } from "./hooks/xlt-hooks.interface.js";
+export type { XltAuditEvent, XltAuditEventType } from "./events/xlt-audit-event.js";
+export type { XltEventSink } from "./events/xlt-event-sink.js";
+export { XLT_EVENT_SINK } from "./events/xlt-event-sink.js";
 
 export type { StpInterface } from "./perm/stp-interface.js";
 export { XLT_STP_INTERFACE } from "./perm/stp-interface.js";
@@ -77,7 +78,7 @@ export {
 } from "./http/express.js";
 export { createMockHttpContext, type MockHttpContextOptions } from "./http/testing.js";
 
-export { XltError } from "./exceptions/xlt-error.js";
+export { XltError, type XltErrorCode, type XltErrorDetails } from "./exceptions/xlt-error.js";
 export { NotLoginException } from "./exceptions/not-login.exception.js";
 export { NotPermissionException } from "./exceptions/not-permission.exception.js";
 export { NotRoleException } from "./exceptions/not-role.exception.js";

@@ -1,5 +1,5 @@
 import { ForbiddenException, Inject, Injectable, Module, Optional, SetMetadata, UnauthorizedException, createParamDecorator } from "@nestjs/common";
-import { DEFAULT_XLT_TOKEN_CONFIG, MemoryStore, MemoryStore as MemoryStore$1, NotLoginException as NotLoginException$1, NotLoginType, NotLoginType as NotLoginType$1, NotPermissionException as NotPermissionException$1, NotRoleException as NotRoleException$1, NotSafeException as NotSafeException$1, StpLogic, StpLogic as StpLogic$1, StpPermLogic, StpPermLogic as StpPermLogic$1, StpUtil, UuidStrategy, UuidStrategy as UuidStrategy$1, XLT_CHECK_LOGIN_KEY, XLT_IGNORE_KEY, XLT_PERMISSION_KEY, XLT_ROLE_KEY, XLT_STP_INTERFACE, XLT_STP_INTERFACE as XLT_STP_INTERFACE$1, XLT_TOKEN_CONFIG, XLT_TOKEN_CONFIG as XLT_TOKEN_CONFIG$1, XLT_TOKEN_HOOKS, XLT_TOKEN_HOOKS as XLT_TOKEN_HOOKS$1, XLT_TOKEN_STORE, XLT_TOKEN_STORE as XLT_TOKEN_STORE$1, XLT_TOKEN_STRATEGY, XLT_TOKEN_STRATEGY as XLT_TOKEN_STRATEGY$1, XltMode, XltMode as XltMode$1, XltSession, createExpressContext, createExpressContext as createExpressContext$1, createMockHttpContext, createXltToken, matchPermission, normalizeXltTokenConfig, setStpLogic, setStpLogic as setStpLogic$1, setStpPermLogic, setStpPermLogic as setStpPermLogic$1 } from "@xlt-token/core";
+import { DEFAULT_XLT_TOKEN_CONFIG, MemoryStore, MemoryStore as MemoryStore$1, NotLoginException as NotLoginException$1, NotLoginType, NotLoginType as NotLoginType$1, NotPermissionException as NotPermissionException$1, NotRoleException as NotRoleException$1, NotSafeException as NotSafeException$1, StpLogic, StpLogic as StpLogic$1, StpPermLogic, StpPermLogic as StpPermLogic$1, StpUtil, UuidStrategy, UuidStrategy as UuidStrategy$1, XLT_CHECK_LOGIN_KEY, XLT_EVENT_SINK, XLT_EVENT_SINK as XLT_EVENT_SINK$1, XLT_IGNORE_KEY, XLT_PERMISSION_KEY, XLT_ROLE_KEY, XLT_STP_INTERFACE, XLT_STP_INTERFACE as XLT_STP_INTERFACE$1, XLT_TOKEN_CONFIG, XLT_TOKEN_CONFIG as XLT_TOKEN_CONFIG$1, XLT_TOKEN_STORE, XLT_TOKEN_STORE as XLT_TOKEN_STORE$1, XLT_TOKEN_STRATEGY, XLT_TOKEN_STRATEGY as XLT_TOKEN_STRATEGY$1, XltMode, XltMode as XltMode$1, XltSession, createExpressContext, createExpressContext as createExpressContext$1, createMockHttpContext, createXltToken, matchPermission, normalizeXltTokenConfig, setStpLogic, setStpLogic as setStpLogic$1, setStpPermLogic, setStpPermLogic as setStpPermLogic$1 } from "@xlt-token/core";
 import { IORedisStore as IORedisStore$1, RedisStore as RedisStore$1 } from "@xlt-token/store-redis";
 import { JwtStrategy, createJwtStrategyConfig } from "@xlt-token/jwt";
 import { Reflector } from "@nestjs/core";
@@ -22,12 +22,12 @@ let XltTokenModule = class XltTokenModule {
 	static {
 		this.stpLogicProvider = {
 			provide: StpLogic$1,
-			useFactory: (config, store, strategy, hooks) => new StpLogic$1(config, store, strategy, hooks),
+			useFactory: (config, store, strategy, eventSink) => new StpLogic$1(config, store, strategy, eventSink),
 			inject: [
 				XLT_TOKEN_CONFIG$1,
 				XLT_TOKEN_STORE$1,
 				XLT_TOKEN_STRATEGY$1,
-				XLT_TOKEN_HOOKS$1
+				XLT_EVENT_SINK$1
 			]
 		};
 	}
@@ -74,7 +74,7 @@ let XltTokenModule = class XltTokenModule {
 				_XltTokenModule.createStoreProvider(store),
 				_XltTokenModule.createStrategyProvider(strategy),
 				_XltTokenModule.createStpInterfaceProvider(stpInterface),
-				_XltTokenModule.createHooksProvider(options.hooks),
+				_XltTokenModule.createEventSinkProvider(options.eventSink),
 				_XltTokenModule.stpLogicProvider,
 				_XltTokenModule.stpPermLogicProvider,
 				_XltTokenModule.initProvider,
@@ -101,7 +101,7 @@ let XltTokenModule = class XltTokenModule {
 				_XltTokenModule.createStoreProvider(store),
 				_XltTokenModule.createStrategyProvider(strategy),
 				_XltTokenModule.createStpInterfaceProvider(stpInterface),
-				_XltTokenModule.createHooksProvider(options.hooks),
+				_XltTokenModule.createEventSinkProvider(options.eventSink),
 				_XltTokenModule.stpLogicProvider,
 				_XltTokenModule.stpPermLogicProvider,
 				_XltTokenModule.initProvider,
@@ -154,10 +154,10 @@ let XltTokenModule = class XltTokenModule {
 			}
 		};
 	}
-	static createHooksProvider(hooks) {
+	static createEventSinkProvider(eventSink) {
 		return {
-			provide: XLT_TOKEN_HOOKS$1,
-			useValue: hooks ?? {}
+			provide: XLT_EVENT_SINK$1,
+			useValue: eventSink ?? {}
 		};
 	}
 };
@@ -282,11 +282,22 @@ var NotLoginException = class NotLoginException extends UnauthorizedException {
 	constructor(type, token) {
 		super({
 			statusCode: 401,
+			code: NotLoginException.codeForType(type),
 			type,
 			message: NotLoginException.describeType(type)
 		});
 		this.type = type;
 		this.token = token;
+	}
+	static codeForType(type) {
+		return {
+			[NotLoginType$1.NOT_TOKEN]: "TOKEN_MISSING",
+			[NotLoginType$1.INVALID_TOKEN]: "TOKEN_INVALID",
+			[NotLoginType$1.TOKEN_TIMEOUT]: "TOKEN_TIMEOUT",
+			[NotLoginType$1.TOKEN_FREEZE]: "TOKEN_FREEZE",
+			[NotLoginType$1.BE_REPLACED]: "TOKEN_REPLACED",
+			[NotLoginType$1.KICK_OUT]: "TOKEN_KICKED_OUT"
+		}[type] ?? "TOKEN_INVALID";
 	}
 	static describeType(type) {
 		return {
@@ -306,7 +317,9 @@ var NotPermissionException = class extends ForbiddenException {
 	constructor(permission, mode) {
 		super({
 			statusCode: 403,
-			type: "NOT_PERMISSION",
+			code: "PERMISSION_DENIED",
+			permission,
+			mode,
 			message: `缺少权限: ${Array.isArray(permission) ? permission.join(", ") : permission}`
 		});
 		this.permission = permission;
@@ -320,7 +333,9 @@ var NotRoleException = class extends ForbiddenException {
 	constructor(role, mode) {
 		super({
 			statusCode: 403,
-			type: "NOT_ROLE",
+			code: "ROLE_DENIED",
+			role,
+			mode,
 			message: `缺少角色: ${Array.isArray(role) ? role.join(", ") : role}`
 		});
 		this.role = role;
@@ -334,7 +349,8 @@ var NotSafeException = class extends ForbiddenException {
 	constructor(business) {
 		super({
 			statusCode: 403,
-			type: "NOT_SAFE",
+			code: "SAFE_REQUIRED",
+			business,
 			message: `二级认证未开启：${business}`
 		});
 		this.business = business;
@@ -485,5 +501,5 @@ XltAbstractLoginGuard = __decorate([
 ], XltAbstractLoginGuard);
 
 //#endregion
-export { DEFAULT_XLT_TOKEN_CONFIG, IORedisStore, JwtStrategy, LoginId, MemoryStore, NotLoginException, NotLoginType, NotPermissionException, NotRoleException, NotSafeException, RedisStore, StpLogic, StpPermLogic, StpUtil, TokenValue, UuidStrategy, XLT_CHECK_SAFE_KEY, XLT_IOREDIS_CLIENT, XLT_REDIS_CLIENT, XLT_STP_INTERFACE, XLT_TOKEN_CONFIG, XLT_TOKEN_HOOKS, XLT_TOKEN_STORE, XLT_TOKEN_STRATEGY, XltAbstractLoginGuard, XltCheckLogin, XltCheckPermission, XltCheckRole, XltCheckSafe, XltIgnore, XltMode, XltSession, XltTokenGuard, XltTokenModule, createExpressContext, createJwtStrategyConfig, createMockHttpContext, createXltToken, matchPermission, setStpLogic, setStpPermLogic };
+export { DEFAULT_XLT_TOKEN_CONFIG, IORedisStore, JwtStrategy, LoginId, MemoryStore, NotLoginException, NotLoginType, NotPermissionException, NotRoleException, NotSafeException, RedisStore, StpLogic, StpPermLogic, StpUtil, TokenValue, UuidStrategy, XLT_CHECK_SAFE_KEY, XLT_EVENT_SINK, XLT_IOREDIS_CLIENT, XLT_REDIS_CLIENT, XLT_STP_INTERFACE, XLT_TOKEN_CONFIG, XLT_TOKEN_STORE, XLT_TOKEN_STRATEGY, XltAbstractLoginGuard, XltCheckLogin, XltCheckPermission, XltCheckRole, XltCheckSafe, XltIgnore, XltMode, XltSession, XltTokenGuard, XltTokenModule, createExpressContext, createJwtStrategyConfig, createMockHttpContext, createXltToken, matchPermission, setStpLogic, setStpPermLogic };
 //# sourceMappingURL=index.mjs.map

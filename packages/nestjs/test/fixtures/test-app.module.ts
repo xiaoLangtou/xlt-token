@@ -14,7 +14,7 @@ import {
   XltTokenGuard,
   XltTokenModule,
 } from "@xlt-token/nestjs";
-import type { TokenStrategy, XltHooks } from "@xlt-token/core";
+import type { TokenStrategy, XltEventSink } from "@xlt-token/core";
 import { MockStpInterface } from "./mock-stp-interface";
 
 @Controller("api")
@@ -79,7 +79,7 @@ export interface BuildOpts {
   guardClass?: any;
   /** 额外的配置覆盖（如 isConcurrent / isShare / activeTimeout 等） */
   config?: Partial<XltTokenConfig>;
-  hooks?: XltHooks;
+  eventSink?: XltEventSink;
   /** Token 策略，如 JwtStrategy */
   strategy?: { useClass: new (...args: any[]) => TokenStrategy } | { useValue: TokenStrategy };
 }
@@ -99,7 +99,7 @@ export async function buildTestApp(opts: BuildOpts = {}) {
           ...opts.config,
         },
         stpInterface: MockStpInterface,
-        hooks: opts.hooks,
+        eventSink: opts.eventSink,
       }),
     ],
     controllers: [DemoController],

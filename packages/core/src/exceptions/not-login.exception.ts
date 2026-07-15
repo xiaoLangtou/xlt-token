@@ -1,5 +1,5 @@
 import { NotLoginType } from "../const/index.js";
-import { XltError } from "./xlt-error.js";
+import { XltError, type XltErrorCode } from "./xlt-error.js";
 
 export class NotLoginException extends XltError {
   readonly status = 401;
@@ -7,9 +7,23 @@ export class NotLoginException extends XltError {
   readonly token?: string;
 
   constructor(type: NotLoginType, token?: string) {
-    super(NotLoginException.describeType(type), "NOT_LOGIN", 401);
+    super(NotLoginException.describeType(type), NotLoginException.codeForType(type), 401, {
+      type,
+    });
     this.type = type;
     this.token = token;
+  }
+
+  private static codeForType(type: NotLoginType): XltErrorCode {
+    const map: Record<NotLoginType, XltErrorCode> = {
+      [NotLoginType.NOT_TOKEN]: "TOKEN_MISSING",
+      [NotLoginType.INVALID_TOKEN]: "TOKEN_INVALID",
+      [NotLoginType.TOKEN_TIMEOUT]: "TOKEN_TIMEOUT",
+      [NotLoginType.TOKEN_FREEZE]: "TOKEN_FREEZE",
+      [NotLoginType.BE_REPLACED]: "TOKEN_REPLACED",
+      [NotLoginType.KICK_OUT]: "TOKEN_KICKED_OUT",
+    };
+    return map[type] ?? "TOKEN_INVALID";
   }
 
   private static describeType(type: NotLoginType): string {

@@ -261,40 +261,26 @@ declare class UuidStrategy implements TokenStrategy {
   private buildRaw;
 }
 //#endregion
-//#region src/hooks/xlt-hooks.interface.d.ts
-interface XltHooks {
-  /**
-   * 登录成功后触发
-   * @param loginId 登录ID
-   * @param token 令牌
-   * @param device 设备
-   */
-  onLogin?: (loginId: string, token: string, device: string) => void | Promise<void>;
-  /**
-   * 登出后触发
-   * @param loginId 登录ID
-   * @param token 令牌
-   * @param reason 登出原因
-   */
-  onLogout?: (loginId: string, token: string, reason: string) => void | Promise<void>;
-  /**
-   * 踢出后触发
-   * @param loginId 登录ID
-   * @param token 令牌
-   */
-  onKickout?: (loginId: string, token: string) => void | Promise<void>;
-  /**
-   * 替换后触发
-   * @param loginId 登录ID
-   * @param oldToken 旧令牌
-   * @param newToken 新令牌
-   */
-  onReplaced?: (loginId: string, oldToken: string, newToken: string) => void | Promise<void>;
+//#region src/events/xlt-audit-event.d.ts
+type XltAuditEventType = "token.logged_in" | "token.refreshed" | "token.logged_out" | "token.kicked_out" | "token.replaced" | "token.family_revoked";
+interface XltAuditEvent {
+  schemaVersion: 1;
+  type: XltAuditEventType;
+  occurredAt: number;
+  loginId?: string;
+  device?: string;
+  reason?: string;
+  tokenFingerprint?: string;
+  previousTokenFingerprint?: string;
+  nextTokenFingerprint?: string;
+  familyIdFingerprint?: string;
 }
-/**
- * 钩子注入 token
- */
-declare const XLT_TOKEN_HOOKS = "XLT_TOKEN_HOOKS";
+//#endregion
+//#region src/events/xlt-event-sink.d.ts
+interface XltEventSink {
+  emit?: (event: XltAuditEvent) => void | Promise<void>;
+}
+declare const XLT_EVENT_SINK = "XLT_EVENT_SINK";
 //#endregion
 //#region src/perm/stp-interface.d.ts
 interface StpInterface {
@@ -381,10 +367,13 @@ interface MockHttpContextOptions {
 declare function createMockHttpContext(options?: MockHttpContextOptions): HttpContext;
 //#endregion
 //#region src/exceptions/xlt-error.d.ts
+type XltErrorCode = "TOKEN_MISSING" | "TOKEN_INVALID" | "TOKEN_TIMEOUT" | "TOKEN_FREEZE" | "TOKEN_REPLACED" | "TOKEN_KICKED_OUT" | "PERMISSION_DENIED" | "ROLE_DENIED" | "SAFE_REQUIRED" | "CONFIG_INVALID";
+type XltErrorDetails = Record<string, string | string[] | number | boolean | null>;
 declare class XltError extends Error {
-  readonly code: string;
+  readonly code: XltErrorCode;
   readonly status: number;
-  constructor(message: string, code: string, status: number);
+  readonly details: XltErrorDetails;
+  constructor(message: string, code: XltErrorCode, status: number, details?: XltErrorDetails);
 }
 //#endregion
 //#region src/exceptions/not-login.exception.d.ts
@@ -393,6 +382,7 @@ declare class NotLoginException extends XltError {
   readonly type: NotLoginType;
   readonly token?: string;
   constructor(type: NotLoginType, token?: string);
+  private static codeForType;
   private static describeType;
 }
 //#endregion
@@ -476,8 +466,8 @@ declare class StpLogic {
   private config;
   private store;
   private strategy;
-  private hooks;
-  constructor(config: XltTokenConfig, store: XltTokenStore, strategy: TokenStrategy, hooks?: XltHooks);
+  private eventSink;
+  constructor(config: XltTokenConfig, store: XltTokenStore, strategy: TokenStrategy, eventSink?: XltEventSink);
   private readonly keys;
   /**
    * 登录
@@ -655,7 +645,7 @@ declare class StpLogic {
   private _isJwtMode;
   /** 钩子回调用完整 token（JWT 模式下 session 存的是 jti） */
   private _resolveHookToken;
-  private callHook;
+  private emitAuditEvent;
 }
 //#endregion
 //#region src/auth/stp-perm-logic.d.ts
@@ -723,7 +713,7 @@ interface CreateOptions {
   store?: XltTokenStore;
   strategy?: TokenStrategy;
   stpInterface?: StpInterface;
-  hooks?: XltHooks;
+  eventSink?: XltEventSink;
 }
 interface XltTokenContext {
   config: XltTokenConfig;
@@ -750,5 +740,5 @@ declare function normalizeDuration(value: DurationInput, options: NormalizeDurat
  */
 declare function normalizeXltTokenConfig(input?: Partial<XltTokenConfigInput>): XltTokenConfig;
 //#endregion
-export { type AuthResult, type CookieOptions, type CreateOptions, DEFAULT_XLT_TOKEN_CONFIG, type DeviceInfo, type DurationInput, type DurationString, type DurationUnit, type ExpressLikeRequest, type ExpressLikeResponse, type HttpContext, type HttpCookies, type HttpHeaders, type HttpQuery, type JwtConfig, MemoryStore, type MockHttpContextOptions, type NormalizeDurationOptions, type NormalizedTokenExpirationConfig, type NormalizedTokenLifecycleConfig, type NormalizedTokenRefreshConfig, NotLoginException, NotLoginType, NotPermissionException, NotRoleException, NotSafeException, type RefreshResult, type RevokeResult, type RevokeScope, type StoreEntry, type StoreScanOptions, type StoreScanResult, type StoreTtl, type StoreTtlUpdate, type StpInterface, StpLogic, StpPermLogic, StpUtil, type TokenExpirationConfig, type TokenFamilyState, type TokenFamilyStatus, type TokenLifecycleConfig, type TokenRefreshConfig, type TokenStrategy, UuidStrategy, XLT_CHECK_LOGIN_KEY, XLT_IGNORE_KEY, XLT_PERMISSION_KEY, XLT_ROLE_KEY, XLT_STP_INTERFACE, XLT_TOKEN_CONFIG, XLT_TOKEN_HOOKS, XLT_TOKEN_STORE, XLT_TOKEN_STRATEGY, XltError, type XltHooks, XltMode, XltSession, type XltTokenConfig, type XltTokenConfigInput, type XltTokenContext, XltTokenKeys, type XltTokenStore, createExpressContext, createMockHttpContext, createXltToken, finiteTtl, keepTtl, matchPermission, normalizeDuration, normalizeTokenLifecycleConfig, normalizeXltTokenConfig, persistentTtl, setStpLogic, setStpPermLogic };
+export { type AuthResult, type CookieOptions, type CreateOptions, DEFAULT_XLT_TOKEN_CONFIG, type DeviceInfo, type DurationInput, type DurationString, type DurationUnit, type ExpressLikeRequest, type ExpressLikeResponse, type HttpContext, type HttpCookies, type HttpHeaders, type HttpQuery, type JwtConfig, MemoryStore, type MockHttpContextOptions, type NormalizeDurationOptions, type NormalizedTokenExpirationConfig, type NormalizedTokenLifecycleConfig, type NormalizedTokenRefreshConfig, NotLoginException, NotLoginType, NotPermissionException, NotRoleException, NotSafeException, type RefreshResult, type RevokeResult, type RevokeScope, type StoreEntry, type StoreScanOptions, type StoreScanResult, type StoreTtl, type StoreTtlUpdate, type StpInterface, StpLogic, StpPermLogic, StpUtil, type TokenExpirationConfig, type TokenFamilyState, type TokenFamilyStatus, type TokenLifecycleConfig, type TokenRefreshConfig, type TokenStrategy, UuidStrategy, XLT_CHECK_LOGIN_KEY, XLT_EVENT_SINK, XLT_IGNORE_KEY, XLT_PERMISSION_KEY, XLT_ROLE_KEY, XLT_STP_INTERFACE, XLT_TOKEN_CONFIG, XLT_TOKEN_STORE, XLT_TOKEN_STRATEGY, type XltAuditEvent, type XltAuditEventType, XltError, type XltErrorCode, type XltErrorDetails, type XltEventSink, XltMode, XltSession, type XltTokenConfig, type XltTokenConfigInput, type XltTokenContext, XltTokenKeys, type XltTokenStore, createExpressContext, createMockHttpContext, createXltToken, finiteTtl, keepTtl, matchPermission, normalizeDuration, normalizeTokenLifecycleConfig, normalizeXltTokenConfig, persistentTtl, setStpLogic, setStpPermLogic };
 //# sourceMappingURL=index.d.mts.map

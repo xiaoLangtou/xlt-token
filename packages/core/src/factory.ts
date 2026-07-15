@@ -1,8 +1,8 @@
 import type { StpInterface } from "./perm/stp-interface.js";
 import type { TokenStrategy } from "./token/token-strategy.interface.js";
 import type { XltTokenConfig, XltTokenConfigInput } from "./config/xlt-token-config.js";
+import type { XltEventSink } from "./events/xlt-event-sink.js";
 import type { XltTokenStore } from "./store/xlt-token-store.interface.js";
-import type { XltHooks } from "./hooks/xlt-hooks.interface.js";
 import { StpLogic } from "./auth/stp-logic.js";
 import { StpPermLogic } from "./auth/stp-perm-logic.js";
 import { setStpLogic, setStpPermLogic, StpUtil } from "./auth/stp-util.js";
@@ -15,7 +15,7 @@ export interface CreateOptions {
   store?: XltTokenStore;
   strategy?: TokenStrategy;
   stpInterface?: StpInterface;
-  hooks?: XltHooks;
+  eventSink?: XltEventSink;
 }
 
 export interface XltTokenContext {
@@ -39,8 +39,8 @@ export function createXltToken(options: CreateOptions = {}): XltTokenContext {
       throw new Error("StpInterface not registered: getRoleList");
     },
   };
-  const hooks = options.hooks ?? {};
-  const stpLogic = new StpLogic(config, store, strategy, hooks);
+  const eventSink = options.eventSink ?? {};
+  const stpLogic = new StpLogic(config, store, strategy, eventSink);
   const stpPermLogic = new StpPermLogic(stpInterface, store, config);
   setStpLogic(stpLogic);
   setStpPermLogic(stpPermLogic);

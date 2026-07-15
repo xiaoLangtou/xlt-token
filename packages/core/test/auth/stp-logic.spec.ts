@@ -3,7 +3,7 @@ import {
   DEFAULT_XLT_TOKEN_CONFIG,
   type XltTokenConfig,
 } from "../../src/config/xlt-token-config.js";
-import type { XltHooks } from "../../src/hooks/xlt-hooks.interface.js";
+import type { XltAuditEvent, XltEventSink } from "../../src/index.js";
 import { NotSafeException } from "../../src/exceptions/not-safe.exception.js";
 import { createMockHttpContext } from "../../src/http/testing.js";
 import { createStpLogic } from "../helpers/setup-stp-logic.js";
@@ -41,8 +41,8 @@ describe("StpLogic", () => {
   let logic: StpLogic;
   let config: XltTokenConfig;
 
-  const buildModule = async (cfg: XltTokenConfig, hookOverrides: XltHooks = {}) => {
-    ({ logic, store, config } = createStpLogic({ config: cfg, hooks: hookOverrides }));
+  const buildModule = async (cfg: XltTokenConfig, eventSink: XltEventSink = {}) => {
+    ({ logic, store, config } = createStpLogic({ config: cfg, eventSink }));
   };
 
   const storeValue = async (key: string): Promise<string | null> => {
@@ -291,74 +291,93 @@ describe("StpLogic", () => {
     });
   });
 
-  describe("Hooks (Milestone 1)", () => {
-    it("onLogin 登录成功后触发", async () => {
-      const onLogin = vi.fn();
-      await buildModule(makeConfig(), { onLogin });
+  describe("Audit events", () => {
+    it("登录成功后触发 token.logged_in", async () => {
+      const events: XltAuditEvent[] = [];
+      await buildModule(makeConfig(), { emit: (event) => events.push(event) });
       const token = await logic.login("u1", { device: "pc" });
-      expect(onLogin).toHaveBeenCalledWith("u1", token, "pc");
+      expect(JSON.stringify(events)).not.toContain(token);
+      expect(events).toContainEqual(
+        expect.objectContaining({ type: "token.logged_in", loginId: "u1", device: "pc" }),
+      );
     });
 
-    it("onKickout kickoutByDevice 时触发", async () => {
-      const onKickout = vi.fn();
-      await buildModule(makeConfig(), { onKickout });
-      const token = await logic.login("u1", { device: "pc" });
+    it("kickoutByDevice 时触发 token.kicked_out", async () => {
+      const events: XltAuditEvent[] = [];
+      await buildModule(makeConfig(), { emit: (event) => events.push(event) });
+      await logic.login("u1", { device: "pc" });
       await logic.kickoutByDevice("u1", "pc");
-      expect(onKickout).toHaveBeenCalledWith("u1", token);
+      expect(events).toContainEqual(
+        expect.objectContaining({ type: "token.kicked_out", loginId: "u1", device: "pc" }),
+      );
     });
 
-    it("onKickout kickoutByToken 时触发", async () => {
-      const onKickout = vi.fn();
-      await buildModule(makeConfig(), { onKickout });
+    it("kickoutByToken 时触发 token.kicked_out", async () => {
+      const events: XltAuditEvent[] = [];
+      await buildModule(makeConfig(), { emit: (event) => events.push(event) });
       const token = await logic.login("u1", { device: "pc" });
       await logic.kickoutByToken(token);
-      expect(onKickout).toHaveBeenCalledWith("u1", token);
+      expect(JSON.stringify(events)).not.toContain(token);
+      expect(events).toContainEqual(
+        expect.objectContaining({ type: "token.kicked_out", loginId: "u1" }),
+      );
     });
 
-    it("onKickout kickout(loginId) 时触发", async () => {
-      const onKickout = vi.fn();
-      await buildModule(makeConfig(), { onKickout });
-      const token = await logic.login("u1", { device: "default" });
+    it("kickout(loginId) 时触发 token.kicked_out", async () => {
+      const events: XltAuditEvent[] = [];
+      await buildModule(makeConfig(), { emit: (event) => events.push(event) });
+      await logic.login("u1", { device: "default" });
       await logic.kickout("u1");
-      expect(onKickout).toHaveBeenCalledWith("u1", token);
+      expect(events).toContainEqual(
+        expect.objectContaining({ type: "token.kicked_out", loginId: "u1", device: "default" }),
+      );
     });
 
-    it("onLogout logout 成功后触发", async () => {
-      const onLogout = vi.fn();
-      await buildModule(makeConfig(), { onLogout });
+    it("logout 成功后触发 token.logged_out", async () => {
+      const events: XltAuditEvent[] = [];
+      await buildModule(makeConfig(), { emit: (event) => events.push(event) });
       const token = await logic.login("u1");
       await logic.logout(token);
-      expect(onLogout).toHaveBeenCalledWith("u1", token, "LOGOUT");
+      expect(JSON.stringify(events)).not.toContain(token);
+      expect(events).toContainEqual(
+        expect.objectContaining({ type: "token.logged_out", loginId: "u1", reason: "LOGOUT" }),
+      );
     });
 
-    it("onReplaced 同设备顶号时触发", async () => {
-      const onReplaced = vi.fn();
-      await buildModule(makeConfig({ isConcurrent: false }), { onReplaced });
+    it("同设备顶号时触发 token.replaced", async () => {
+      const events: XltAuditEvent[] = [];
+      await buildModule(makeConfig({ isConcurrent: false }), {
+        emit: (event) => events.push(event),
+      });
       const oldToken = await logic.login("u1", { device: "pc" });
       const newToken = await logic.login("u1", { device: "pc" });
-      expect(onReplaced).toHaveBeenCalledWith("u1", oldToken, newToken);
+      expect(JSON.stringify(events)).not.toContain(oldToken);
+      expect(JSON.stringify(events)).not.toContain(newToken);
+      expect(events).toContainEqual(
+        expect.objectContaining({ type: "token.replaced", loginId: "u1", device: "pc" }),
+      );
     });
 
-    it("钩子同步抛异常不影响主流程", async () => {
-      const onLogin = vi.fn(() => {
-        throw new Error("hook failed");
+    it("事件投递同步抛异常不影响主流程", async () => {
+      const emit = vi.fn(() => {
+        throw new Error("event failed");
       });
       const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-      await buildModule(makeConfig(), { onLogin });
+      await buildModule(makeConfig(), { emit });
       const token = await logic.login("u1");
       expect(token).toBeTruthy();
-      expect(onLogin).toHaveBeenCalled();
+      expect(emit).toHaveBeenCalled();
       consoleSpy.mockRestore();
     });
 
-    it("钩子异步 reject 不影响主流程", async () => {
-      const onLogin = vi.fn().mockRejectedValue(new Error("async hook failed"));
+    it("事件投递异步 reject 不影响主流程", async () => {
+      const emit = vi.fn().mockRejectedValue(new Error("async event failed"));
       const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-      await buildModule(makeConfig(), { onLogin });
+      await buildModule(makeConfig(), { emit });
       const token = await logic.login("u1");
       expect(token).toBeTruthy();
       await new Promise((r) => setTimeout(r, 10));
-      expect(onLogin).toHaveBeenCalled();
+      expect(emit).toHaveBeenCalled();
       consoleSpy.mockRestore();
     });
   });

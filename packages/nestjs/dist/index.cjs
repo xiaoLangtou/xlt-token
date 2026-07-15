@@ -23,12 +23,12 @@ let XltTokenModule = class XltTokenModule {
 	static {
 		this.stpLogicProvider = {
 			provide: _xlt_token_core.StpLogic,
-			useFactory: (config, store, strategy, hooks) => new _xlt_token_core.StpLogic(config, store, strategy, hooks),
+			useFactory: (config, store, strategy, eventSink) => new _xlt_token_core.StpLogic(config, store, strategy, eventSink),
 			inject: [
 				_xlt_token_core.XLT_TOKEN_CONFIG,
 				_xlt_token_core.XLT_TOKEN_STORE,
 				_xlt_token_core.XLT_TOKEN_STRATEGY,
-				_xlt_token_core.XLT_TOKEN_HOOKS
+				_xlt_token_core.XLT_EVENT_SINK
 			]
 		};
 	}
@@ -75,7 +75,7 @@ let XltTokenModule = class XltTokenModule {
 				_XltTokenModule.createStoreProvider(store),
 				_XltTokenModule.createStrategyProvider(strategy),
 				_XltTokenModule.createStpInterfaceProvider(stpInterface),
-				_XltTokenModule.createHooksProvider(options.hooks),
+				_XltTokenModule.createEventSinkProvider(options.eventSink),
 				_XltTokenModule.stpLogicProvider,
 				_XltTokenModule.stpPermLogicProvider,
 				_XltTokenModule.initProvider,
@@ -102,7 +102,7 @@ let XltTokenModule = class XltTokenModule {
 				_XltTokenModule.createStoreProvider(store),
 				_XltTokenModule.createStrategyProvider(strategy),
 				_XltTokenModule.createStpInterfaceProvider(stpInterface),
-				_XltTokenModule.createHooksProvider(options.hooks),
+				_XltTokenModule.createEventSinkProvider(options.eventSink),
 				_XltTokenModule.stpLogicProvider,
 				_XltTokenModule.stpPermLogicProvider,
 				_XltTokenModule.initProvider,
@@ -155,10 +155,10 @@ let XltTokenModule = class XltTokenModule {
 			}
 		};
 	}
-	static createHooksProvider(hooks) {
+	static createEventSinkProvider(eventSink) {
 		return {
-			provide: _xlt_token_core.XLT_TOKEN_HOOKS,
-			useValue: hooks ?? {}
+			provide: _xlt_token_core.XLT_EVENT_SINK,
+			useValue: eventSink ?? {}
 		};
 	}
 };
@@ -283,11 +283,22 @@ var NotLoginException = class NotLoginException extends _nestjs_common.Unauthori
 	constructor(type, token) {
 		super({
 			statusCode: 401,
+			code: NotLoginException.codeForType(type),
 			type,
 			message: NotLoginException.describeType(type)
 		});
 		this.type = type;
 		this.token = token;
+	}
+	static codeForType(type) {
+		return {
+			[_xlt_token_core.NotLoginType.NOT_TOKEN]: "TOKEN_MISSING",
+			[_xlt_token_core.NotLoginType.INVALID_TOKEN]: "TOKEN_INVALID",
+			[_xlt_token_core.NotLoginType.TOKEN_TIMEOUT]: "TOKEN_TIMEOUT",
+			[_xlt_token_core.NotLoginType.TOKEN_FREEZE]: "TOKEN_FREEZE",
+			[_xlt_token_core.NotLoginType.BE_REPLACED]: "TOKEN_REPLACED",
+			[_xlt_token_core.NotLoginType.KICK_OUT]: "TOKEN_KICKED_OUT"
+		}[type] ?? "TOKEN_INVALID";
 	}
 	static describeType(type) {
 		return {
@@ -307,7 +318,9 @@ var NotPermissionException = class extends _nestjs_common.ForbiddenException {
 	constructor(permission, mode) {
 		super({
 			statusCode: 403,
-			type: "NOT_PERMISSION",
+			code: "PERMISSION_DENIED",
+			permission,
+			mode,
 			message: `缺少权限: ${Array.isArray(permission) ? permission.join(", ") : permission}`
 		});
 		this.permission = permission;
@@ -321,7 +334,9 @@ var NotRoleException = class extends _nestjs_common.ForbiddenException {
 	constructor(role, mode) {
 		super({
 			statusCode: 403,
-			type: "NOT_ROLE",
+			code: "ROLE_DENIED",
+			role,
+			mode,
 			message: `缺少角色: ${Array.isArray(role) ? role.join(", ") : role}`
 		});
 		this.role = role;
@@ -335,7 +350,8 @@ var NotSafeException = class extends _nestjs_common.ForbiddenException {
 	constructor(business) {
 		super({
 			statusCode: 403,
-			type: "NOT_SAFE",
+			code: "SAFE_REQUIRED",
+			business,
 			message: `二级认证未开启：${business}`
 		});
 		this.business = business;
@@ -553,6 +569,12 @@ Object.defineProperty(exports, 'UuidStrategy', {
   }
 });
 exports.XLT_CHECK_SAFE_KEY = XLT_CHECK_SAFE_KEY;
+Object.defineProperty(exports, 'XLT_EVENT_SINK', {
+  enumerable: true,
+  get: function () {
+    return _xlt_token_core.XLT_EVENT_SINK;
+  }
+});
 exports.XLT_IOREDIS_CLIENT = XLT_IOREDIS_CLIENT;
 exports.XLT_REDIS_CLIENT = XLT_REDIS_CLIENT;
 Object.defineProperty(exports, 'XLT_STP_INTERFACE', {
@@ -565,12 +587,6 @@ Object.defineProperty(exports, 'XLT_TOKEN_CONFIG', {
   enumerable: true,
   get: function () {
     return _xlt_token_core.XLT_TOKEN_CONFIG;
-  }
-});
-Object.defineProperty(exports, 'XLT_TOKEN_HOOKS', {
-  enumerable: true,
-  get: function () {
-    return _xlt_token_core.XLT_TOKEN_HOOKS;
   }
 });
 Object.defineProperty(exports, 'XLT_TOKEN_STORE', {

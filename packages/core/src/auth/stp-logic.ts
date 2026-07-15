@@ -1,11 +1,13 @@
 // 核心引擎
 import { isNull, isUndefined } from "es-toolkit";
+import { createHash } from "node:crypto";
 import type { DeviceInfo, DurationInput, XltTokenConfig } from "../config/xlt-token-config.js";
 import { NotLoginType } from "../const/index.js";
 import { XltTokenKeys } from "../config/xlt-token-keys.js";
+import type { XltAuditEvent, XltAuditEventType } from "../events/xlt-audit-event.js";
+import type { XltEventSink } from "../events/xlt-event-sink.js";
 import { NotLoginException } from "../exceptions/not-login.exception.js";
 import { NotSafeException } from "../exceptions/not-safe.exception.js";
-import type { XltHooks } from "../hooks/xlt-hooks.interface.js";
 import type { HttpContext } from "../http/context.js";
 import {
   normalizeTokenLifecycleConfig,
@@ -42,7 +44,7 @@ export class StpLogic {
     private config: XltTokenConfig,
     private store: XltTokenStore,
     private strategy: TokenStrategy,
-    private hooks: XltHooks = {},
+    private eventSink: XltEventSink = {},
   ) {
     this.keys = new XltTokenKeys(this.config.tokenName);
   }
@@ -129,10 +131,18 @@ export class StpLogic {
     await this._addToSessionList(_loginId, { device, token, loginTime: Date.now() }, timeout);
     await this.createTokenFamily(_loginId, device, token);
 
-    // ── 触发钩子 ──
-    this.callHook("onLogin", _loginId, token, device);
+    this.emitAuditEvent("token.logged_in", {
+      loginId: _loginId,
+      device,
+      tokenFingerprint: fingerprintToken(token),
+    });
     if (replacedOldFullToken) {
-      this.callHook("onReplaced", _loginId, replacedOldFullToken, token);
+      this.emitAuditEvent("token.replaced", {
+        loginId: _loginId,
+        device,
+        previousTokenFingerprint: fingerprintToken(replacedOldFullToken),
+        nextTokenFingerprint: fingerprintToken(token),
+      });
     }
     // 返回纯 token，客户端请求时自行拼接前缀（如 "Bearer "）
     return token;
@@ -375,7 +385,11 @@ export class StpLogic {
         }
 
         this.writeOfflineRecord(token, "LOGOUT");
-        this.callHook("onLogout", loginId, token, "LOGOUT");
+        this.emitAuditEvent("token.logged_out", {
+          loginId,
+          reason: "LOGOUT",
+          tokenFingerprint: fingerprintToken(token),
+        });
         return true;
       } catch {
         return null;
@@ -393,7 +407,11 @@ export class StpLogic {
     const info = list.find((d) => d.token === token);
     if (info) await this._removeFromSessionList(loginId, info.device);
 
-    this.callHook("onLogout", loginId, token, "LOGOUT");
+    this.emitAuditEvent("token.logged_out", {
+      loginId,
+      reason: "LOGOUT",
+      tokenFingerprint: fingerprintToken(token),
+    });
     return true;
   }
 
@@ -430,7 +448,12 @@ export class StpLogic {
         }
       }
       await this.store.delete(this.keys.sessionKey(loginId, device));
-      this.callHook("onLogout", loginId, token, "LOGOUT_BY_LOGIN_ID");
+      this.emitAuditEvent("token.logged_out", {
+        loginId,
+        device,
+        reason: "LOGOUT_BY_LOGIN_ID",
+        tokenFingerprint: fingerprintToken(token),
+      });
     }
 
     await this.store.delete(this.keys.sessionListKey(loginId));
@@ -471,7 +494,11 @@ export class StpLogic {
     await this.store.delete(sessionKey);
     await this.store.delete(this.keys.sessionDataKey(loginId));
     this.writeOfflineRecord(fullToken, NotLoginType.KICK_OUT);
-    this.callHook("onKickout", loginId, fullToken);
+    this.emitAuditEvent("token.kicked_out", {
+      loginId,
+      device,
+      tokenFingerprint: fingerprintToken(fullToken),
+    });
     return true;
   }
 
@@ -530,7 +557,12 @@ export class StpLogic {
       resolvedTimeout,
     );
 
-    this.callHook("onLogin", state.loginId, nextToken, state.device);
+    this.emitAuditEvent("token.refreshed", {
+      loginId: state.loginId,
+      device: state.device,
+      previousTokenFingerprint: fingerprintToken(token),
+      nextTokenFingerprint: fingerprintToken(nextToken),
+    });
     return { ok: true, accessToken: nextToken, family: nextState };
   }
 
@@ -672,7 +704,12 @@ export class StpLogic {
     await this.store.delete(this.keys.sessionKey(loginId, device));
     await this._removeFromSessionList(loginId, device);
     this.writeOfflineRecord(fullToken, "LOGOUT");
-    this.callHook("onLogout", loginId, fullToken, "LOGOUT_BY_DEVICE");
+    this.emitAuditEvent("token.logged_out", {
+      loginId,
+      device,
+      reason: "LOGOUT_BY_DEVICE",
+      tokenFingerprint: fingerprintToken(fullToken),
+    });
     return true;
   }
 
@@ -704,7 +741,11 @@ export class StpLogic {
     await this.store.delete(this.keys.sessionKey(loginId, device));
     await this._removeFromSessionList(loginId, device);
     this.writeOfflineRecord(fullToken, NotLoginType.KICK_OUT);
-    this.callHook("onKickout", loginId, fullToken);
+    this.emitAuditEvent("token.kicked_out", {
+      loginId,
+      device,
+      tokenFingerprint: fingerprintToken(fullToken),
+    });
     return true;
   }
 
@@ -737,7 +778,10 @@ export class StpLogic {
         await this._removeFromSessionList(loginId, info.device);
       }
       this.writeOfflineRecord(token, NotLoginType.KICK_OUT);
-      this.callHook("onKickout", loginId, token);
+      this.emitAuditEvent("token.kicked_out", {
+        loginId,
+        tokenFingerprint: fingerprintToken(token),
+      });
       return true;
     }
 
@@ -754,7 +798,10 @@ export class StpLogic {
       await this._removeFromSessionList(loginId, info.device);
     }
     this.writeOfflineRecord(token, NotLoginType.KICK_OUT);
-    this.callHook("onKickout", loginId, token);
+    this.emitAuditEvent("token.kicked_out", {
+      loginId,
+      tokenFingerprint: fingerprintToken(token),
+    });
     return true;
   }
 
@@ -994,18 +1041,28 @@ export class StpLogic {
     return info?.token ?? sessionValue;
   }
 
-  private callHook<K extends keyof XltHooks>(
-    event: K,
-    ...args: Parameters<NonNullable<XltHooks[K]>>
+  private emitAuditEvent(
+    type: XltAuditEventType,
+    event: Omit<XltAuditEvent, "schemaVersion" | "type" | "occurredAt">,
   ): void {
-    if (!this.hooks?.[event]) return;
+    if (!this.eventSink?.emit) return;
+    const payload: XltAuditEvent = {
+      schemaVersion: 1,
+      type,
+      occurredAt: Date.now(),
+      ...event,
+    };
     try {
-      const result = (this.hooks[event] as any)(...args);
+      const result = this.eventSink.emit(payload);
       if (result instanceof Promise) {
-        result.catch((err) => console.error(`[xlt-token] hook ${event} error:`, err));
+        result.catch((err) => console.error(`[xlt-token] event ${type} error:`, err));
       }
     } catch (err) {
-      console.error(`[xlt-token] hook ${event} error:`, err);
+      console.error(`[xlt-token] event ${type} error:`, err);
     }
   }
+}
+
+function fingerprintToken(token: string): string {
+  return createHash("sha256").update(token).digest("hex").slice(0, 16);
 }

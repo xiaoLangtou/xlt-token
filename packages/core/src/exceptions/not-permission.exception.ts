@@ -9,8 +9,9 @@ export class NotPermissionException extends XltError {
   constructor(permission: string | string[], mode: XltMode) {
     super(
       `缺少权限: ${Array.isArray(permission) ? permission.join(", ") : permission}`,
-      "NOT_PERMISSION",
+      "PERMISSION_DENIED",
       403,
+      { permission, mode },
     );
     this.permission = permission;
     this.mode = mode;

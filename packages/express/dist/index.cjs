@@ -267,9 +267,8 @@ function mapXltError(err) {
 		body: {
 			statusCode: 401,
 			code: err.code,
-			type: err.type,
-			message: err.message,
-			token: err.token
+			...err.details,
+			message: err.message
 		}
 	};
 	if (err instanceof _xlt_token_core.NotPermissionException) return {
@@ -277,8 +276,7 @@ function mapXltError(err) {
 		body: {
 			statusCode: 403,
 			code: err.code,
-			permission: err.permission,
-			mode: err.mode,
+			...err.details,
 			message: err.message
 		}
 	};
@@ -287,8 +285,7 @@ function mapXltError(err) {
 		body: {
 			statusCode: 403,
 			code: err.code,
-			role: err.role,
-			mode: err.mode,
+			...err.details,
 			message: err.message
 		}
 	};
@@ -297,7 +294,7 @@ function mapXltError(err) {
 		body: {
 			statusCode: 403,
 			code: err.code,
-			business: err.business,
+			...err.details,
 			message: err.message
 		}
 	};
@@ -391,6 +388,12 @@ Object.defineProperty(exports, 'UuidStrategy', {
     return _xlt_token_core.UuidStrategy;
   }
 });
+Object.defineProperty(exports, 'XLT_EVENT_SINK', {
+  enumerable: true,
+  get: function () {
+    return _xlt_token_core.XLT_EVENT_SINK;
+  }
+});
 Object.defineProperty(exports, 'XLT_STP_INTERFACE', {
   enumerable: true,
   get: function () {
@@ -401,12 +404,6 @@ Object.defineProperty(exports, 'XLT_TOKEN_CONFIG', {
   enumerable: true,
   get: function () {
     return _xlt_token_core.XLT_TOKEN_CONFIG;
-  }
-});
-Object.defineProperty(exports, 'XLT_TOKEN_HOOKS', {
-  enumerable: true,
-  get: function () {
-    return _xlt_token_core.XLT_TOKEN_HOOKS;
   }
 });
 Object.defineProperty(exports, 'XLT_TOKEN_STORE', {

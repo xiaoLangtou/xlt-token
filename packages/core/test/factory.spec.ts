@@ -27,17 +27,17 @@ describe("createXltToken", () => {
     expect(ctx.stpUtil).toBe(StpUtil);
   });
 
-  it("注入自定义 config / store / strategy / stpInterface / hooks", () => {
+  it("注入自定义 config / store / strategy / stpInterface / eventSink", () => {
     const store = new MemoryStore();
     const strategy = new UuidStrategy();
-    const onLogin = () => {};
+    const eventSink = { emit: () => {} };
 
     const ctx = createXltToken({
       config: { tokenName: "x-auth" },
       store,
       strategy,
       stpInterface: customStpInterface,
-      hooks: { onLogin },
+      eventSink,
     });
 
     expect(ctx.config.tokenName).toBe("x-auth");

@@ -8,7 +8,9 @@ export class NotRoleException extends ForbiddenException {
   constructor(role: string | string[], mode: XltMode) {
     super({
       statusCode: 403,
-      type: "NOT_ROLE",
+      code: "ROLE_DENIED",
+      role,
+      mode,
       message: `缺少角色: ${Array.isArray(role) ? role.join(", ") : role}`,
     });
     this.role = role;

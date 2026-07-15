@@ -8,7 +8,9 @@ export class NotPermissionException extends ForbiddenException {
   constructor(permission: string | string[], mode: XltMode) {
     super({
       statusCode: 403,
-      type: "NOT_PERMISSION",
+      code: "PERMISSION_DENIED",
+      permission,
+      mode,
       message: `缺少权限: ${Array.isArray(permission) ? permission.join(", ") : permission}`,
     });
     this.permission = permission;

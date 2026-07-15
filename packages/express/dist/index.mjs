@@ -1,4 +1,4 @@
-import { DEFAULT_XLT_TOKEN_CONFIG, MemoryStore, NotLoginException, NotLoginException as NotLoginException$1, NotLoginType, NotPermissionException, NotPermissionException as NotPermissionException$1, NotRoleException, NotRoleException as NotRoleException$1, NotSafeException, NotSafeException as NotSafeException$1, StpLogic, StpPermLogic, StpUtil, UuidStrategy, XLT_STP_INTERFACE, XLT_TOKEN_CONFIG, XLT_TOKEN_HOOKS, XLT_TOKEN_STORE, XLT_TOKEN_STRATEGY, XltError, XltMode, XltMode as XltMode$1, XltSession, createMockHttpContext, createXltToken, matchPermission, setStpLogic, setStpPermLogic } from "@xlt-token/core";
+import { DEFAULT_XLT_TOKEN_CONFIG, MemoryStore, NotLoginException, NotLoginException as NotLoginException$1, NotLoginType, NotPermissionException, NotPermissionException as NotPermissionException$1, NotRoleException, NotRoleException as NotRoleException$1, NotSafeException, NotSafeException as NotSafeException$1, StpLogic, StpPermLogic, StpUtil, UuidStrategy, XLT_EVENT_SINK, XLT_STP_INTERFACE, XLT_TOKEN_CONFIG, XLT_TOKEN_STORE, XLT_TOKEN_STRATEGY, XltError, XltMode, XltMode as XltMode$1, XltSession, createMockHttpContext, createXltToken, matchPermission, setStpLogic, setStpPermLogic } from "@xlt-token/core";
 
 //#region src/context.ts
 /**
@@ -266,9 +266,8 @@ function mapXltError(err) {
 		body: {
 			statusCode: 401,
 			code: err.code,
-			type: err.type,
-			message: err.message,
-			token: err.token
+			...err.details,
+			message: err.message
 		}
 	};
 	if (err instanceof NotPermissionException$1) return {
@@ -276,8 +275,7 @@ function mapXltError(err) {
 		body: {
 			statusCode: 403,
 			code: err.code,
-			permission: err.permission,
-			mode: err.mode,
+			...err.details,
 			message: err.message
 		}
 	};
@@ -286,8 +284,7 @@ function mapXltError(err) {
 		body: {
 			statusCode: 403,
 			code: err.code,
-			role: err.role,
-			mode: err.mode,
+			...err.details,
 			message: err.message
 		}
 	};
@@ -296,7 +293,7 @@ function mapXltError(err) {
 		body: {
 			statusCode: 403,
 			code: err.code,
-			business: err.business,
+			...err.details,
 			message: err.message
 		}
 	};
@@ -324,5 +321,5 @@ function xltErrorHandler() {
 }
 
 //#endregion
-export { DEFAULT_XLT_TOKEN_CONFIG, MemoryStore, NotLoginException, NotLoginType, NotPermissionException, NotRoleException, NotSafeException, StpLogic, StpPermLogic, StpUtil, UuidStrategy, XLT_STP_INTERFACE, XLT_TOKEN_CONFIG, XLT_TOKEN_HOOKS, XLT_TOKEN_STORE, XLT_TOKEN_STRATEGY, XltError, XltMode, XltSession, checkPermission, checkRole, checkSafe, createExpressContext, createMockHttpContext, createXltToken, ignoreAuth, matchPermission, requireLogin, resolveRouteAuthMeta, runAuth, setStpLogic, setStpPermLogic, shouldCheckLogin, syncExpressAuthState, xltErrorHandler, xltMiddleware };
+export { DEFAULT_XLT_TOKEN_CONFIG, MemoryStore, NotLoginException, NotLoginType, NotPermissionException, NotRoleException, NotSafeException, StpLogic, StpPermLogic, StpUtil, UuidStrategy, XLT_EVENT_SINK, XLT_STP_INTERFACE, XLT_TOKEN_CONFIG, XLT_TOKEN_STORE, XLT_TOKEN_STRATEGY, XltError, XltMode, XltSession, checkPermission, checkRole, checkSafe, createExpressContext, createMockHttpContext, createXltToken, ignoreAuth, matchPermission, requireLogin, resolveRouteAuthMeta, runAuth, setStpLogic, setStpPermLogic, shouldCheckLogin, syncExpressAuthState, xltErrorHandler, xltMiddleware };
 //# sourceMappingURL=index.mjs.map
