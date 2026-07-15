@@ -576,13 +576,8 @@ declare class StpLogic {
    * @param loginId
    */
   kickout(loginId: string, device?: string): Promise<boolean | null>;
-  /**
-   * 刷新 token（仅 JWT 模式）：签发新 JWT，旧 jti 加入黑名单
-   * @param token 当前 JWT
-   * @param timeout 新 token 过期时间，默认沿用配置
-   * @returns 新 JWT，失败返回 null
-   */
-  refreshToken(token: string, timeout?: DurationInput): Promise<string | null>;
+  refreshToken(token: string, timeout?: DurationInput): Promise<RefreshResult>;
+  revoke(target: string, scope: RevokeScope): Promise<RevokeResult>;
   /**
    * 刷新 token 过期时间
    * @param token
@@ -650,6 +645,9 @@ declare class StpLogic {
   private replaced;
   private writeOfflineRecord;
   private _removeFromSessionList;
+  private createTokenFamily;
+  private getLifecycleConfig;
+  private revokeFamilyAfterReplay;
   /**
    * 是否为JWT模式
    * @returns 是否为JWT模式

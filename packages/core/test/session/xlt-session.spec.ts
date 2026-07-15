@@ -112,7 +112,7 @@ describe("XltSession", () => {
       const session = createSession();
       await session.set("a", 1);
       await session.clear();
-      expect(await store.has(storeKey)).toBe(false);
+      expect(await store.get(storeKey)).toBeNull();
     });
   });
 });

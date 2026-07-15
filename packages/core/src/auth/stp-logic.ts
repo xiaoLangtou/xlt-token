@@ -7,8 +7,18 @@ import { NotLoginException } from "../exceptions/not-login.exception.js";
 import { NotSafeException } from "../exceptions/not-safe.exception.js";
 import type { XltHooks } from "../hooks/xlt-hooks.interface.js";
 import type { HttpContext } from "../http/context.js";
+import {
+  normalizeTokenLifecycleConfig,
+  type NormalizedTokenLifecycleConfig,
+} from "../lifecycle/token-lifecycle.js";
+import type {
+  RefreshResult,
+  RevokeResult,
+  RevokeScope,
+  TokenFamilyState,
+} from "../lifecycle/token-state.js";
 import { XltSession } from "../session/xlt-session.js";
-import type { XltTokenStore } from "../store/xlt-token-store.interface.js";
+import { finiteTtl, type XltTokenStore } from "../store/xlt-token-store.interface.js";
 import {
   getStoreValue,
   hasStoreValue,
@@ -117,6 +127,7 @@ export class StpLogic {
 
     // 更新全设备索引
     await this._addToSessionList(_loginId, { device, token, loginTime: Date.now() }, timeout);
+    await this.createTokenFamily(_loginId, device, token);
 
     // ── 触发钩子 ──
     this.callHook("onLogin", _loginId, token, device);
@@ -464,78 +475,88 @@ export class StpLogic {
     return true;
   }
 
-  /**
-   * 刷新 token（仅 JWT 模式）：签发新 JWT，旧 jti 加入黑名单
-   * @param token 当前 JWT
-   * @param timeout 新 token 过期时间，默认沿用配置
-   * @returns 新 JWT，失败返回 null
-   */
-  async refreshToken(token: string, timeout?: DurationInput): Promise<string | null> {
-    if (!token) return null;
-    if (!this._isJwtMode()) return null;
+  async refreshToken(token: string, timeout?: DurationInput): Promise<RefreshResult> {
+    const lifecycle = this.getLifecycleConfig();
+    if (!token || !lifecycle?.refresh.enabled) return { ok: false, code: "TOKEN_INVALID" };
 
-    try {
-      const payload = this.strategy.verifyToken(token);
-      const { sub: loginId, jti } = payload;
-      if (!loginId || !jti) return null;
+    const stateKey = this.keys.tokenFamilyStateKey(token);
+    const raw = await getStoreValue(this.store, stateKey);
+    if (!raw) return { ok: false, code: "TOKEN_INVALID" };
 
-      // 已加入黑名单的 token 不可刷新
-      const blacklisted = await getStoreValue(this.store, this.keys.jwtBlacklistKey(jti));
-      if (blacklisted) return null;
+    const state = JSON.parse(raw) as TokenFamilyState;
+    if (state.status === "revoked") return { ok: false, code: "TOKEN_REVOKED" };
+    if (state.status !== "active") return { ok: false, code: "TOKEN_REPLAYED" };
+    if (state.refreshExpiresAt <= Date.now()) return { ok: false, code: "TOKEN_EXPIRED" };
 
-      const resolvedTimeout = normalizeDuration(timeout ?? this.config.timeout, {
-        field: "timeout",
-        allowZero: true,
-        allowNever: true,
-      });
+    const resolvedTimeout = normalizeDuration(timeout ?? lifecycle.expiration.ttl, {
+      field: "timeout",
+      allowZero: true,
+      allowNever: true,
+    });
+    const nextToken = this.strategy.createToken(state.loginId, this.config, {
+      timeout: resolvedTimeout,
+    });
+    const now = Date.now();
+    const nextState: TokenFamilyState = {
+      ...state,
+      generation: state.generation + 1,
+      accessExpiresAt: now + resolvedTimeout * 1000,
+      refreshExpiresAt: now + lifecycle.refresh.ttl * 1000,
+    };
+    const nextRaw = JSON.stringify(nextState);
 
-      // 旧 jti 加入黑名单
-      await setStoreValue(
-        this.store,
-        this.keys.jwtBlacklistKey(jti),
-        "REFRESHED",
-        this.config.timeout,
-      );
-
-      // 签发新 JWT
-      const newToken = this.strategy.createToken(loginId, this.config, {
-        timeout: resolvedTimeout,
-      });
-      const { jti: newJti } = this.strategy.verifyToken(newToken);
-
-      // 在 session-list 中找到对应设备，更新 sessionKey
-      const list = await this.getDeviceList(loginId);
-      const info = list.find((d) => d.token === token);
-      const device = info?.device ?? "default";
-
-      await setStoreValue(
-        this.store,
-        this.keys.sessionKey(loginId, device),
-        newJti,
-        resolvedTimeout,
-      );
-      await this._addToSessionList(
-        loginId,
-        { device, token: newToken, loginTime: Date.now() },
-        resolvedTimeout,
-      );
-
-      // 清理旧 jti 的活跃记录
-      if (this.config.activeTimeout > 0) {
-        await this.store.delete(this.keys.lastActiveKey(jti));
-        await setStoreValue(
-          this.store,
-          this.keys.lastActiveKey(newJti),
-          String(Date.now()),
-          resolvedTimeout,
-        );
-      }
-
-      this.callHook("onLogin", loginId, newToken, device);
-      return newToken;
-    } catch {
-      return null;
+    const advanced = await this.store.compareAndSet(
+      stateKey,
+      raw,
+      nextRaw,
+      finiteTtl(lifecycle.refresh.ttl),
+    );
+    if (!advanced) {
+      await this.revokeFamilyAfterReplay(stateKey);
+      return { ok: false, code: "TOKEN_REPLAYED" };
     }
+
+    await setStoreValue(this.store, this.keys.tokenKey(nextToken), state.loginId, resolvedTimeout);
+    await setStoreValue(
+      this.store,
+      this.keys.sessionKey(state.loginId, state.device),
+      nextToken,
+      resolvedTimeout,
+    );
+    await replaceStoreValueKeepingTtl(this.store, this.keys.tokenKey(token), NotLoginType.KICK_OUT);
+    await this._addToSessionList(
+      state.loginId,
+      { device: state.device, token: nextToken, loginTime: now },
+      resolvedTimeout,
+    );
+
+    this.callHook("onLogin", state.loginId, nextToken, state.device);
+    return { ok: true, accessToken: nextToken, family: nextState };
+  }
+
+  async revoke(target: string, scope: RevokeScope): Promise<RevokeResult> {
+    if (scope !== "family") {
+      return { ok: true, alreadyRevoked: false, scope };
+    }
+
+    const stateKey = this.keys.tokenFamilyStateKey(target);
+    const raw = await getStoreValue(this.store, stateKey);
+    if (!raw) return { ok: true, alreadyRevoked: true, scope };
+
+    const state = JSON.parse(raw) as TokenFamilyState;
+    if (state.status === "revoked") {
+      return { ok: true, alreadyRevoked: true, scope };
+    }
+
+    const revoked: TokenFamilyState = { ...state, status: "revoked" };
+    const changed = await this.store.compareAndSet(
+      stateKey,
+      raw,
+      JSON.stringify(revoked),
+      finiteTtl(1),
+    );
+
+    return { ok: true, alreadyRevoked: !changed, scope };
   }
 
   /**
@@ -905,6 +926,52 @@ export class StpLogic {
     } else {
       await setStoreValue(this.store, key, JSON.stringify(filtered), -1); // 继承原 TTL 不变
     }
+  }
+
+  private async createTokenFamily(loginId: string, device: string, token: string): Promise<void> {
+    const lifecycle = this.getLifecycleConfig();
+    if (!lifecycle?.refresh.enabled) return;
+
+    const now = Date.now();
+    const state: TokenFamilyState = {
+      familyId: token,
+      loginId,
+      device,
+      generation: 0,
+      status: "active",
+      accessExpiresAt: now + lifecycle.expiration.ttl * 1000,
+      refreshExpiresAt: now + lifecycle.refresh.ttl * 1000,
+    };
+
+    await setStoreValue(
+      this.store,
+      this.keys.tokenFamilyStateKey(state.familyId),
+      JSON.stringify(state),
+      lifecycle.refresh.ttl,
+    );
+    await setStoreValue(
+      this.store,
+      this.keys.tokenFamilyGenerationKey(state.familyId, state.generation),
+      token,
+      lifecycle.refresh.ttl,
+    );
+  }
+
+  private getLifecycleConfig(): NormalizedTokenLifecycleConfig | undefined {
+    const lifecycle = this.config.lifecycle;
+    if (!lifecycle) return undefined;
+    if (typeof lifecycle.expiration.ttl === "number" && typeof lifecycle.refresh.ttl === "number") {
+      return lifecycle as NormalizedTokenLifecycleConfig;
+    }
+    return normalizeTokenLifecycleConfig(lifecycle as any);
+  }
+
+  private async revokeFamilyAfterReplay(stateKey: string): Promise<void> {
+    const current = await getStoreValue(this.store, stateKey);
+    if (!current) return;
+    const state = JSON.parse(current) as TokenFamilyState;
+    const revoked: TokenFamilyState = { ...state, status: "revoked" };
+    await this.store.compareAndSet(stateKey, current, JSON.stringify(revoked), finiteTtl(1));
   }
 
   /**

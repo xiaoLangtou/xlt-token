@@ -667,6 +667,7 @@ var StpLogic = class {
 			token,
 			loginTime: Date.now()
 		}, timeout);
+		await this.createTokenFamily(_loginId, device, token);
 		this.callHook("onLogin", _loginId, token, device);
 		if (replacedOldFullToken) this.callHook("onReplaced", _loginId, replacedOldFullToken, token);
 		return token;
@@ -888,43 +889,95 @@ var StpLogic = class {
 		this.callHook("onKickout", loginId, fullToken);
 		return true;
 	}
-	/**
-	* 刷新 token（仅 JWT 模式）：签发新 JWT，旧 jti 加入黑名单
-	* @param token 当前 JWT
-	* @param timeout 新 token 过期时间，默认沿用配置
-	* @returns 新 JWT，失败返回 null
-	*/
 	async refreshToken(token, timeout) {
-		if (!token) return null;
-		if (!this._isJwtMode()) return null;
-		try {
-			const { sub: loginId, jti } = this.strategy.verifyToken(token);
-			if (!loginId || !jti) return null;
-			if (await getStoreValue(this.store, this.keys.jwtBlacklistKey(jti))) return null;
-			const resolvedTimeout = normalizeDuration(timeout ?? this.config.timeout, {
-				field: "timeout",
-				allowZero: true,
-				allowNever: true
-			});
-			await setStoreValue(this.store, this.keys.jwtBlacklistKey(jti), "REFRESHED", this.config.timeout);
-			const newToken = this.strategy.createToken(loginId, this.config, { timeout: resolvedTimeout });
-			const { jti: newJti } = this.strategy.verifyToken(newToken);
-			const device = (await this.getDeviceList(loginId)).find((d) => d.token === token)?.device ?? "default";
-			await setStoreValue(this.store, this.keys.sessionKey(loginId, device), newJti, resolvedTimeout);
-			await this._addToSessionList(loginId, {
-				device,
-				token: newToken,
-				loginTime: Date.now()
-			}, resolvedTimeout);
-			if (this.config.activeTimeout > 0) {
-				await this.store.delete(this.keys.lastActiveKey(jti));
-				await setStoreValue(this.store, this.keys.lastActiveKey(newJti), String(Date.now()), resolvedTimeout);
-			}
-			this.callHook("onLogin", loginId, newToken, device);
-			return newToken;
-		} catch {
-			return null;
+		const lifecycle = this.getLifecycleConfig();
+		if (!token || !lifecycle?.refresh.enabled) return {
+			ok: false,
+			code: "TOKEN_INVALID"
+		};
+		const stateKey = this.keys.tokenFamilyStateKey(token);
+		const raw = await getStoreValue(this.store, stateKey);
+		if (!raw) return {
+			ok: false,
+			code: "TOKEN_INVALID"
+		};
+		const state = JSON.parse(raw);
+		if (state.status === "revoked") return {
+			ok: false,
+			code: "TOKEN_REVOKED"
+		};
+		if (state.status !== "active") return {
+			ok: false,
+			code: "TOKEN_REPLAYED"
+		};
+		if (state.refreshExpiresAt <= Date.now()) return {
+			ok: false,
+			code: "TOKEN_EXPIRED"
+		};
+		const resolvedTimeout = normalizeDuration(timeout ?? lifecycle.expiration.ttl, {
+			field: "timeout",
+			allowZero: true,
+			allowNever: true
+		});
+		const nextToken = this.strategy.createToken(state.loginId, this.config, { timeout: resolvedTimeout });
+		const now = Date.now();
+		const nextState = {
+			...state,
+			generation: state.generation + 1,
+			accessExpiresAt: now + resolvedTimeout * 1e3,
+			refreshExpiresAt: now + lifecycle.refresh.ttl * 1e3
+		};
+		const nextRaw = JSON.stringify(nextState);
+		if (!await this.store.compareAndSet(stateKey, raw, nextRaw, finiteTtl(lifecycle.refresh.ttl))) {
+			await this.revokeFamilyAfterReplay(stateKey);
+			return {
+				ok: false,
+				code: "TOKEN_REPLAYED"
+			};
 		}
+		await setStoreValue(this.store, this.keys.tokenKey(nextToken), state.loginId, resolvedTimeout);
+		await setStoreValue(this.store, this.keys.sessionKey(state.loginId, state.device), nextToken, resolvedTimeout);
+		await replaceStoreValueKeepingTtl(this.store, this.keys.tokenKey(token), NotLoginType.KICK_OUT);
+		await this._addToSessionList(state.loginId, {
+			device: state.device,
+			token: nextToken,
+			loginTime: now
+		}, resolvedTimeout);
+		this.callHook("onLogin", state.loginId, nextToken, state.device);
+		return {
+			ok: true,
+			accessToken: nextToken,
+			family: nextState
+		};
+	}
+	async revoke(target, scope) {
+		if (scope !== "family") return {
+			ok: true,
+			alreadyRevoked: false,
+			scope
+		};
+		const stateKey = this.keys.tokenFamilyStateKey(target);
+		const raw = await getStoreValue(this.store, stateKey);
+		if (!raw) return {
+			ok: true,
+			alreadyRevoked: true,
+			scope
+		};
+		const state = JSON.parse(raw);
+		if (state.status === "revoked") return {
+			ok: true,
+			alreadyRevoked: true,
+			scope
+		};
+		const revoked = {
+			...state,
+			status: "revoked"
+		};
+		return {
+			ok: true,
+			alreadyRevoked: !await this.store.compareAndSet(stateKey, raw, JSON.stringify(revoked), finiteTtl(1)),
+			scope
+		};
 	}
 	/**
 	* 刷新 token 过期时间
@@ -1216,6 +1269,37 @@ var StpLogic = class {
 		const filtered = JSON.parse(raw).filter((d) => d.device !== device);
 		if (filtered.length === 0) await this.store.delete(key);
 		else await setStoreValue(this.store, key, JSON.stringify(filtered), -1);
+	}
+	async createTokenFamily(loginId, device, token) {
+		const lifecycle = this.getLifecycleConfig();
+		if (!lifecycle?.refresh.enabled) return;
+		const now = Date.now();
+		const state = {
+			familyId: token,
+			loginId,
+			device,
+			generation: 0,
+			status: "active",
+			accessExpiresAt: now + lifecycle.expiration.ttl * 1e3,
+			refreshExpiresAt: now + lifecycle.refresh.ttl * 1e3
+		};
+		await setStoreValue(this.store, this.keys.tokenFamilyStateKey(state.familyId), JSON.stringify(state), lifecycle.refresh.ttl);
+		await setStoreValue(this.store, this.keys.tokenFamilyGenerationKey(state.familyId, state.generation), token, lifecycle.refresh.ttl);
+	}
+	getLifecycleConfig() {
+		const lifecycle = this.config.lifecycle;
+		if (!lifecycle) return void 0;
+		if (typeof lifecycle.expiration.ttl === "number" && typeof lifecycle.refresh.ttl === "number") return lifecycle;
+		return normalizeTokenLifecycleConfig(lifecycle);
+	}
+	async revokeFamilyAfterReplay(stateKey) {
+		const current = await getStoreValue(this.store, stateKey);
+		if (!current) return;
+		const revoked = {
+			...JSON.parse(current),
+			status: "revoked"
+		};
+		await this.store.compareAndSet(stateKey, current, JSON.stringify(revoked), finiteTtl(1));
 	}
 	/**
 	* 是否为JWT模式

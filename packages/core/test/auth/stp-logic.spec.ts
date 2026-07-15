@@ -45,6 +45,14 @@ describe("StpLogic", () => {
     ({ logic, store, config } = createStpLogic({ config: cfg, hooks: hookOverrides }));
   };
 
+  const storeValue = async (key: string): Promise<string | null> => {
+    return (await store.get(key))?.value ?? null;
+  };
+
+  const storeHas = async (key: string): Promise<boolean> => {
+    return (await store.get(key)) !== null;
+  };
+
   beforeEach(async () => {
     await buildModule(makeConfig());
   });
@@ -61,20 +69,20 @@ describe("StpLogic", () => {
     it("number 类型的 loginId 能成功登录", async () => {
       const token = await logic.login(123);
       expect(token).toBeTruthy();
-      await expect(store.get(tokenKey(config, token))).resolves.toBe("123");
+      await expect(storeValue(tokenKey(config, token))).resolves.toBe("123");
     });
   });
 
   describe("login - 写入 Store", () => {
     it("写入 tokenKey -> loginId 和 sessionKey -> token（含 device 后缀）", async () => {
       const token = await logic.login("u1");
-      await expect(store.get(tokenKey(config, token))).resolves.toBe("u1");
-      await expect(store.get(sessionKey(config, "u1", "default"))).resolves.toBe(token);
+      await expect(storeValue(tokenKey(config, token))).resolves.toBe("u1");
+      await expect(storeValue(sessionKey(config, "u1", "default"))).resolves.toBe(token);
     });
 
     it("登录后写入 session-list 索引", async () => {
       const token = await logic.login("u1", { device: "pc" });
-      const raw = await store.get(sessionListKey(config, "u1"));
+      const raw = await storeValue(sessionListKey(config, "u1"));
       expect(raw).not.toBeNull();
       const list = JSON.parse(raw!);
       expect(list).toHaveLength(1);
@@ -85,7 +93,7 @@ describe("StpLogic", () => {
     it("options.timeout 优先于 config.timeout", async () => {
       await buildModule(makeConfig({ timeout: 1000 }));
       const token = await logic.login("u1", { timeout: 50 });
-      const ttl = await store.getTimeout(tokenKey(config, token));
+      const ttl = await store.getTtl(tokenKey(config, token));
       expect(ttl).toBeGreaterThan(45);
       expect(ttl).toBeLessThanOrEqual(50);
     });
@@ -93,7 +101,7 @@ describe("StpLogic", () => {
     it("options.timeout 支持 DurationInput 字符串", async () => {
       await buildModule(makeConfig({ timeout: 1000 }));
       const token = await logic.login("u1", { timeout: "30s" });
-      const ttl = await store.getTimeout(tokenKey(config, token));
+      const ttl = await store.getTtl(tokenKey(config, token));
       expect(ttl).toBeGreaterThan(25);
       expect(ttl).toBeLessThanOrEqual(30);
     });
@@ -101,7 +109,7 @@ describe("StpLogic", () => {
     it("options.timeout 为 0 时 store 立即过期", async () => {
       await buildModule(makeConfig({ timeout: 1000 }));
       const token = await logic.login("u1", { timeout: 0 });
-      const ttl = await store.getTimeout(tokenKey(config, token));
+      const ttl = await store.getTtl(tokenKey(config, token));
       // 0 表示立即过期，getTimeout 返回 -2
       expect(ttl).toBe(-2);
     });
@@ -109,14 +117,14 @@ describe("StpLogic", () => {
     it("options.timeout 为 -1 时永不过期", async () => {
       await buildModule(makeConfig({ timeout: 1000 }));
       const token = await logic.login("u1", { timeout: -1 });
-      const ttl = await store.getTimeout(tokenKey(config, token));
+      const ttl = await store.getTtl(tokenKey(config, token));
       expect(ttl).toBe(-1);
     });
 
     it("config.timeout 也支持 DurationInput", async () => {
       await buildModule(makeConfig({ timeout: "30s" as any }));
       const token = await logic.login("u1");
-      const ttl = await store.getTimeout(tokenKey(config, token));
+      const ttl = await store.getTtl(tokenKey(config, token));
       expect(ttl).toBeGreaterThan(25);
       expect(ttl).toBeLessThanOrEqual(30);
     });
@@ -124,20 +132,20 @@ describe("StpLogic", () => {
     it("activeTimeout > 0 时会写入 lastActiveKey", async () => {
       await buildModule(makeConfig({ activeTimeout: 60 }));
       const token = await logic.login("u1");
-      const lastActive = await store.get(lastActiveKey(config, token));
+      const lastActive = await storeValue(lastActiveKey(config, token));
       expect(lastActive).not.toBeNull();
       expect(Number(lastActive)).toBeGreaterThan(0);
     });
 
     it("activeTimeout <= 0 时不会写入 lastActiveKey", async () => {
       const token = await logic.login("u1");
-      await expect(store.get(lastActiveKey(config, token))).resolves.toBeNull();
+      await expect(storeValue(lastActiveKey(config, token))).resolves.toBeNull();
     });
 
     it("options.token 优先使用外部传入的 token", async () => {
       const token = await logic.login("u1", { token: "custom-token" });
       expect(token).toBe("custom-token");
-      await expect(store.get(tokenKey(config, "custom-token"))).resolves.toBe("u1");
+      await expect(storeValue(tokenKey(config, "custom-token"))).resolves.toBe("u1");
     });
   });
 
@@ -160,9 +168,9 @@ describe("StpLogic", () => {
       const t1 = await logic.login("u1");
       const t2 = await logic.login("u1");
       expect(t2).not.toBe(t1);
-      await expect(store.get(tokenKey(config, t1))).resolves.toBe("BE_REPLACED");
-      await expect(store.get(tokenKey(config, t2))).resolves.toBe("u1");
-      await expect(store.get(sessionKey(config, "u1", "default"))).resolves.toBe(t2);
+      await expect(storeValue(tokenKey(config, t1))).resolves.toBe("BE_REPLACED");
+      await expect(storeValue(tokenKey(config, t2))).resolves.toBe("u1");
+      await expect(storeValue(sessionKey(config, "u1", "default"))).resolves.toBe(t2);
     });
   });
 
@@ -180,7 +188,7 @@ describe("StpLogic", () => {
       const t1 = await logic.login("u1", { device: "pc" });
       const t2 = await logic.login("u1", { device: "pc" });
       expect(t2).not.toBe(t1);
-      await expect(store.get(tokenKey(config, t1))).resolves.toBe("BE_REPLACED");
+      await expect(storeValue(tokenKey(config, t1))).resolves.toBe("BE_REPLACED");
       await expect(logic.isLogin(makeReq(config, t1))).resolves.toBe(false);
       await expect(logic.isLogin(makeReq(config, t2))).resolves.toBe(true);
     });
@@ -198,7 +206,7 @@ describe("StpLogic", () => {
       await buildModule(makeConfig({ deviceConcurrent: false, isShare: false }));
       const pcToken = await logic.login("u1", { device: "pc" });
       const appToken = await logic.login("u1", { device: "app" });
-      await expect(store.get(tokenKey(config, pcToken))).resolves.toBe("KICK_OUT");
+      await expect(storeValue(tokenKey(config, pcToken))).resolves.toBe("KICK_OUT");
       await expect(logic.isLogin(makeReq(config, pcToken))).resolves.toBe(false);
       await expect(logic.isLogin(makeReq(config, appToken))).resolves.toBe(true);
     });
@@ -215,7 +223,7 @@ describe("StpLogic", () => {
       const pcToken = await logic.login("u1", { device: "pc" });
       const appToken = await logic.login("u1", { device: "app" });
       await expect(logic.kickoutByDevice("u1", "pc")).resolves.toBe(true);
-      await expect(store.get(tokenKey(config, pcToken))).resolves.toBe("KICK_OUT");
+      await expect(storeValue(tokenKey(config, pcToken))).resolves.toBe("KICK_OUT");
       await expect(logic.isLogin(makeReq(config, pcToken))).resolves.toBe(false);
       await expect(logic.isLogin(makeReq(config, appToken))).resolves.toBe(true);
       const list = await logic.getDeviceList("u1");
@@ -478,7 +486,7 @@ describe("StpLogic", () => {
     it("kickout 后 token 被标记为 KICK_OUT", async () => {
       const token = await logic.login("u1");
       await expect(logic.kickout("u1")).resolves.toBe(true);
-      await expect(store.get(tokenKey(config, token))).resolves.toBe("KICK_OUT");
+      await expect(storeValue(tokenKey(config, token))).resolves.toBe("KICK_OUT");
     });
 
     it("kickout 后 checkLogin 抛异常", async () => {
@@ -498,7 +506,7 @@ describe("StpLogic", () => {
       await buildModule(makeConfig({ timeout: 100 }));
       const token = await logic.login("u1");
       await expect(logic.renewTimeout(token, 200)).resolves.toBe(true);
-      const ttl = await store.getTimeout(tokenKey(config, token));
+      const ttl = await store.getTtl(tokenKey(config, token));
       expect(ttl).toBeGreaterThan(190);
       expect(ttl).toBeLessThanOrEqual(200);
     });
@@ -511,7 +519,7 @@ describe("StpLogic", () => {
       await buildModule(makeConfig({ activeTimeout: 60 }));
       const token = await logic.login("u1");
       await logic.renewTimeout(token, 200);
-      const ttl = await store.getTimeout(lastActiveKey(config, token));
+      const ttl = await store.getTtl(lastActiveKey(config, token));
       expect(ttl).toBeGreaterThan(190);
       expect(ttl).toBeLessThanOrEqual(200);
     });
@@ -592,7 +600,7 @@ describe("StpLogic", () => {
       const token = await logic.login("u1");
       const before = Date.now();
       await logic.openSafe(token, "pay", 300);
-      const raw = await store.get(safeKey(config, token, "pay"));
+      const raw = await storeValue(safeKey(config, token, "pay"));
       expect(raw).not.toBeNull();
       expect(Number(raw)).toBeGreaterThanOrEqual(before);
     });
@@ -603,7 +611,7 @@ describe("StpLogic", () => {
       const tempToken = await logic.createTempToken("resetPwd:1001", 600);
       expect(tempToken).toBeTruthy();
       await expect(logic.parseTempToken(tempToken)).resolves.toBe("resetPwd:1001");
-      await expect(store.get(tempTokenKey(config, tempToken))).resolves.toBe("resetPwd:1001");
+      await expect(storeValue(tempTokenKey(config, tempToken))).resolves.toBe("resetPwd:1001");
     });
 
     it("超时后 parseTempToken 返回 null", async () => {
@@ -616,7 +624,7 @@ describe("StpLogic", () => {
       const tempToken = await logic.createTempToken("resetPwd:1001", 600);
       await logic.deleteTempToken(tempToken);
       await expect(logic.parseTempToken(tempToken)).resolves.toBeNull();
-      await expect(store.has(tempTokenKey(config, tempToken))).resolves.toBe(false);
+      await expect(storeHas(tempTokenKey(config, tempToken))).resolves.toBe(false);
     });
 
     it("不同 tempToken 互不影响", async () => {
