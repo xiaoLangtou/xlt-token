@@ -5,6 +5,7 @@ import {
   type XltTokenConfig,
   type XltTokenConfigInput,
 } from "../config/xlt-token-config.js";
+import { normalizeTokenLifecycleConfig } from "../lifecycle/token-lifecycle.js";
 
 const DURATION_PATTERN = /^\d+(?:\.\d+)?[smhdw]$/;
 
@@ -84,5 +85,8 @@ export function normalizeXltTokenConfig(input?: Partial<XltTokenConfigInput>): X
         allowNever: true,
       },
     ),
+    lifecycle: config.lifecycle
+      ? normalizeTokenLifecycleConfig(config.lifecycle)
+      : DEFAULT_XLT_TOKEN_CONFIG.lifecycle,
   };
 }

@@ -1,3 +1,8 @@
+import type {
+  NormalizedTokenLifecycleConfig,
+  TokenLifecycleConfig,
+} from "../lifecycle/token-lifecycle.js";
+
 export type DurationUnit = "s" | "m" | "h" | "d" | "w";
 export type DurationString = `${number}${DurationUnit}`;
 export type DurationInput = number | DurationString;
@@ -32,16 +37,18 @@ export interface XltTokenConfig {
   offlineRecordTimeout?: number; // 下线记录保留秒数，默认 3600
   deviceConcurrent?: boolean; // 是否允许同账号多端在线，默认 true
   jwt?: JwtConfig;
+  lifecycle?: NormalizedTokenLifecycleConfig;
 }
 
 export interface XltTokenConfigInput extends Omit<
   XltTokenConfig,
-  "timeout" | "activeTimeout" | "permCacheTimeout" | "offlineRecordTimeout"
+  "timeout" | "activeTimeout" | "permCacheTimeout" | "offlineRecordTimeout" | "lifecycle"
 > {
   timeout: DurationInput;
   activeTimeout: DurationInput;
   permCacheTimeout?: DurationInput;
   offlineRecordTimeout?: DurationInput;
+  lifecycle?: TokenLifecycleConfig;
 }
 
 export const DEFAULT_XLT_TOKEN_CONFIG: XltTokenConfig = Object.freeze({

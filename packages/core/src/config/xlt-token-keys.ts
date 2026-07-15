@@ -75,4 +75,12 @@ export class XltTokenKeys {
   roleCacheKey(loginId: string): string {
     return `${this.tokenName}:perm-cache:role:${loginId}`;
   }
+
+  tokenFamilyStateKey(familyId: string): string {
+    return `${this.tokenName}:lifecycle:{${familyId}}:state`;
+  }
+
+  tokenFamilyGenerationKey(familyId: string, generation: number): string {
+    return `${this.tokenName}:lifecycle:{${familyId}}:generation:${generation}`;
+  }
 }

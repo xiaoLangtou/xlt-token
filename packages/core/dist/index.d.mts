@@ -24,6 +24,73 @@ type XltMode = (typeof XltMode)[keyof typeof XltMode];
 declare const XLT_PERMISSION_KEY = "XltCheckPermission";
 declare const XLT_ROLE_KEY = "xltCheckRole";
 //#endregion
+//#region src/lifecycle/token-state.d.ts
+type TokenFamilyStatus = "active" | "consumed" | "revoked" | "expired";
+interface TokenFamilyState {
+  familyId: string;
+  loginId: string;
+  device: string;
+  generation: number;
+  status: TokenFamilyStatus;
+  accessExpiresAt: number;
+  refreshExpiresAt: number;
+}
+type RefreshResult = {
+  ok: true;
+  accessToken: string;
+  refreshToken?: string;
+  family: TokenFamilyState;
+} | {
+  ok: false;
+  code: "TOKEN_EXPIRED" | "TOKEN_REPLAYED" | "TOKEN_REVOKED" | "TOKEN_INVALID";
+};
+type RevokeScope = "token" | "device" | "family" | "login";
+interface RevokeResult {
+  ok: true;
+  alreadyRevoked: boolean;
+  scope: RevokeScope;
+}
+//#endregion
+//#region src/lifecycle/token-lifecycle.d.ts
+type TokenExpirationConfig = {
+  mode: "fixed";
+  ttl: DurationInput;
+  renewWhenRemainingBelow?: never;
+} | {
+  mode: "sliding";
+  ttl: DurationInput;
+  renewWhenRemainingBelow?: DurationInput;
+};
+interface TokenRefreshConfig {
+  enabled: boolean;
+  ttl: DurationInput;
+  rotate: boolean;
+  replayDetection: "off" | "token" | "family";
+}
+interface TokenLifecycleConfig {
+  expiration: TokenExpirationConfig;
+  refresh: TokenRefreshConfig;
+}
+type NormalizedTokenExpirationConfig = {
+  mode: "fixed";
+  ttl: number;
+} | {
+  mode: "sliding";
+  ttl: number;
+  renewWhenRemainingBelow: number;
+};
+interface NormalizedTokenRefreshConfig {
+  enabled: boolean;
+  ttl: number;
+  rotate: boolean;
+  replayDetection: "off" | "token" | "family";
+}
+interface NormalizedTokenLifecycleConfig {
+  expiration: NormalizedTokenExpirationConfig;
+  refresh: NormalizedTokenRefreshConfig;
+}
+declare function normalizeTokenLifecycleConfig(input: TokenLifecycleConfig): NormalizedTokenLifecycleConfig;
+//#endregion
 //#region src/config/xlt-token-config.d.ts
 type DurationUnit = "s" | "m" | "h" | "d" | "w";
 type DurationString = `${number}${DurationUnit}`;
@@ -56,12 +123,14 @@ interface XltTokenConfig {
   offlineRecordTimeout?: number;
   deviceConcurrent?: boolean;
   jwt?: JwtConfig;
+  lifecycle?: NormalizedTokenLifecycleConfig;
 }
-interface XltTokenConfigInput extends Omit<XltTokenConfig, "timeout" | "activeTimeout" | "permCacheTimeout" | "offlineRecordTimeout"> {
+interface XltTokenConfigInput extends Omit<XltTokenConfig, "timeout" | "activeTimeout" | "permCacheTimeout" | "offlineRecordTimeout" | "lifecycle"> {
   timeout: DurationInput;
   activeTimeout: DurationInput;
   permCacheTimeout?: DurationInput;
   offlineRecordTimeout?: DurationInput;
+  lifecycle?: TokenLifecycleConfig;
 }
 declare const DEFAULT_XLT_TOKEN_CONFIG: XltTokenConfig;
 declare const XLT_TOKEN_CONFIG = "XLT_TOKEN_CONFIG";
@@ -114,6 +183,8 @@ declare class XltTokenKeys {
   tempTokenKey(tempToken: string): string;
   permCacheKey(loginId: string): string;
   roleCacheKey(loginId: string): string;
+  tokenFamilyStateKey(familyId: string): string;
+  tokenFamilyGenerationKey(familyId: string, generation: number): string;
 }
 //#endregion
 //#region src/store/xlt-token-store.interface.d.ts
@@ -681,5 +752,5 @@ declare function normalizeDuration(value: DurationInput, options: NormalizeDurat
  */
 declare function normalizeXltTokenConfig(input?: Partial<XltTokenConfigInput>): XltTokenConfig;
 //#endregion
-export { type AuthResult, type CookieOptions, type CreateOptions, DEFAULT_XLT_TOKEN_CONFIG, type DeviceInfo, type DurationInput, type DurationString, type DurationUnit, type ExpressLikeRequest, type ExpressLikeResponse, type HttpContext, type HttpCookies, type HttpHeaders, type HttpQuery, type JwtConfig, MemoryStore, type MockHttpContextOptions, type NormalizeDurationOptions, NotLoginException, NotLoginType, NotPermissionException, NotRoleException, NotSafeException, type StoreEntry, type StoreScanOptions, type StoreScanResult, type StoreTtl, type StoreTtlUpdate, type StpInterface, StpLogic, StpPermLogic, StpUtil, type TokenStrategy, UuidStrategy, XLT_CHECK_LOGIN_KEY, XLT_IGNORE_KEY, XLT_PERMISSION_KEY, XLT_ROLE_KEY, XLT_STP_INTERFACE, XLT_TOKEN_CONFIG, XLT_TOKEN_HOOKS, XLT_TOKEN_STORE, XLT_TOKEN_STRATEGY, XltError, type XltHooks, XltMode, XltSession, type XltTokenConfig, type XltTokenConfigInput, type XltTokenContext, XltTokenKeys, type XltTokenStore, createExpressContext, createMockHttpContext, createXltToken, finiteTtl, keepTtl, matchPermission, normalizeDuration, normalizeXltTokenConfig, persistentTtl, setStpLogic, setStpPermLogic };
+export { type AuthResult, type CookieOptions, type CreateOptions, DEFAULT_XLT_TOKEN_CONFIG, type DeviceInfo, type DurationInput, type DurationString, type DurationUnit, type ExpressLikeRequest, type ExpressLikeResponse, type HttpContext, type HttpCookies, type HttpHeaders, type HttpQuery, type JwtConfig, MemoryStore, type MockHttpContextOptions, type NormalizeDurationOptions, type NormalizedTokenExpirationConfig, type NormalizedTokenLifecycleConfig, type NormalizedTokenRefreshConfig, NotLoginException, NotLoginType, NotPermissionException, NotRoleException, NotSafeException, type RefreshResult, type RevokeResult, type RevokeScope, type StoreEntry, type StoreScanOptions, type StoreScanResult, type StoreTtl, type StoreTtlUpdate, type StpInterface, StpLogic, StpPermLogic, StpUtil, type TokenExpirationConfig, type TokenFamilyState, type TokenFamilyStatus, type TokenLifecycleConfig, type TokenRefreshConfig, type TokenStrategy, UuidStrategy, XLT_CHECK_LOGIN_KEY, XLT_IGNORE_KEY, XLT_PERMISSION_KEY, XLT_ROLE_KEY, XLT_STP_INTERFACE, XLT_TOKEN_CONFIG, XLT_TOKEN_HOOKS, XLT_TOKEN_STORE, XLT_TOKEN_STRATEGY, XltError, type XltHooks, XltMode, XltSession, type XltTokenConfig, type XltTokenConfigInput, type XltTokenContext, XltTokenKeys, type XltTokenStore, createExpressContext, createMockHttpContext, createXltToken, finiteTtl, keepTtl, matchPermission, normalizeDuration, normalizeTokenLifecycleConfig, normalizeXltTokenConfig, persistentTtl, setStpLogic, setStpPermLogic };
 //# sourceMappingURL=index.d.mts.map

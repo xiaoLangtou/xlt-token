@@ -25,6 +25,23 @@ export {
 
 export { XltTokenKeys } from "./config/xlt-token-keys.js";
 
+export {
+  normalizeTokenLifecycleConfig,
+  type NormalizedTokenExpirationConfig,
+  type NormalizedTokenLifecycleConfig,
+  type NormalizedTokenRefreshConfig,
+  type TokenExpirationConfig,
+  type TokenLifecycleConfig,
+  type TokenRefreshConfig,
+} from "./lifecycle/token-lifecycle.js";
+export type {
+  RefreshResult,
+  RevokeResult,
+  RevokeScope,
+  TokenFamilyState,
+  TokenFamilyStatus,
+} from "./lifecycle/token-state.js";
+
 export type {
   StoreEntry,
   StoreScanOptions,

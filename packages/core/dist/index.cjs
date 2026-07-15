@@ -26,10 +26,10 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 }) : target, mod));
 
 //#endregion
-let node_crypto = require("node:crypto");
-let es_toolkit = require("es-toolkit");
 let ms = require("ms");
 ms = __toESM(ms);
+let node_crypto = require("node:crypto");
+let es_toolkit = require("es-toolkit");
 
 //#region src/const/index.ts
 /**
@@ -148,7 +148,100 @@ var XltTokenKeys = class {
 	roleCacheKey(loginId) {
 		return `${this.tokenName}:perm-cache:role:${loginId}`;
 	}
+	tokenFamilyStateKey(familyId) {
+		return `${this.tokenName}:lifecycle:{${familyId}}:state`;
+	}
+	tokenFamilyGenerationKey(familyId, generation) {
+		return `${this.tokenName}:lifecycle:{${familyId}}:generation:${generation}`;
+	}
 };
+
+//#endregion
+//#region src/time/duration.ts
+const DURATION_PATTERN = /^\d+(?:\.\d+)?[smhdw]$/;
+function normalizeDuration(value, options) {
+	const invalid = () => {
+		throw new TypeError(`Invalid duration for "${options.field}": expected integer seconds or a duration such as "30m", received ${JSON.stringify(value)}`);
+	};
+	if (typeof value === "number") {
+		if (!Number.isFinite(value) || !Number.isInteger(value)) invalid();
+		if (value === 0) return options.allowZero ? 0 : invalid();
+		if (value === -1) return options.allowNever ? -1 : invalid();
+		if (value < 0) invalid();
+		return value;
+	}
+	if (!DURATION_PATTERN.test(value)) invalid();
+	const seconds = (0, ms.default)(value) / 1e3;
+	if (!Number.isFinite(seconds) || !Number.isInteger(seconds) || seconds <= 0) invalid();
+	return seconds;
+}
+/**
+* 规范化 XltToken 配置
+*/
+function normalizeXltTokenConfig(input) {
+	const config = {
+		...DEFAULT_XLT_TOKEN_CONFIG,
+		...input,
+		timeout: input?.timeout ?? DEFAULT_XLT_TOKEN_CONFIG.timeout,
+		activeTimeout: input?.activeTimeout ?? DEFAULT_XLT_TOKEN_CONFIG.activeTimeout,
+		permCacheTimeout: input?.permCacheTimeout ?? DEFAULT_XLT_TOKEN_CONFIG.permCacheTimeout,
+		offlineRecordTimeout: input?.offlineRecordTimeout ?? DEFAULT_XLT_TOKEN_CONFIG.offlineRecordTimeout
+	};
+	return {
+		...config,
+		timeout: normalizeDuration(config.timeout, {
+			field: "timeout",
+			allowZero: true,
+			allowNever: true
+		}),
+		activeTimeout: normalizeDuration(config.activeTimeout, {
+			field: "activeTimeout",
+			allowZero: true,
+			allowNever: true
+		}),
+		permCacheTimeout: normalizeDuration(config.permCacheTimeout ?? DEFAULT_XLT_TOKEN_CONFIG.permCacheTimeout, {
+			field: "permCacheTimeout",
+			allowZero: true,
+			allowNever: true
+		}),
+		offlineRecordTimeout: normalizeDuration(config.offlineRecordTimeout ?? DEFAULT_XLT_TOKEN_CONFIG.offlineRecordTimeout, {
+			field: "offlineRecordTimeout",
+			allowZero: true,
+			allowNever: true
+		}),
+		lifecycle: config.lifecycle ? normalizeTokenLifecycleConfig(config.lifecycle) : DEFAULT_XLT_TOKEN_CONFIG.lifecycle
+	};
+}
+
+//#endregion
+//#region src/lifecycle/token-lifecycle.ts
+function normalizeTokenLifecycleConfig(input) {
+	const accessTtl = normalizeDuration(input.expiration.ttl, { field: "lifecycle.expiration.ttl" });
+	if (input.expiration.mode === "fixed" && "renewWhenRemainingBelow" in input.expiration && input.expiration.renewWhenRemainingBelow !== void 0) throwConfigInvalid("fixed expiration does not support renewWhenRemainingBelow");
+	const refreshTtl = normalizeDuration(input.refresh.ttl, { field: "lifecycle.refresh.ttl" });
+	if (input.refresh.enabled && refreshTtl < accessTtl) throwConfigInvalid("refresh ttl must be greater than or equal to access ttl");
+	return {
+		expiration: input.expiration.mode === "fixed" ? {
+			mode: "fixed",
+			ttl: accessTtl
+		} : {
+			mode: "sliding",
+			ttl: accessTtl,
+			renewWhenRemainingBelow: input.expiration.renewWhenRemainingBelow === void 0 ? Math.floor(accessTtl * .2) : normalizeDuration(input.expiration.renewWhenRemainingBelow, { field: "lifecycle.expiration.renewWhenRemainingBelow" })
+		},
+		refresh: {
+			enabled: input.refresh.enabled,
+			ttl: refreshTtl,
+			rotate: input.refresh.rotate,
+			replayDetection: input.refresh.replayDetection
+		}
+	};
+}
+function throwConfigInvalid(message) {
+	const error = new TypeError(message);
+	error.code = "CONFIG_INVALID";
+	throw error;
+}
 
 //#endregion
 //#region src/store/xlt-token-store.interface.ts
@@ -547,62 +640,6 @@ var XltSession = class {
 		await setStoreValue(this.store, this.storeKey, JSON.stringify(this.data), this.timeout);
 	}
 };
-
-//#endregion
-//#region src/time/duration.ts
-const DURATION_PATTERN = /^\d+(?:\.\d+)?[smhdw]$/;
-function normalizeDuration(value, options) {
-	const invalid = () => {
-		throw new TypeError(`Invalid duration for "${options.field}": expected integer seconds or a duration such as "30m", received ${JSON.stringify(value)}`);
-	};
-	if (typeof value === "number") {
-		if (!Number.isFinite(value) || !Number.isInteger(value)) invalid();
-		if (value === 0) return options.allowZero ? 0 : invalid();
-		if (value === -1) return options.allowNever ? -1 : invalid();
-		if (value < 0) invalid();
-		return value;
-	}
-	if (!DURATION_PATTERN.test(value)) invalid();
-	const seconds = (0, ms.default)(value) / 1e3;
-	if (!Number.isFinite(seconds) || !Number.isInteger(seconds) || seconds <= 0) invalid();
-	return seconds;
-}
-/**
-* 规范化 XltToken 配置
-*/
-function normalizeXltTokenConfig(input) {
-	const config = {
-		...DEFAULT_XLT_TOKEN_CONFIG,
-		...input,
-		timeout: input?.timeout ?? DEFAULT_XLT_TOKEN_CONFIG.timeout,
-		activeTimeout: input?.activeTimeout ?? DEFAULT_XLT_TOKEN_CONFIG.activeTimeout,
-		permCacheTimeout: input?.permCacheTimeout ?? DEFAULT_XLT_TOKEN_CONFIG.permCacheTimeout,
-		offlineRecordTimeout: input?.offlineRecordTimeout ?? DEFAULT_XLT_TOKEN_CONFIG.offlineRecordTimeout
-	};
-	return {
-		...config,
-		timeout: normalizeDuration(config.timeout, {
-			field: "timeout",
-			allowZero: true,
-			allowNever: true
-		}),
-		activeTimeout: normalizeDuration(config.activeTimeout, {
-			field: "activeTimeout",
-			allowZero: true,
-			allowNever: true
-		}),
-		permCacheTimeout: normalizeDuration(config.permCacheTimeout ?? DEFAULT_XLT_TOKEN_CONFIG.permCacheTimeout, {
-			field: "permCacheTimeout",
-			allowZero: true,
-			allowNever: true
-		}),
-		offlineRecordTimeout: normalizeDuration(config.offlineRecordTimeout ?? DEFAULT_XLT_TOKEN_CONFIG.offlineRecordTimeout, {
-			field: "offlineRecordTimeout",
-			allowZero: true,
-			allowNever: true
-		})
-	};
-}
 
 //#endregion
 //#region src/auth/stp-logic.ts
@@ -1458,6 +1495,7 @@ exports.finiteTtl = finiteTtl;
 exports.keepTtl = keepTtl;
 exports.matchPermission = matchPermission;
 exports.normalizeDuration = normalizeDuration;
+exports.normalizeTokenLifecycleConfig = normalizeTokenLifecycleConfig;
 exports.normalizeXltTokenConfig = normalizeXltTokenConfig;
 exports.persistentTtl = persistentTtl;
 exports.setStpLogic = setStpLogic;
