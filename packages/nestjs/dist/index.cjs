@@ -2,8 +2,7 @@ Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
 let _nestjs_common = require("@nestjs/common");
 let _xlt_token_core = require("@xlt-token/core");
 let _xlt_token_store_redis = require("@xlt-token/store-redis");
-let node_crypto = require("node:crypto");
-let node_module = require("node:module");
+let _xlt_token_jwt = require("@xlt-token/jwt");
 let _nestjs_core = require("@nestjs/core");
 
 //#region \0@oxc-project+runtime@0.112.0/helpers/decorate.js
@@ -127,12 +126,16 @@ let XltTokenModule = class XltTokenModule {
 		};
 	}
 	static createStrategyProvider(strategy) {
-		return strategy?.useClass ? {
+		if (!strategy) return {
+			provide: _xlt_token_core.XLT_TOKEN_STRATEGY,
+			useClass: _xlt_token_core.UuidStrategy
+		};
+		return "useClass" in strategy ? {
 			provide: _xlt_token_core.XLT_TOKEN_STRATEGY,
 			useClass: strategy.useClass
 		} : {
 			provide: _xlt_token_core.XLT_TOKEN_STRATEGY,
-			useClass: _xlt_token_core.UuidStrategy
+			useValue: strategy.useValue
 		};
 	}
 	static createStpInterfaceProvider(stpInterface) {
@@ -202,59 +205,6 @@ IORedisStore = __decorate([
 	__decorateParam(0, (0, _nestjs_common.Inject)(XLT_IOREDIS_CLIENT)),
 	__decorateMetadata("design:paramtypes", [Object])
 ], IORedisStore);
-
-//#endregion
-//#region src/token/jwt-strategy.ts
-const require$1 = (0, node_module.createRequire)(require("url").pathToFileURL(__filename).href);
-let jsonwebtoken;
-function getJsonwebtoken() {
-	try {
-		jsonwebtoken ??= require$1("jsonwebtoken");
-		return jsonwebtoken;
-	} catch (error) {
-		if (error.code === "MODULE_NOT_FOUND") throw new Error("JwtStrategy requires the optional peer dependency \"jsonwebtoken\". Install it in your application with \"pnpm add jsonwebtoken\".");
-		throw error;
-	}
-}
-let JwtStrategy = class JwtStrategy {
-	constructor(config) {
-		this.config = config;
-	}
-	ensureJwtConfig(config) {
-		const jwt = (config ?? this.config).jwt;
-		if (!jwt || !jwt.secret) throw new Error("JwtStrategy requires jwt config with a secret. Provide { jwt: { secret: \"your-secret\" } } in the module config.");
-		return jwt;
-	}
-	createToken(loginId, config, options) {
-		const { sign } = getJsonwebtoken();
-		const jwt = this.ensureJwtConfig(config);
-		const jti = (0, node_crypto.randomUUID)();
-		const resolvedTimeout = options?.timeout ?? config.timeout;
-		const hasExpiry = typeof resolvedTimeout === "number" ? resolvedTimeout > 0 : true;
-		return sign({
-			sub: loginId,
-			jti
-		}, jwt.secret, {
-			algorithm: jwt.algorithm ?? "HS256",
-			...jwt.issuer && { issuer: jwt.issuer },
-			...jwt.audience && { audience: jwt.audience },
-			...hasExpiry && { expiresIn: resolvedTimeout }
-		});
-	}
-	generateToken(payload) {
-		const { sign } = getJsonwebtoken();
-		return sign(payload, this.ensureJwtConfig().secret);
-	}
-	verifyToken(token) {
-		const { verify } = getJsonwebtoken();
-		return verify(token, this.ensureJwtConfig().secret);
-	}
-};
-JwtStrategy = __decorate([
-	(0, _nestjs_common.Injectable)(),
-	__decorateParam(0, (0, _nestjs_common.Inject)(_xlt_token_core.XLT_TOKEN_CONFIG)),
-	__decorateMetadata("design:paramtypes", [Object])
-], JwtStrategy);
 
 //#endregion
 //#region src/decorators/xlt-check-login.decorator.ts
@@ -551,7 +501,7 @@ Object.defineProperty(exports, 'IORedisStore', {
 Object.defineProperty(exports, 'JwtStrategy', {
   enumerable: true,
   get: function () {
-    return JwtStrategy;
+    return _xlt_token_jwt.JwtStrategy;
   }
 });
 exports.LoginId = LoginId;
@@ -674,6 +624,12 @@ Object.defineProperty(exports, 'createExpressContext', {
   enumerable: true,
   get: function () {
     return _xlt_token_core.createExpressContext;
+  }
+});
+Object.defineProperty(exports, 'createJwtStrategyConfig', {
+  enumerable: true,
+  get: function () {
+    return _xlt_token_jwt.createJwtStrategyConfig;
   }
 });
 Object.defineProperty(exports, 'createMockHttpContext', {

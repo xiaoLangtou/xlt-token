@@ -26,7 +26,7 @@ import {
 export interface XltTokenModuleOptions {
   config?: Partial<XltTokenConfigInput>;
   store?: { useClass: new (...args: any[]) => XltTokenStore } | { useValue: XltTokenStore };
-  strategy?: { useClass: new (...args: any[]) => TokenStrategy };
+  strategy?: { useClass: new (...args: any[]) => TokenStrategy } | { useValue: TokenStrategy };
   isGlobal?: boolean;
   providers?: Provider[];
   stpInterface?: new (...args: any[]) => StpInterface;
@@ -37,7 +37,7 @@ export interface XltTokenModuleAsyncOptions extends Pick<ModuleMetadata, "import
   useFactory: (...args: any[]) => Promise<XltTokenModuleOptions> | XltTokenModuleOptions;
   inject?: any[];
   store?: { useClass: new (...args: any[]) => XltTokenStore } | { useValue: XltTokenStore };
-  strategy?: { useClass: new (...args: any[]) => TokenStrategy };
+  strategy?: { useClass: new (...args: any[]) => TokenStrategy } | { useValue: TokenStrategy };
   isGlobal?: boolean;
   providers?: Provider[];
   stpInterface?: new (...args: any[]) => StpInterface;
@@ -153,9 +153,10 @@ export class XltTokenModule {
   }
 
   private static createStrategyProvider(strategy?: XltTokenModuleOptions["strategy"]): Provider {
-    return strategy?.useClass
+    if (!strategy) return { provide: XLT_TOKEN_STRATEGY, useClass: UuidStrategy };
+    return "useClass" in strategy
       ? { provide: XLT_TOKEN_STRATEGY, useClass: strategy.useClass }
-      : { provide: XLT_TOKEN_STRATEGY, useClass: UuidStrategy };
+      : { provide: XLT_TOKEN_STRATEGY, useValue: strategy.useValue };
   }
 
   private static createStpInterfaceProvider(

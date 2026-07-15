@@ -42,10 +42,20 @@ export {
   createMockHttpContext,
 } from "@xlt-token/core";
 
-// Redis / JWT 实现（暂留根包）
+// Redis / JWT 实现
 export { RedisStore, XLT_REDIS_CLIENT } from "./store/redis-store.js";
 export { IORedisStore, XLT_IOREDIS_CLIENT } from "./store/ioredis-store.js";
-export { JwtStrategy } from "./token/jwt-strategy.js";
+export {
+  JwtStrategy,
+  createJwtStrategyConfig,
+  type JwtAlgorithm,
+  type JwtAudience,
+  type JwtKey,
+  type JwtKeyInput,
+  type JwtStrategyConfig,
+  type JwtStrategyConfigInput,
+  type XltJwtPayload,
+} from "@xlt-token/jwt";
 
 // 装饰器
 export { XltCheckLogin } from "./decorators/xlt-check-login.decorator.js";

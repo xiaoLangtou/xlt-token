@@ -225,11 +225,42 @@ importers:
         specifier: ^2.0.0
         version: 2.1.9(@types/node@20.19.39)(@vitest/ui@2.1.9)(terser@5.48.0)
 
+  packages/jwt:
+    dependencies:
+      '@xlt-token/core':
+        specifier: ^1.2.1
+        version: link:../core
+      jsonwebtoken:
+        specifier: ^9.0.3
+        version: 9.0.3
+    devDependencies:
+      '@types/jsonwebtoken':
+        specifier: ^9.0.10
+        version: 9.0.10
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.39
+      '@vitest/coverage-v8':
+        specifier: ^2.1.9
+        version: 2.1.9(vitest@2.1.9)
+      tsdown:
+        specifier: ^0.20.0
+        version: 0.20.3(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(synckit@0.11.13)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.1.0
+        version: 5.9.3
+      vitest:
+        specifier: ^2.0.0
+        version: 2.1.9(@types/node@20.19.39)(@vitest/ui@2.1.9)(terser@5.48.0)
+
   packages/nestjs:
     dependencies:
       '@xlt-token/core':
         specifier: ^1.2.1
         version: link:../core
+      '@xlt-token/jwt':
+        specifier: ^1.2.1
+        version: link:../jwt
       '@xlt-token/store-redis':
         specifier: ^1.2.1
         version: link:../store-redis

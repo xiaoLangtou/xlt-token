@@ -1,15 +1,21 @@
 import { describe, expect, it } from "vitest";
 import request from "supertest";
 import { sign } from "jsonwebtoken";
-import { JwtStrategy, StpLogic } from "@xlt-token/nestjs";
+import { createJwtStrategyConfig, JwtStrategy, StpLogic } from "@xlt-token/nestjs";
 import { buildTestApp } from "./fixtures/test-app.module";
 
-const JWT_SECRET = "e2e-jwt-secret";
+const JWT_SECRET = "xlt-token-e2e-jwt-secret-at-least-32-bytes";
+const jwtStrategy = new JwtStrategy(
+  createJwtStrategyConfig({
+    activeKid: "e2e-active",
+    keys: [{ kid: "e2e-active", algorithm: "HS256", secret: JWT_SECRET }],
+    issuer: "xlt-token",
+  }),
+);
 
 const jwtAppOpts = {
-  strategy: { useClass: JwtStrategy },
+  strategy: { useValue: jwtStrategy },
   config: {
-    jwt: { secret: JWT_SECRET, issuer: "xlt-token" },
     isConcurrent: false,
     isShare: false,
     timeout: 3600,
@@ -81,7 +87,12 @@ describe("JWT Strategy (e2e)", () => {
 
   it("过期 JWT → 401 INVALID_TOKEN", async () => {
     const { app } = await buildTestApp(jwtAppOpts);
-    const expired = sign({ sub: "7005", jti: "expired-jti" }, JWT_SECRET, { expiresIn: -1 });
+    const expired = sign({ sub: "7005", jti: "expired-jti" }, JWT_SECRET, {
+      algorithm: "HS256",
+      expiresIn: -1,
+      issuer: "xlt-token",
+      keyid: "e2e-active",
+    });
 
     const res = await request(app.getHttpServer())
       .get("/api/me")

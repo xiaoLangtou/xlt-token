@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import {
+  createJwtStrategyConfig,
   JwtStrategy,
   RedisStore,
   XLT_REDIS_CLIENT,
@@ -18,7 +19,7 @@ export class AppConfigService {
   readonly store: StoreKind = process.env.XLT_STORE === "redis" ? "redis" : "memory";
   readonly strategy: StrategyKind = process.env.XLT_STRATEGY === "jwt" ? "jwt" : "uuid";
   readonly redisUrl = process.env.REDIS_URL ?? "redis://127.0.0.1:6379";
-  readonly jwtSecret = process.env.JWT_SECRET ?? "example-jwt-secret-change-me";
+  readonly jwtSecret = process.env.JWT_SECRET ?? "example-jwt-secret-change-me-at-least-32-bytes";
 
   /** forRootAsync useFactory 仅返回 config；其余项见 buildAsyncModuleOptions */
   getTokenConfig() {
@@ -32,11 +33,6 @@ export class AppConfigService {
       isConcurrent: true,
       isShare: false,
     } as Record<string, unknown>;
-
-    if (this.strategy === "jwt") {
-      config.jwt = { secret: this.jwtSecret, issuer: "xlt-token-example" };
-    }
-
     return config;
   }
 }
@@ -57,7 +53,15 @@ export function buildAsyncModuleOptions(): Pick<
   };
 
   if (cfg.strategy === "jwt") {
-    options.strategy = { useClass: JwtStrategy };
+    options.strategy = {
+      useValue: new JwtStrategy(
+        createJwtStrategyConfig({
+          activeKid: "example-active",
+          keys: [{ kid: "example-active", algorithm: "HS256", secret: cfg.jwtSecret }],
+          issuer: "xlt-token-example",
+        }),
+      ),
+    };
   }
 
   if (cfg.store === "redis") {

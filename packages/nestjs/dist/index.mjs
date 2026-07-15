@@ -1,8 +1,7 @@
-import { createRequire } from "node:module";
 import { ForbiddenException, Inject, Injectable, Module, Optional, SetMetadata, UnauthorizedException, createParamDecorator } from "@nestjs/common";
 import { DEFAULT_XLT_TOKEN_CONFIG, MemoryStore, MemoryStore as MemoryStore$1, NotLoginException as NotLoginException$1, NotLoginType, NotLoginType as NotLoginType$1, NotPermissionException as NotPermissionException$1, NotRoleException as NotRoleException$1, NotSafeException as NotSafeException$1, StpLogic, StpLogic as StpLogic$1, StpPermLogic, StpPermLogic as StpPermLogic$1, StpUtil, UuidStrategy, UuidStrategy as UuidStrategy$1, XLT_CHECK_LOGIN_KEY, XLT_IGNORE_KEY, XLT_PERMISSION_KEY, XLT_ROLE_KEY, XLT_STP_INTERFACE, XLT_STP_INTERFACE as XLT_STP_INTERFACE$1, XLT_TOKEN_CONFIG, XLT_TOKEN_CONFIG as XLT_TOKEN_CONFIG$1, XLT_TOKEN_HOOKS, XLT_TOKEN_HOOKS as XLT_TOKEN_HOOKS$1, XLT_TOKEN_STORE, XLT_TOKEN_STORE as XLT_TOKEN_STORE$1, XLT_TOKEN_STRATEGY, XLT_TOKEN_STRATEGY as XLT_TOKEN_STRATEGY$1, XltMode, XltMode as XltMode$1, XltSession, createExpressContext, createExpressContext as createExpressContext$1, createMockHttpContext, createXltToken, matchPermission, normalizeXltTokenConfig, setStpLogic, setStpLogic as setStpLogic$1, setStpPermLogic, setStpPermLogic as setStpPermLogic$1 } from "@xlt-token/core";
 import { IORedisStore as IORedisStore$1, RedisStore as RedisStore$1 } from "@xlt-token/store-redis";
-import { randomUUID } from "node:crypto";
+import { JwtStrategy, createJwtStrategyConfig } from "@xlt-token/jwt";
 import { Reflector } from "@nestjs/core";
 
 //#region \0@oxc-project+runtime@0.112.0/helpers/decorate.js
@@ -126,12 +125,16 @@ let XltTokenModule = class XltTokenModule {
 		};
 	}
 	static createStrategyProvider(strategy) {
-		return strategy?.useClass ? {
+		if (!strategy) return {
+			provide: XLT_TOKEN_STRATEGY$1,
+			useClass: UuidStrategy$1
+		};
+		return "useClass" in strategy ? {
 			provide: XLT_TOKEN_STRATEGY$1,
 			useClass: strategy.useClass
 		} : {
 			provide: XLT_TOKEN_STRATEGY$1,
-			useClass: UuidStrategy$1
+			useValue: strategy.useValue
 		};
 	}
 	static createStpInterfaceProvider(stpInterface) {
@@ -201,59 +204,6 @@ IORedisStore = __decorate([
 	__decorateParam(0, Inject(XLT_IOREDIS_CLIENT)),
 	__decorateMetadata("design:paramtypes", [Object])
 ], IORedisStore);
-
-//#endregion
-//#region src/token/jwt-strategy.ts
-const require = createRequire(import.meta.url);
-let jsonwebtoken;
-function getJsonwebtoken() {
-	try {
-		jsonwebtoken ??= require("jsonwebtoken");
-		return jsonwebtoken;
-	} catch (error) {
-		if (error.code === "MODULE_NOT_FOUND") throw new Error("JwtStrategy requires the optional peer dependency \"jsonwebtoken\". Install it in your application with \"pnpm add jsonwebtoken\".");
-		throw error;
-	}
-}
-let JwtStrategy = class JwtStrategy {
-	constructor(config) {
-		this.config = config;
-	}
-	ensureJwtConfig(config) {
-		const jwt = (config ?? this.config).jwt;
-		if (!jwt || !jwt.secret) throw new Error("JwtStrategy requires jwt config with a secret. Provide { jwt: { secret: \"your-secret\" } } in the module config.");
-		return jwt;
-	}
-	createToken(loginId, config, options) {
-		const { sign } = getJsonwebtoken();
-		const jwt = this.ensureJwtConfig(config);
-		const jti = randomUUID();
-		const resolvedTimeout = options?.timeout ?? config.timeout;
-		const hasExpiry = typeof resolvedTimeout === "number" ? resolvedTimeout > 0 : true;
-		return sign({
-			sub: loginId,
-			jti
-		}, jwt.secret, {
-			algorithm: jwt.algorithm ?? "HS256",
-			...jwt.issuer && { issuer: jwt.issuer },
-			...jwt.audience && { audience: jwt.audience },
-			...hasExpiry && { expiresIn: resolvedTimeout }
-		});
-	}
-	generateToken(payload) {
-		const { sign } = getJsonwebtoken();
-		return sign(payload, this.ensureJwtConfig().secret);
-	}
-	verifyToken(token) {
-		const { verify } = getJsonwebtoken();
-		return verify(token, this.ensureJwtConfig().secret);
-	}
-};
-JwtStrategy = __decorate([
-	Injectable(),
-	__decorateParam(0, Inject(XLT_TOKEN_CONFIG$1)),
-	__decorateMetadata("design:paramtypes", [Object])
-], JwtStrategy);
 
 //#endregion
 //#region src/decorators/xlt-check-login.decorator.ts
@@ -535,5 +485,5 @@ XltAbstractLoginGuard = __decorate([
 ], XltAbstractLoginGuard);
 
 //#endregion
-export { DEFAULT_XLT_TOKEN_CONFIG, IORedisStore, JwtStrategy, LoginId, MemoryStore, NotLoginException, NotLoginType, NotPermissionException, NotRoleException, NotSafeException, RedisStore, StpLogic, StpPermLogic, StpUtil, TokenValue, UuidStrategy, XLT_CHECK_SAFE_KEY, XLT_IOREDIS_CLIENT, XLT_REDIS_CLIENT, XLT_STP_INTERFACE, XLT_TOKEN_CONFIG, XLT_TOKEN_HOOKS, XLT_TOKEN_STORE, XLT_TOKEN_STRATEGY, XltAbstractLoginGuard, XltCheckLogin, XltCheckPermission, XltCheckRole, XltCheckSafe, XltIgnore, XltMode, XltSession, XltTokenGuard, XltTokenModule, createExpressContext, createMockHttpContext, createXltToken, matchPermission, setStpLogic, setStpPermLogic };
+export { DEFAULT_XLT_TOKEN_CONFIG, IORedisStore, JwtStrategy, LoginId, MemoryStore, NotLoginException, NotLoginType, NotPermissionException, NotRoleException, NotSafeException, RedisStore, StpLogic, StpPermLogic, StpUtil, TokenValue, UuidStrategy, XLT_CHECK_SAFE_KEY, XLT_IOREDIS_CLIENT, XLT_REDIS_CLIENT, XLT_STP_INTERFACE, XLT_TOKEN_CONFIG, XLT_TOKEN_HOOKS, XLT_TOKEN_STORE, XLT_TOKEN_STRATEGY, XltAbstractLoginGuard, XltCheckLogin, XltCheckPermission, XltCheckRole, XltCheckSafe, XltIgnore, XltMode, XltSession, XltTokenGuard, XltTokenModule, createExpressContext, createJwtStrategyConfig, createMockHttpContext, createXltToken, matchPermission, setStpLogic, setStpPermLogic };
 //# sourceMappingURL=index.mjs.map

@@ -81,7 +81,7 @@ export interface BuildOpts {
   config?: Partial<XltTokenConfig>;
   hooks?: XltHooks;
   /** Token 策略，如 JwtStrategy */
-  strategy?: { useClass: new (...args: any[]) => TokenStrategy };
+  strategy?: { useClass: new (...args: any[]) => TokenStrategy } | { useValue: TokenStrategy };
 }
 
 export async function buildTestApp(opts: BuildOpts = {}) {
