@@ -3,6 +3,8 @@ import type { DurationInput, XltTokenConfig } from "../config/xlt-token-config.j
 import type { TokenStrategy } from "./token-strategy.interface.js";
 
 export class UuidStrategy implements TokenStrategy {
+  readonly kind = "opaque" as const;
+
   generateToken(_payload: unknown): string {
     return randomUUID();
   }

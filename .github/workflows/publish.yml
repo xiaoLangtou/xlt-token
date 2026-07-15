@@ -32,11 +32,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Test
-        run: pnpm test:all
-
-      - name: Build
-        run: pnpm run build:workspace
+      - name: Release gates
+        run: pnpm run release:check
 
       - name: Publish packages
         run: pnpm publish -r --access public --no-git-checks

@@ -32,7 +32,6 @@ export type {
   CookieOptions,
   DeviceInfo,
   HttpContext,
-  JwtConfig,
   StpInterface,
   TokenStrategy,
   XltAuditEvent,

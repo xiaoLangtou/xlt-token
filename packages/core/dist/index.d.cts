@@ -95,12 +95,6 @@ declare function normalizeTokenLifecycleConfig(input: TokenLifecycleConfig): Nor
 type DurationUnit = "s" | "m" | "h" | "d" | "w";
 type DurationString = `${number}${DurationUnit}`;
 type DurationInput = number | DurationString;
-interface JwtConfig {
-  secret: string;
-  algorithm?: "HS256" | "HS384" | "HS512" | "RS256" | "RS384" | "RS512";
-  issuer?: string;
-  audience?: string;
-}
 interface DeviceInfo {
   device: string;
   token: string;
@@ -122,7 +116,6 @@ interface XltTokenConfig {
   offlineRecordEnabled?: boolean;
   offlineRecordTimeout?: number;
   deviceConcurrent?: boolean;
-  jwt?: JwtConfig;
   lifecycle?: NormalizedTokenLifecycleConfig;
 }
 interface XltTokenConfigInput extends Omit<XltTokenConfig, "timeout" | "activeTimeout" | "permCacheTimeout" | "offlineRecordTimeout" | "lifecycle"> {
@@ -244,6 +237,7 @@ declare class MemoryStore implements XltTokenStore {
 //#endregion
 //#region src/token/token-strategy.interface.d.ts
 interface TokenStrategy<T = any> {
+  readonly kind?: "opaque" | "jwt";
   generateToken(payload: T): string;
   verifyToken(token: string): T;
   createToken(loginId: string, config: XltTokenConfig, options?: {
@@ -253,6 +247,7 @@ interface TokenStrategy<T = any> {
 //#endregion
 //#region src/token/uuid-strategy.d.ts
 declare class UuidStrategy implements TokenStrategy {
+  readonly kind: "opaque";
   generateToken(_payload: unknown): string;
   verifyToken(token: string): unknown;
   createToken(_loginId: string, config: XltTokenConfig, _options?: {
@@ -643,8 +638,8 @@ declare class StpLogic {
    * @returns 是否为JWT模式
    */
   private _isJwtMode;
-  /** 钩子回调用完整 token（JWT 模式下 session 存的是 jti） */
-  private _resolveHookToken;
+  /** 审计事件使用完整 token 生成指纹（JWT 模式下 session 存的是 jti） */
+  private _resolveAuditToken;
   private emitAuditEvent;
 }
 //#endregion
@@ -740,5 +735,5 @@ declare function normalizeDuration(value: DurationInput, options: NormalizeDurat
  */
 declare function normalizeXltTokenConfig(input?: Partial<XltTokenConfigInput>): XltTokenConfig;
 //#endregion
-export { type AuthResult, type CookieOptions, type CreateOptions, DEFAULT_XLT_TOKEN_CONFIG, type DeviceInfo, type DurationInput, type DurationString, type DurationUnit, type ExpressLikeRequest, type ExpressLikeResponse, type HttpContext, type HttpCookies, type HttpHeaders, type HttpQuery, type JwtConfig, MemoryStore, type MockHttpContextOptions, type NormalizeDurationOptions, type NormalizedTokenExpirationConfig, type NormalizedTokenLifecycleConfig, type NormalizedTokenRefreshConfig, NotLoginException, NotLoginType, NotPermissionException, NotRoleException, NotSafeException, type RefreshResult, type RevokeResult, type RevokeScope, type StoreEntry, type StoreScanOptions, type StoreScanResult, type StoreTtl, type StoreTtlUpdate, type StpInterface, StpLogic, StpPermLogic, StpUtil, type TokenExpirationConfig, type TokenFamilyState, type TokenFamilyStatus, type TokenLifecycleConfig, type TokenRefreshConfig, type TokenStrategy, UuidStrategy, XLT_CHECK_LOGIN_KEY, XLT_EVENT_SINK, XLT_IGNORE_KEY, XLT_PERMISSION_KEY, XLT_ROLE_KEY, XLT_STP_INTERFACE, XLT_TOKEN_CONFIG, XLT_TOKEN_STORE, XLT_TOKEN_STRATEGY, type XltAuditEvent, type XltAuditEventType, XltError, type XltErrorCode, type XltErrorDetails, type XltEventSink, XltMode, XltSession, type XltTokenConfig, type XltTokenConfigInput, type XltTokenContext, XltTokenKeys, type XltTokenStore, createExpressContext, createMockHttpContext, createXltToken, finiteTtl, keepTtl, matchPermission, normalizeDuration, normalizeTokenLifecycleConfig, normalizeXltTokenConfig, persistentTtl, setStpLogic, setStpPermLogic };
+export { type AuthResult, type CookieOptions, type CreateOptions, DEFAULT_XLT_TOKEN_CONFIG, type DeviceInfo, type DurationInput, type DurationString, type DurationUnit, type ExpressLikeRequest, type ExpressLikeResponse, type HttpContext, type HttpCookies, type HttpHeaders, type HttpQuery, MemoryStore, type MockHttpContextOptions, type NormalizeDurationOptions, type NormalizedTokenExpirationConfig, type NormalizedTokenLifecycleConfig, type NormalizedTokenRefreshConfig, NotLoginException, NotLoginType, NotPermissionException, NotRoleException, NotSafeException, type RefreshResult, type RevokeResult, type RevokeScope, type StoreEntry, type StoreScanOptions, type StoreScanResult, type StoreTtl, type StoreTtlUpdate, type StpInterface, StpLogic, StpPermLogic, StpUtil, type TokenExpirationConfig, type TokenFamilyState, type TokenFamilyStatus, type TokenLifecycleConfig, type TokenRefreshConfig, type TokenStrategy, UuidStrategy, XLT_CHECK_LOGIN_KEY, XLT_EVENT_SINK, XLT_IGNORE_KEY, XLT_PERMISSION_KEY, XLT_ROLE_KEY, XLT_STP_INTERFACE, XLT_TOKEN_CONFIG, XLT_TOKEN_STORE, XLT_TOKEN_STRATEGY, type XltAuditEvent, type XltAuditEventType, XltError, type XltErrorCode, type XltErrorDetails, type XltEventSink, XltMode, XltSession, type XltTokenConfig, type XltTokenConfigInput, type XltTokenContext, XltTokenKeys, type XltTokenStore, createExpressContext, createMockHttpContext, createXltToken, finiteTtl, keepTtl, matchPermission, normalizeDuration, normalizeTokenLifecycleConfig, normalizeXltTokenConfig, persistentTtl, setStpLogic, setStpPermLogic };
 //# sourceMappingURL=index.d.cts.map

@@ -35,23 +35,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Format check
-        run: pnpm run format:check
-
-      - name: Lint
-        run: pnpm run lint
-
-      - name: Typecheck
-        run: pnpm run typecheck
-
-      - name: Package boundaries
-        run: pnpm run check:boundaries
-
-      - name: Test
-        run: pnpm run test:all
-
-      - name: Build packages
-        run: pnpm run build:workspace
+      - name: Quality gates
+        run: pnpm run check:quality
 
   docs:
     name: Docs build

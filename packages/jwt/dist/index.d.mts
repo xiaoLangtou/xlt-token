@@ -39,6 +39,7 @@ type XltJwtPayload = JwtPayload & {
 };
 declare class JwtStrategy implements TokenStrategy<XltJwtPayload> {
   private readonly jwtConfig;
+  readonly kind: "jwt";
   constructor(jwtConfig: JwtStrategyConfig);
   createToken(loginId: string, config: XltTokenConfig, options?: {
     timeout?: DurationInput;

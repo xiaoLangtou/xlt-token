@@ -49,32 +49,36 @@
   "scripts": {
     "prebuild": "pnpm --filter @xlt-token/core build && pnpm --filter @xlt-token/nestjs build",
     "build": "tsdown",
-    "build:workspace": "turbo run build",
+    "build:workspace": "node scripts/run-workspace-task.mjs build packages && tsdown",
     "build:watch": "tsdown --watch",
     "lint": "oxlint src packages examples docs/.vitepress scripts",
     "lint:fix": "oxlint src packages examples docs/.vitepress scripts --fix",
     "format": "oxfmt --write \"**/*.{ts,tsx,js,mjs,cjs,json,jsonc,yml,yaml}\"",
     "format:check": "oxfmt --check \"**/*.{ts,tsx,js,mjs,cjs,json,jsonc,yml,yaml}\"",
-    "typecheck": "tsc --noEmit && pnpm --filter \"./packages/*\" --filter \"./examples/*\" --if-present typecheck",
+    "typecheck": "node scripts/run-workspace-task.mjs typecheck packages examples",
     "check:boundaries": "node scripts/check-package-boundaries.mjs",
-    "check:quality": "pnpm run format:check && pnpm run lint && pnpm run typecheck && pnpm run check:boundaries && pnpm run test:all && pnpm run build:workspace",
+    "check:security": "node scripts/check-security-invariants.mjs",
+    "check:release": "node scripts/check-release-gates.mjs",
+    "check:quality": "oxfmt --check \"**/*.{ts,tsx,js,mjs,cjs,json,jsonc,yml,yaml}\" && oxlint src packages examples docs/.vitepress scripts && node scripts/run-workspace-task.mjs typecheck packages examples && node scripts/check-package-boundaries.mjs && node scripts/check-security-invariants.mjs && node scripts/run-workspace-task.mjs test:cov,test:e2e packages && node scripts/run-workspace-task.mjs build packages && tsdown",
+    "benchmark:smoke": "node scripts/run-smoke-benchmarks.mjs",
     "test": "pnpm --filter @xlt-token/nestjs test",
     "test:watch": "pnpm --filter @xlt-token/nestjs test -- --watch",
     "test:ui": "pnpm --filter @xlt-token/nestjs test -- --ui",
     "test:cov": "pnpm --filter @xlt-token/nestjs test:cov",
     "test:e2e": "pnpm --filter @xlt-token/nestjs test:e2e",
     "test:e2e:cov": "pnpm --filter @xlt-token/nestjs test:e2e:cov",
-    "test:all": "pnpm --filter @xlt-token/core test:cov && pnpm --filter @xlt-token/store-redis test:cov && pnpm --filter @xlt-token/express test:cov && pnpm --filter @xlt-token/express test:e2e && pnpm --filter @xlt-token/nestjs test:cov && pnpm --filter @xlt-token/nestjs test:e2e",
-    "test:workspace": "turbo run test test:cov test:e2e",
+    "test:all": "node scripts/run-workspace-task.mjs test:cov,test:e2e packages",
+    "test:workspace": "node scripts/run-workspace-task.mjs test,test:cov,test:e2e packages",
     "test:junit": "vitest run --reporter=junit --outputFile=reports/junit.xml",
     "test:e2e:junit": "pnpm --filter @xlt-token/nestjs test:e2e:junit",
     "prepublishOnly": "pnpm run build:workspace",
+    "release:check": "oxfmt --check \"**/*.{ts,tsx,js,mjs,cjs,json,jsonc,yml,yaml}\" && oxlint src packages examples docs/.vitepress scripts && node scripts/run-workspace-task.mjs typecheck packages examples && node scripts/check-package-boundaries.mjs && node scripts/check-security-invariants.mjs && node scripts/run-workspace-task.mjs test:cov,test:e2e packages && node scripts/run-workspace-task.mjs build packages && tsdown && node scripts/check-release-gates.mjs && node scripts/run-smoke-benchmarks.mjs && vitepress build docs",
     "publish:packages": "pnpm publish -r --access public --no-git-checks",
     "publish:dry-run": "pnpm publish -r --access public --no-git-checks --dry-run",
     "docs:dev": "vitepress dev docs",
     "docs:preview": "vitepress preview docs",
-    "docs:build": "pnpm build && vitepress build docs",
-    "docs:build:workspace": "turbo run docs:build"
+    "docs:build": "node scripts/run-workspace-task.mjs build packages/core packages/jwt packages/store-contract packages/store-redis packages/nestjs && tsdown && vitepress build docs",
+    "docs:build:workspace": "node scripts/run-workspace-task.mjs docs:build packages"
   },
   "dependencies": {
     "@xlt-token/core": "^2.0.0",
@@ -123,6 +127,13 @@
     },
     "jsonwebtoken": {
       "optional": true
+    }
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "10.15.1",
+      "onFail": "warn"
     }
   },
   "packageManager": "pnpm@10.15.1"

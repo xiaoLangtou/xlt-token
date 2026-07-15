@@ -7,13 +7,6 @@ export type DurationUnit = "s" | "m" | "h" | "d" | "w";
 export type DurationString = `${number}${DurationUnit}`;
 export type DurationInput = number | DurationString;
 
-export interface JwtConfig {
-  secret: string;
-  algorithm?: "HS256" | "HS384" | "HS512" | "RS256" | "RS384" | "RS512";
-  issuer?: string;
-  audience?: string;
-}
-
 export interface DeviceInfo {
   device: string;
   token: string;
@@ -36,7 +29,6 @@ export interface XltTokenConfig {
   offlineRecordEnabled?: boolean; // 是否记录下线原因，默认 false
   offlineRecordTimeout?: number; // 下线记录保留秒数，默认 3600
   deviceConcurrent?: boolean; // 是否允许同账号多端在线，默认 true
-  jwt?: JwtConfig;
   lifecycle?: NormalizedTokenLifecycleConfig;
 }
 

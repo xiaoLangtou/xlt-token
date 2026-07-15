@@ -17,6 +17,12 @@ export default defineConfig({
         "src/http/context.ts",
         "src/perm/stp-interface.ts",
       ],
+      thresholds: {
+        lines: 80,
+        functions: 90,
+        branches: 80,
+        statements: 80,
+      },
     },
   },
 });

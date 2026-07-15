@@ -8,7 +8,6 @@ export {
 } from "./const/index.js";
 
 export type {
-  JwtConfig,
   DeviceInfo,
   XltTokenConfig,
   DurationUnit,

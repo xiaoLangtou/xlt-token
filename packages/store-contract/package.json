@@ -49,9 +49,7 @@
     "build": "tsdown",
     "build:watch": "tsdown --watch",
     "prepublishOnly": "pnpm run build",
-    "typecheck": "tsc --noEmit",
-    "test": "vitest run",
-    "test:cov": "vitest run --coverage"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@xlt-token/core": "^2.0.0",

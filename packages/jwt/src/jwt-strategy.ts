@@ -7,6 +7,8 @@ import type { JwtKey, JwtStrategyConfig } from "./jwt-config.js";
 export type XltJwtPayload = JwtPayload & { sub: string; jti: string };
 
 export class JwtStrategy implements TokenStrategy<XltJwtPayload> {
+  readonly kind = "jwt" as const;
+
   constructor(private readonly jwtConfig: JwtStrategyConfig) {}
 
   createToken(

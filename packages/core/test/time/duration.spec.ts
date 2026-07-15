@@ -123,12 +123,10 @@ describe("normalizeXltTokenConfig", () => {
       tokenName: "x-auth",
       isConcurrent: false,
       isShare: false,
-      jwt: { secret: "s3cr3t" },
     });
     expect(config.tokenName).toBe("x-auth");
     expect(config.isConcurrent).toBe(false);
     expect(config.isShare).toBe(false);
-    expect(config.jwt).toEqual({ secret: "s3cr3t" });
   });
 
   it("混合传入字符串和数字时长", () => {

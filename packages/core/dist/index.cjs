@@ -375,6 +375,9 @@ var MemoryStore = class MemoryStore {
 //#endregion
 //#region src/token/uuid-strategy.ts
 var UuidStrategy = class {
+	constructor() {
+		this.kind = "opaque";
+	}
 	generateToken(_payload) {
 		return (0, node_crypto.randomUUID)();
 	}
@@ -689,7 +692,7 @@ var StpLogic = class {
 			token = options.token ?? this.strategy.createToken(_loginId, this.config, { timeout });
 		} else if (!this.config.isConcurrent) {
 			if (oldToken) {
-				replacedOldFullToken = await this._resolveHookToken(_loginId, device, oldToken);
+				replacedOldFullToken = await this._resolveAuditToken(_loginId, device, oldToken);
 				await this._replacedToken(_loginId, oldToken, device);
 			}
 			token = options.token ?? this.strategy.createToken(_loginId, this.config, { timeout });
@@ -1395,10 +1398,10 @@ var StpLogic = class {
 	* @returns 是否为JWT模式
 	*/
 	_isJwtMode() {
-		return !!(this.config.jwt?.secret && typeof this.strategy.verifyToken === "function");
+		return this.strategy.kind === "jwt";
 	}
-	/** 钩子回调用完整 token（JWT 模式下 session 存的是 jti） */
-	async _resolveHookToken(loginId, device, sessionValue) {
+	/** 审计事件使用完整 token 生成指纹（JWT 模式下 session 存的是 jti） */
+	async _resolveAuditToken(loginId, device, sessionValue) {
 		if (!this._isJwtMode()) return sessionValue;
 		return (await this.getDeviceList(loginId)).find((d) => d.device === device)?.token ?? sessionValue;
 	}

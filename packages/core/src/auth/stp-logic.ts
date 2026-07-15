@@ -89,7 +89,7 @@ export class StpLogic {
     } else if (!this.config.isConcurrent) {
       // 同设备互踢
       if (oldToken) {
-        replacedOldFullToken = await this._resolveHookToken(_loginId, device, oldToken);
+        replacedOldFullToken = await this._resolveAuditToken(_loginId, device, oldToken);
         await this._replacedToken(_loginId, oldToken, device);
       }
       token = options.token ?? this.strategy.createToken(_loginId, this.config, { timeout });
@@ -1026,11 +1026,11 @@ export class StpLogic {
    * @returns 是否为JWT模式
    */
   private _isJwtMode(): boolean {
-    return !!(this.config.jwt?.secret && typeof (this.strategy as any).verifyToken === "function");
+    return this.strategy.kind === "jwt";
   }
 
-  /** 钩子回调用完整 token（JWT 模式下 session 存的是 jti） */
-  private async _resolveHookToken(
+  /** 审计事件使用完整 token 生成指纹（JWT 模式下 session 存的是 jti） */
+  private async _resolveAuditToken(
     loginId: string,
     device: string,
     sessionValue: string,

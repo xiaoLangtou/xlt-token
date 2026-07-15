@@ -25,7 +25,7 @@
 | `offlineRecordEnabled` | `boolean` | `false` | 是否记录被踢/被顶的下线原因 |
 | `offlineRecordTimeout` | `number` | `3600` | 下线记录保留秒数，支持相对时间字符串 |
 | `permCacheTimeout` | `number` | `0` | 权限/角色列表缓存秒数（`0` = 不缓存），支持相对时间字符串 |
-| `jwt` | `JwtConfig` | — | JWT 策略配置（`secret` 等），见 [JWT 策略](/core/jwt-strategy) |
+| `lifecycle` | `TokenLifecycleConfig` | — | refresh token 轮转、重放检测与 token family 生命周期配置 |
 
 > **取 token 顺序**：`header → cookie → query`。三者同时开启时，前者优先。
 

@@ -55,6 +55,7 @@ function assertStrongHmacSecret(kid, secret) {
 var JwtStrategy = class {
 	constructor(jwtConfig) {
 		this.jwtConfig = jwtConfig;
+		this.kind = "jwt";
 	}
 	createToken(loginId, config, options) {
 		const jti = randomUUID();
