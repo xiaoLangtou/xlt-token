@@ -189,7 +189,7 @@ const loginIds = await StpUtil.getOnlineLoginIds({ page: 0, pageSize: 50 });
 const devices = await StpUtil.getDeviceList('1001');
 ```
 
-管理后台完整示例见 [Hooks 与观测性](/core/hooks-and-observability#管理后台示例)。
+管理后台完整示例见 [审计事件与观测性](/core/hooks-and-observability#管理后台示例)。
 
 > 实现依赖 Store 的 `keys(pattern)` 扫描 `session-list:*` 前缀；在线量极大时请降低扫描频率或自建索引。
 

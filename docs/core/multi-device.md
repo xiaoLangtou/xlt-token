@@ -213,6 +213,6 @@ kickoutByDevice('1001', 'pc')
 
 ## 下一步
 
-- 在线人数 / 在线列表 API → [Hooks 与观测性](/core/hooks-and-observability)
+- 在线人数 / 在线列表 API → [审计事件与观测性](/core/hooks-and-observability)
 - 管理员踢人场景代码 → [场景手册 · 管理员踢人](/core/recipes#6-管理员踢人下线)
 - 配置字段完整列表 → [Core 配置参考](/core/configuration)

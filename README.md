@@ -8,7 +8,7 @@
 
 📖 **在线文档**: https://xiaolangtou.github.io/xlt-token/
 
-xlt-token 是一个轻量级 token 认证库，提供灵活的 token 管理、会话控制、多端登录、权限校验，以及可插拔的存储与策略。鉴权语义集中在 `@xlt-token/core`；Redis 实现在 `@xlt-token/store-redis`；NestJS 集成（Module、Guard、Decorator、JwtStrategy）在 `@xlt-token/nestjs`。
+xlt-token 是一个轻量级 token 认证库，提供灵活的 token 管理、会话控制、多端登录、权限校验，以及可插拔的存储与策略。鉴权语义集中在 `@xlt-token/core`；Redis 实现在 `@xlt-token/store-redis`；JWT 策略在 `@xlt-token/jwt`；NestJS 集成（Module、Guard、Decorator）在 `@xlt-token/nestjs`。
 
 ## 特性
 
@@ -18,7 +18,7 @@ xlt-token 是一个轻量级 token 认证库，提供灵活的 token 管理、�
 - 💾 **内置存储** - 内置内存存储和 Redis 存储实现，开箱即用
 - 🎨 **Token 策略** - UUID / Simple UUID / 随机字符串，以及 JWT 策略（jti 黑名单）
 - 🔒 **二级认证** - Safe 安全窗口 + `@XltCheckSafe`，适用于支付确认等敏感操作
-- 📡 **Hooks 观测** - 登录 / 踢人 / 顶号 / 登出生命周期钩子，支持在线用户查询
+- 📡 **审计事件** - 登录 / 刷新 / 踢人 / 顶号 / 登出事件脱敏投递，支持在线用户查询
 - 🛡️ **全局守卫** - 黑名单 / 白名单双模式，默认安全
 - 🧩 **可扩展守卫** - `XltAbstractLoginGuard` 抽象基类，通过 `onAuthSuccess` / `onAuthFail` 注入业务会话
 - 🎯 **声明式装饰器** - `@XltIgnore` / `@XltCheckLogin` / `@LoginId` / `@TokenValue` / `@XltCheckPermission` / `@XltCheckRole` / `@XltCheckSafe`
@@ -57,16 +57,17 @@ pnpm add @xlt-token/store-redis ioredis
 其他可选依赖：
 
 ```bash
-pnpm add jsonwebtoken       # JwtStrategy
+pnpm add @xlt-token/jwt jsonwebtoken       # JwtStrategy
 ```
 
 ## 包结构
 
 | 包 | 职责 | 典型 import |
 | --- | --- | --- |
-| `@xlt-token/core` | 鉴权引擎、HttpContext、Store / Strategy 契约、Hooks | `createXltToken`, `StpLogic`, `MemoryStore` |
+| `@xlt-token/core` | 鉴权引擎、HttpContext、Store / Strategy 契约、审计事件 | `createXltToken`, `StpLogic`, `MemoryStore` |
 | `@xlt-token/store-redis` | 框架无关的 node-redis / ioredis Store | `RedisStore`, `IORedisStore` |
-| `@xlt-token/nestjs` | Module、Guard、Decorator、JwtStrategy | `XltTokenModule`, `XltTokenGuard`, `@LoginId()` |
+| `@xlt-token/jwt` | kid 密钥轮换 JWT 策略 | `JwtStrategy`, `createJwtStrategyConfig` |
+| `@xlt-token/nestjs` | Module、Guard、Decorator | `XltTokenModule`, `XltTokenGuard`, `@LoginId()` |
 | `@xlt-token/express` | Express 中间件、路由策略、错误处理 | `xltMiddleware`, `xltErrorHandler` |
 | `xlt-token` | 兼容包，等价于 `@xlt-token/nestjs` | `XltTokenModule`, `StpUtil` |
 
@@ -180,10 +181,10 @@ app.use(async (req, res, next) => {
 |---|---|---|---|
 | `config` | `Partial<XltTokenConfig>` | - | 配置选项（见下表） |
 | `store` | `{ useClass } \| { useValue }` | `MemoryStore` | 存储实现；Redis Store 从独立包安装 |
-| `strategy` | `{ useClass }` | `UuidStrategy` | Token 策略（`UuidStrategy` / `JwtStrategy`） |
+| `strategy` | `{ useClass } \| { useValue }` | `UuidStrategy` | Token 策略（UUID 策略或 `@xlt-token/jwt` 的 `JwtStrategy` 实例） |
 | `isGlobal` | `boolean` | `false` | 是否全局模块 |
 | `stpInterface` | `class` | 内置 stub | 权限 / 角色数据源 |
-| `hooks` | `XltHooks` | - | 登录 / 踢人等生命周期钩子 |
+| `eventSink` | `XltEventSink` | - | 接收脱敏审计事件，用于日志、指标和消息推送 |
 | `providers` | `Provider[]` | `[]` | 追加 Provider（如 `XLT_REDIS_CLIENT`） |
 
 ### XltTokenConfig
@@ -205,7 +206,7 @@ app.use(async (req, res, next) => {
 | `offlineRecordEnabled` | `boolean` | `false` | 是否记录被踢 / 被顶的下线原因 |
 | `offlineRecordTimeout` | `number` | `3600` | 下线记录保留秒数 |
 | `permCacheTimeout` | `number` | `0` | 权限 / 角色列表缓存秒数（`0` = 不缓存） |
-| `jwt` | `JwtConfig` | - | JWT 策略配置（`secret` 等） |
+| `tokenLifecycle` | `TokenLifecycleConfig` | - | refresh token 轮转、复用检测与 token family 生命周期配置 |
 
 ## API 文档
 
@@ -314,16 +315,26 @@ export class OrderController {
 xlt-token 的 JWT 模式是「**有状态 JWT**」——JWT 携带身份，Store 负责踢人、顶号、多端索引：
 
 ```ts
-import { XltTokenModule, JwtStrategy } from '@xlt-token/nestjs';
+import { createJwtStrategyConfig, JwtStrategy } from '@xlt-token/jwt';
+import { XltTokenModule } from '@xlt-token/nestjs';
+
+const jwtStrategy = new JwtStrategy(
+  createJwtStrategyConfig({
+    keys: [
+      {
+        kid: '2026-07',
+        alg: 'HS256',
+        secret: process.env.JWT_SECRET!,
+        status: 'active',
+      },
+    ],
+  }),
+);
 
 XltTokenModule.forRoot({
-  strategy: { useClass: JwtStrategy },
+  strategy: { useValue: jwtStrategy },
   config: {
     timeout: 86400,
-    jwt: {
-      secret: process.env.JWT_SECRET!,
-      algorithm: 'HS256',
-    },
   },
 })
 ```
@@ -348,24 +359,26 @@ transfer() {}
 
 详见 [二级认证文档](https://xiaolangtou.github.io/xlt-token/core/secondary-auth)。
 
-### Hooks 与观测性
+### 审计事件与观测性
 
-通过 `forRoot({ hooks })` 注册生命周期钩子，用于审计日志、消息推送等：
+通过 `forRoot({ eventSink })` 注册事件接收器，用于审计日志、指标和消息推送。事件只包含 token 指纹，不暴露原始 token：
 
 ```ts
 XltTokenModule.forRoot({
-  hooks: {
-    onLogin: (loginId, token, device) => {
-      logger.info({ event: 'login', loginId, device });
-    },
-    onKickout: (loginId, token) => {
-      websocket.notify(loginId, '您已被强制下线');
+  eventSink: {
+    emit: async (event) => {
+      logger.info({
+        type: event.type,
+        loginId: event.loginId,
+        device: event.device,
+        tokenFingerprint: event.tokenFingerprint,
+      });
     },
   },
 })
 ```
 
-详见 [Hooks 文档](https://xiaolangtou.github.io/xlt-token/core/hooks-and-observability)。
+详见 [审计事件文档](https://xiaolangtou.github.io/xlt-token/core/hooks-and-observability)。
 
 ### 会话管理（XltSession）
 

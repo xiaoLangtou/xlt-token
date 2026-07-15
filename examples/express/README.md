@@ -53,7 +53,7 @@ pnpm start:whitelist  # 白名单模式（defaultCheck=false）
 | `POST /session/*` | 顶号、踢人、在线统计 |
 | `GET /whitelist/*` | 白名单模式（需 `XLT_DEFAULT_CHECK=false`） |
 | `GET /profile/me` | 自定义业务中间件填充 `request.user` |
-| `GET /admin/*` | 管理员 + Hooks 观测 |
+| `GET /admin/*` | 管理员 + 审计事件观测 |
 | `POST /temp-token/*` | 临时 Token |
 
 ## curl 用例
@@ -131,7 +131,7 @@ src/
 ├── app.ts                         # Express app、xltMiddleware、静态 demo、路由注册
 ├── config/
 │   ├── app-config.ts              # xlt-token 配置、ignore、policies
-│   └── audit-hooks.ts             # 生命周期 Hooks
+│   └── audit-hooks.ts             # 脱敏审计事件
 ├── stp/
 │   └── demo-stp-interface.ts      # 权限/角色数据源
 ├── middleware/

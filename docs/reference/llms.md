@@ -4,15 +4,15 @@
 
 ## 项目定位
 
-`xlt-token` 是一个 TypeScript monorepo，提供受 Sa-Token 启发的框架无关 Token 鉴权能力。核心能力包括登录、登出、会话、权限、角色、多端登录、二级认证、JWT、可插拔存储、Token 策略、Hooks，以及 NestJS / Express 适配器。
+`xlt-token` 是一个 TypeScript monorepo，提供受 Sa-Token 启发的框架无关 Token 鉴权能力。核心能力包括登录、登出、会话、权限、角色、多端登录、二级认证、JWT、可插拔存储、Token 策略、审计事件，以及 NestJS / Express 适配器。
 
 ## 包职责
 
 | 包 | 职责 | 关键入口 |
 | --- | --- | --- |
-| `@xlt-token/core` | 框架无关鉴权引擎、Store 契约、Token 策略、权限、会话、Hooks、HTTP 上下文、异常 | `packages/core/src/index.ts` |
+| `@xlt-token/core` | 框架无关鉴权引擎、Store 契约、Token 策略、权限、会话、审计事件、HTTP 上下文、异常 | `packages/core/src/index.ts` |
 | `@xlt-token/store-redis` | 框架无关的 RedisStore、IORedisStore | `packages/store-redis/src/index.ts` |
-| `@xlt-token/nestjs` | NestJS Module、Guard、Decorator、JwtStrategy，并 re-export Core | `packages/nestjs/src/index.ts` |
+| `@xlt-token/nestjs` | NestJS Module、Guard、Decorator、异常包装，并 re-export Core | `packages/nestjs/src/index.ts` |
 | `@xlt-token/express` | Express middleware、route helper、请求状态同步、错误处理器 | `packages/express/src/index.ts` |
 | `xlt-token` | 兼容包，等价于 re-export `@xlt-token/nestjs` | `src/index.ts` |
 

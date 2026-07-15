@@ -84,14 +84,27 @@ export class JwtStrategy implements TokenStrategy {
 注册：
 
 ```ts twoslash
-import { JwtStrategy, XltTokenModule } from '@xlt-token/nestjs';
+import { createJwtStrategyConfig, JwtStrategy } from '@xlt-token/jwt';
+import { XltTokenModule } from '@xlt-token/nestjs';
+
+const jwtStrategy = new JwtStrategy(
+  createJwtStrategyConfig({
+    keys: [
+      {
+        kid: '2026-07',
+        alg: 'HS256',
+        secret: process.env.JWT_SECRET!,
+        status: 'active',
+      },
+    ],
+  }),
+);
 
 @Module({
   imports: [
     XltTokenModule.forRoot({
       isGlobal: true,
-      strategy: { useClass: JwtStrategy },
-      config: { jwt: { secret: process.env.JWT_SECRET! } },
+      strategy: { useValue: jwtStrategy },
     }),
   ],
 })
@@ -100,8 +113,8 @@ export class AppModule {}
 
 ### 注意事项
 
-- 推荐使用内置 **`JwtStrategy`**（`import { JwtStrategy } from '@xlt-token/nestjs'`），无需自行实现黑名单与 `_resolveLoginId` 分支。
-- 若自定义 JWT 策略，需实现 `verifyToken`，并在 `config.jwt.secret` 中配置密钥，`StpLogic` 才会进入 JWT 鉴权分支。
+- 推荐使用 `@xlt-token/jwt` 的 **`JwtStrategy`**，它内置 `kid` 轮换、算法白名单和弱密钥检查。
+- 自定义 JWT 策略仍需实现 `verifyToken` 并返回 `sub` / `jti`。
 - **`createToken` 只负责生成**。UUID 模式下 token 是否仍有效由 store 决定；JWT 模式下正常鉴权以验签为主，踢人/顶号走 **jti 黑名单**（详见 [JWT 策略](/core/jwt-strategy)）。
 - 若只想要「纯无状态 JWT，服务端不保存状态」，xlt-token 并不是合适的方案。
 

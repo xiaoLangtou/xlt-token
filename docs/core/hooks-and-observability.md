@@ -1,202 +1,59 @@
-# 17 · Hooks 与观测性
+# 审计事件与观测性
 
-> 包：`@xlt-token/core`（Hooks 与观测性 API 均在核心层实现）
+2.0 用 `XltEventSink` 取代 1.x 的 `XltHooks`。事件对象只包含明确允许的字段和 token 指纹，不包含原始 token、请求对象或 JWT payload。
 
-1.1.0 新增**生命周期钩子（Hooks）**与**在线观测 API**，用于审计日志、消息推送、管理后台在线用户列表等场景。
+## 注册事件投递器
 
-## Hooks 系统
+```ts
+import type { XltEventSink } from '@xlt-token/core';
 
-### 接口定义
+const eventSink: XltEventSink = {
+  emit(event) {
+    auditLogger.info(event);
+  },
+};
 
-```ts twoslash
-interface XltHooks {
-  onLogin?: (loginId: string, token: string, device: string) => void | Promise<void>;
-  onLogout?: (loginId: string, token: string, reason: string) => void | Promise<void>;
-  onKickout?: (loginId: string, token: string) => void | Promise<void>;
-  onReplaced?: (loginId: string, oldToken: string, newToken: string) => void | Promise<void>;
+createXltToken({ eventSink });
+```
+
+NestJS：
+
+```ts
+XltTokenModule.forRoot({
+  eventSink,
+});
+```
+
+## 事件结构
+
+```ts
+interface XltAuditEvent {
+  schemaVersion: 1;
+  type: 'token.logged_in' | 'token.refreshed' | 'token.logged_out' | 'token.kicked_out' | 'token.replaced' | 'token.family_revoked';
+  occurredAt: number;
+  loginId?: string;
+  device?: string;
+  reason?: string;
+  tokenFingerprint?: string;
+  previousTokenFingerprint?: string;
+  nextTokenFingerprint?: string;
+  familyIdFingerprint?: string;
 }
 ```
 
-### 注册方式
+指纹算法：`sha256(token).slice(0, 16)`。它用于关联事件，不用于认证。
 
-**NestJS** — 通过 `XltTokenModule.forRoot({ hooks })` 传入：
+事件投递是尽力而为：同步抛错或异步 reject 都不会影响登录、登出、踢人或刷新主流程。
 
-```ts twoslash
-XltTokenModule.forRoot({
-  isGlobal: true,
-  hooks: {
-    onLogin: (loginId, token, device) => {
-      console.log(`[login] ${loginId} @ ${device}`);
-    },
-    onKickout: async (loginId, token) => {
-      await auditService.record('kickout', { loginId, token });
-    },
-  },
-});
+## 在线观测 API
+
+`StpLogic` 仍提供在线用户与设备查询：
+
+```ts
+await stp.getOnlineLoginIds({ page: 0, pageSize: 100 });
+await stp.getOnlineCount();
+await stp.getDeviceList('1001');
+await stp.forceLogout('1001');
 ```
 
-**框架无关** — 通过 `createXltToken({ hooks })` 传入：
-
-```ts twoslash
-import { createXltToken, MemoryStore } from '@xlt-token/core';
-
-const xlt = createXltToken({
-  store: new MemoryStore(),
-  hooks: {
-    onLogin: (loginId, token, device) => {
-      console.log(`[login] ${loginId} @ ${device}`);
-    },
-  },
-});
-```
-
-异步钩子若 reject，**不会影响主流程**（内部 `catch` 后 `console.error`），钩子应只做观测性 side-effect。
-
-### 触发时机
-
-| 钩子 | 触发位置 | 当前状态 |
-| --- | --- | --- |
-| `onLogin` | `login()` 写入成功后 | ✅ 已实现 |
-| `onKickout` | `kickout()` / `kickoutByDevice()` / `kickoutByToken()` | ✅ 已实现 |
-| `onLogout` | `logout()` / `logoutByLoginId()` 成功后 | ✅ 已实现 |
-| `onReplaced` | `isConcurrent: false` 同设备顶号，`login()` 成功后 | ✅ 已实现 |
-
-> `onLogout` 的 `reason` 参数：`logout` 为 `'LOGOUT'`，`logoutByLoginId` 为 `'LOGOUT_BY_LOGIN_ID'`。
-
-### 示例：登录审计
-
-```ts twoslash
-XltTokenModule.forRoot({
-  hooks: {
-    onLogin: (loginId, token, device) => {
-      logger.info({ event: 'login', loginId, device });
-    },
-    onKickout: (loginId, token) => {
-      logger.warn({ event: 'kickout', loginId });
-      websocket.notify(loginId, '您已被强制下线');
-    },
-  },
-});
-```
-
-## 观测性 API
-
-依赖 Store 的 `keys(pattern)` 能力（MemoryStore / RedisStore 均已实现），扫描 `session-list:*` 前缀。
-
-### `getOnlineLoginIds(opts?)`
-
-分页查询当前有在线 session 的 **loginId 列表**。
-
-```ts twoslash
-getOnlineLoginIds(opts?: { page?: number; pageSize?: number }): Promise<string[]>
-```
-
-- 默认 `page = 0`，`pageSize = 100`
-- 返回的是 **loginId**，不是 device 数（一个用户多端在线仍计为 1 条 session-list 键）
-
-```ts twoslash
-const page0 = await stp.getOnlineLoginIds({ page: 0, pageSize: 50 });
-// ['1001', '1002', ...]
-```
-
-### `getOnlineCount()`
-
-在线 **用户数**（有 session-list 记录的 loginId 数量）。
-
-```ts twoslash
-getOnlineCount(): Promise<number>
-```
-
-```ts twoslash
-const count = await stp.getOnlineCount();
-console.log(`当前在线用户: ${count}`);
-```
-
-> 若需统计**在线设备总数**，应对每个 loginId 调用 `getDeviceList` 后求和，或自行维护指标。
-
-### `getDeviceList(loginId)`
-
-某账号下所有在线 device（详见 [多端登录](/core/multi-device)）。
-
-```ts twoslash
-getDeviceList(loginId: string): Promise<DeviceInfo[]>
-```
-
-### `forceLogout(loginId)`
-
-强制某账号所有 device 下线。
-
-```ts twoslash
-forceLogout(loginId: string): Promise<boolean>
-```
-
-## 管理后台示例
-
-```ts twoslash
-@Controller('admin/online')
-export class OnlineController {
-  constructor(private readonly stp: StpLogic) {}
-
-  @Get('count')
-  count() {
-    return this.stp.getOnlineCount();
-  }
-
-  @Get('users')
-  users(@Query('page') page = '0', @Query('size') size = '100') {
-    return this.stp.getOnlineLoginIds({
-      page: Number(page),
-      pageSize: Number(size),
-    });
-  }
-
-  @Get('users/:loginId/devices')
-  devices(@Param('loginId') loginId: string) {
-    return this.stp.getDeviceList(loginId);
-  }
-}
-```
-
-## 存储扫描说明
-
-`getOnlineLoginIds` / `getOnlineCount` 使用的 pattern：
-
-```
-${tokenName}:login:session-list:*
-```
-
-- **MemoryStore**：内存前缀扫描，适合开发与小规模
-- **RedisStore / IORedisStore**：分页 `SCAN`；Cluster 会扫描所有 master
-
-生产环境若在线用户量极大，建议：
-
-- 降低扫描频率，或
-- 自行维护在线计数器 / 索引结构
-
-## Hooks + 观测性组合
-
-典型运维面板数据流：
-
-```
-getOnlineLoginIds()  →  loginId 列表
-    ↓
-getDeviceList(id)    →  每用户 device / token / loginTime
-    ↓
-kickoutByDevice()    →  onKickout 钩子 → 审计日志
-```
-
-## 类型导出
-
-```ts twoslash
-import type { XltHooks, DeviceInfo } from '@xlt-token/core';
-import { XLT_TOKEN_HOOKS } from '@xlt-token/core';
-```
-
-`DeviceInfo` 定义于 `packages/core/src/config/xlt-token-config.ts`。
-
-## 下一步
-
-- 多端 API 详解 → [多端登录](/core/multi-device)
-- Store `keys()` 契约 → [Store 契约与内存存储](/core/storage)
-- Redis SCAN 与 Cluster 行为 → [Redis Store 完整指南](/store-redis/)
-- 模块注册选项 → [NestJS 模块配置](/adapters/nestjs/module-config)
+这些 API 依赖 Store 的 `scan(pattern, options)`。生产大规模在线列表建议使用 Redis Store，并控制扫描频率。

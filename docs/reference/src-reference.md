@@ -632,7 +632,7 @@ packages/core/src/
 ├── http/context.ts, express.ts
 ├── store/memory-store.ts, xlt-token-store.interface.ts
 ├── token/uuid-strategy.ts
-├── hooks/, session/, exceptions/, factory.ts
+├── events/, session/, exceptions/, factory.ts
 └── index.ts
 
 packages/nestjs/src/

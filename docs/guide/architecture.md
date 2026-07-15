@@ -8,9 +8,9 @@ xlt-token 采用 **「框架无关核心 + 可选实现 + 框架适配器」** �
 
 | 包 | 职责 | 典型 import |
 | --- | --- | --- |
-| `@xlt-token/core` | 鉴权引擎、HttpContext、Store/Strategy 契约、Hooks、观测性 API | `createXltToken`, `StpLogic`, `MemoryStore` |
+| `@xlt-token/core` | 鉴权引擎、HttpContext、Store/Strategy 契约、审计事件、观测性 API | `createXltToken`, `StpLogic`, `MemoryStore` |
 | `@xlt-token/store-redis` | node-redis / ioredis 的框架无关 Store 实现 | `RedisStore`, `IORedisStore` |
-| `@xlt-token/nestjs` | Module、Guard、Decorator、JwtStrategy、Nest 异常包装 | `XltTokenModule`, `XltTokenGuard`, `@LoginId()` |
+| `@xlt-token/nestjs` | Module、Guard、Decorator、Nest 异常包装 | `XltTokenModule`, `XltTokenGuard`, `@LoginId()` |
 | `@xlt-token/express` | 中间件、路由策略、请求上下文适配 | `xltMiddleware`, `requireLogin`, `checkPermission` |
 
 ```
@@ -21,7 +21,7 @@ packages/
 │   ├── http/      # HttpContext + createExpressContext
 │   ├── store/     # XltTokenStore + MemoryStore
 │   ├── token/     # TokenStrategy + UuidStrategy
-│   ├── hooks/     # XltHooks
+│   ├── events/    # XltAuditEvent / XltEventSink
 │   └── factory.ts # createXltToken()
 │
 ├── store-redis/   # @xlt-token/store-redis — 框架无关 Redis 实现
@@ -32,8 +32,10 @@ packages/
 │   ├── xlt-token.module.ts
 │   ├── guards/
 │   ├── decorators/
-│   ├── store/      # deprecated Redis DI 兼容包装器
-│   └── token/jwt-strategy.ts    # JwtStrategy（暂留 nestjs 包）
+│   └── store/      # Redis DI 辅助包装器
+│
+├── jwt/           # @xlt-token/jwt — kid 轮换 JWT 策略
+│   └── jwt-strategy.ts
 │
 └── express/       # @xlt-token/express — Express 中间件
     ├── middleware/ # xltMiddleware / requireLogin / checkPermission / checkRole / checkSafe
@@ -61,7 +63,7 @@ packages/
 │     createExpressContext(req, res) → HttpContext            │
 ├────────────────────────────────────────────────────────────┤
 │ L1  核心运行时（@xlt-token/core）                           │
-│     StpLogic / StpPermLogic / StpUtil / XltSession / Hooks │
+│     StpLogic / StpPermLogic / StpUtil / XltSession / Events │
 ├────────────────────────────────────────────────────────────┤
 │ L0  抽象接口                                                │
 │     XltTokenStore │ TokenStrategy │ StpInterface            │

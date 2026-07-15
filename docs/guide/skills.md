@@ -13,7 +13,7 @@ last_updated: "2026-06-09"
 
 Skills 是结构化知识文件，用来给 AI 编码代理补充某个库、框架或代码库的上下文。与 MCP server 提供实时工具访问不同，Skill 会被加载进代理上下文，让代理在对话中持续参考这些使用规则和示例。
 
-`xlt-token` 提供一个 **usage skill**：它教 AI 代理如何在 TypeScript 后端项目中正确接入 xlt-token，包括 NestJS、Express、Core API、权限、角色、会话、多端登录、JWT、Redis、Hooks 和二级认证。
+`xlt-token` 提供一个 **usage skill**：它教 AI 代理如何在 TypeScript 后端项目中正确接入 xlt-token，包括 NestJS、Express、Core API、权限、角色、会话、多端登录、JWT、Redis、审计事件和二级认证。
 
 ## Usage
 
@@ -24,7 +24,7 @@ Skills 是结构化知识文件，用来给 AI 编码代理补充某个库、框
 - `@xlt-token/core` 的框架无关用法和自定义适配器
 - 登录、登出、踢人、顶号、多端登录和在线用户查询
 - 权限、角色、会话、二级认证和临时 token
-- Redis Store 独立包、JwtStrategy、Hooks 和生产建议
+- Redis Store 独立包、JwtStrategy、审计事件和生产建议
 
 Skill 内部包含 `references/`，AI 代理会按任务选择性读取，避免一次性加载过多上下文。
 

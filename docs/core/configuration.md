@@ -111,7 +111,7 @@ import { DEFAULT_XLT_TOKEN_CONFIG } from '@xlt-token/core';
 | `store` | `XltTokenStore` | `MemoryStore` | 存储实现 |
 | `strategy` | `TokenStrategy` | `UuidStrategy` | token 生成策略 |
 | `stpInterface` | `StpInterface` | 内置 stub | 权限/角色数据源，见 [权限与会话](/core/permissions-and-session) |
-| `hooks` | `XltHooks` | — | 登录/踢人等生命周期钩子，见 [Hooks 与观测性](/core/hooks-and-observability) |
+| `eventSink` | `XltEventSink` | — | 脱敏审计事件投递器，见 [审计事件与观测性](/core/hooks-and-observability) |
 
 示例：
 

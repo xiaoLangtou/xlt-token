@@ -2,13 +2,13 @@
 
 > Framework-agnostic token authentication library for TypeScript, inspired by Sa-Token.
 
-xlt-token is a pnpm monorepo that provides token login, logout, session, permissions, roles, multi-device login, secondary authentication, JWT support, pluggable storage, token strategies, hooks, and framework adapters.
+xlt-token is a pnpm monorepo that provides token login, logout, session, permissions, roles, multi-device login, secondary authentication, JWT support, pluggable storage, token strategies, audit events, and framework adapters.
 
 ## Primary Packages
 
-- `@xlt-token/core`: framework-agnostic authentication engine, store contracts, token strategies, permissions, sessions, hooks, HTTP context, and errors.
+- `@xlt-token/core`: framework-agnostic authentication engine, store contracts, token strategies, permissions, sessions, audit events, HTTP context, and errors.
 - `@xlt-token/store-redis`: framework-agnostic RedisStore and IORedisStore for node-redis and ioredis.
-- `@xlt-token/nestjs`: NestJS module, guards, decorators, JwtStrategy, deprecated Redis DI wrappers, and re-exports from core.
+- `@xlt-token/nestjs`: NestJS module, guards, decorators, exception wrappers, and re-exports from core.
 - `@xlt-token/express`: Express middleware adapter, route helpers, request state sync, and error handler.
 - `xlt-token`: compatibility package that re-exports `@xlt-token/nestjs`.
 

@@ -1,6 +1,6 @@
 {
   "name": "@xlt-token/store-contract",
-  "version": "1.2.1",
+  "version": "2.0.0",
   "description": "Shared XltTokenStore contract tests for xlt-token stores",
   "keywords": [
     "auth",
@@ -54,7 +54,7 @@
     "test:cov": "vitest run --coverage"
   },
   "dependencies": {
-    "@xlt-token/core": "^1.2.1",
+    "@xlt-token/core": "^2.0.0",
     "vitest": "^2.0.0"
   },
   "devDependencies": {

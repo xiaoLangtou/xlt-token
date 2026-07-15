@@ -1,6 +1,6 @@
 {
   "name": "@xlt-token/example-nestjs",
-  "version": "0.0.1",
+  "version": "2.0.0",
   "private": true,
   "description": "Full-feature NestJS example for @xlt-token/nestjs",
   "scripts": {
@@ -15,8 +15,8 @@
     "@nestjs/common": "^10.0.0",
     "@nestjs/core": "^10.0.0",
     "@nestjs/platform-express": "^10.0.0",
-    "@xlt-token/core": "workspace:*",
-    "@xlt-token/nestjs": "workspace:*",
+    "@xlt-token/core": "^2.0.0",
+    "@xlt-token/nestjs": "^2.0.0",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.0"
   },

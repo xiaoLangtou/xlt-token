@@ -41,5 +41,5 @@ features:
     details: 顶号、踢人、活跃过期、多端并发等能力原生支持。
   - icon: ✨
     title: 1.1.0 新能力
-    details: 多端 device、二级认证、JWT 黑名单、Hooks 与在线观测。
+    details: 多端 device、二级认证、JWT 黑名单、审计事件与在线观测。
 ---

@@ -41,7 +41,7 @@
         <a href="#sec-device" class="nav-item">多端登录</a>
         <a href="#sec-session" class="nav-item">会话管理</a>
         <a href="#sec-profile" class="nav-item">自定义中间件</a>
-        <a href="#sec-admin" class="nav-item">管理 & Hooks</a>
+        <a href="#sec-admin" class="nav-item">管理 & 审计</a>
         <a href="#sec-temp" class="nav-item">临时 Token</a>
       </nav>
 
@@ -254,12 +254,12 @@
 
         <!-- Admin -->
         <section class="section" id="sec-admin">
-          <h2>管理 & Hooks</h2>
-          <p class="section-desc">需 admin 角色；查看 Hooks 审计事件</p>
+          <h2>管理 & 审计</h2>
+          <p class="section-desc">需 admin 角色；查看脱敏审计事件</p>
           <div class="card-grid">
             <article class="card">
               <div class="card-head"><span class="method get">GET</span><code>/admin/hooks</code></div>
-              <p>最近 50 条 onLogin/onKickout 等事件</p>
+              <p>最近 50 条 token 登录、刷新、下线等事件</p>
               <button type="button" class="btn" data-action="adminHooks">执行</button>
             </article>
             <article class="card">

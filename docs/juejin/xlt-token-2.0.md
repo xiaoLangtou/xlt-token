@@ -120,7 +120,7 @@ import { XltTokenModule, StpUtil } from '@xlt-token/nestjs';
 - **多端登录**：同一账号 PC / App 独立 token
 - **二级认证**：`openSafe` + `@XltCheckSafe`
 - **JWT 策略 + 黑名单**
-- **生命周期 Hooks**：`onLogin` / `onKickout` / `onReplaced`
+- **脱敏审计事件**：`token.logged_in` / `token.kicked_out` / `token.replaced`
 - **在线观测**：`getOnlineCount` / `getOnlineLoginIds`
 
 NestJS 用户通过 `StpLogic` / `StpUtil` 透明调用，无感知。
@@ -209,19 +209,20 @@ remove() {}
 
 校验失败分别抛 `NotPermissionException`（403）和 `NotRoleException`（403），前端可按 type 分支处理。
 
-### 2.3 生产环境：forRootAsync + Hooks
+### 2.3 生产环境：forRootAsync + 审计事件
 
 ```typescript
 XltTokenModule.forRootAsync({
   imports: [ConfigModule],
   inject: [ConfigService],
   stpInterface: AppStpInterface,
-  hooks: {
-    onLogin: (loginId, token, device) => {
-      console.log(`[login] ${loginId} @ ${device}`);
-    },
-    onKickout: (loginId) => {
-      websocket.notify(loginId, '您已被强制下线');
+  eventSink: {
+    emit: async (event) => {
+      console.log(`[audit] ${event.type}`, {
+        loginId: event.loginId,
+        device: event.device,
+        tokenFingerprint: event.tokenFingerprint,
+      });
     },
   },
   useFactory: (cfg: ConfigService) => ({
@@ -266,7 +267,7 @@ app.use(async (req, res, next) => {
 | `XltTokenStore` | token ↔ loginId 映射（Memory / Redis / 自定义） |
 | `TokenStrategy` | 生成 token（UUID / JWT / 自定义） |
 | `StpInterface` | 权限与角色数据源 |
-| `XltHooks` | 登录、踢人、顶号等生命周期观测 |
+| `XltEventSink` | 登录、踢人、顶号等脱敏审计事件 |
 
 ---
 
@@ -345,7 +346,7 @@ pnpm start
 演示页能力：
 
 - 顶部一键 **admin / user 登录**，实时预览 token
-- **10 个场景分区**：权限、角色、二级认证、多端踢人、Hooks…
+- **10 个场景分区**：权限、角色、二级认证、多端踢人、审计事件…
 - 右侧 **API 日志面板**，401/403 高亮
 - 二级认证流程指示：openSafe → transfer
 

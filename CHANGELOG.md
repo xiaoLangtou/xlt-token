@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.0.0] - 2026-07-15
+
+### Breaking Changes
+
+- `XltTokenStore` 升级为原子契约：`get` 返回 `StoreEntry`，TTL 使用 `finiteTtl` / `persistentTtl` / `keepTtl`，并新增 `setIfAbsent`、`compareAndSet`、`compareAndDelete`、`touch`、`scan`
+- JWT 策略拆分为 `@xlt-token/jwt`，使用 `kid` 密钥环、算法白名单和 `activeKid` 签发；NestJS 不再内置 `jwt.secret` 配置式策略
+- `refreshToken` 返回 `RefreshResult`，支持 token family、轮换刷新、重放检测和撤销语义
+- `XltHooks` / `XLT_TOKEN_HOOKS` 移除，替换为脱敏 `XltEventSink` / `XLT_EVENT_SINK`
+- 错误码稳定化：`TOKEN_INVALID`、`TOKEN_KICKED_OUT`、`PERMISSION_DENIED`、`SAFE_REQUIRED` 等会出现在 Core 和 HTTP 适配器响应中
+
+### Added
+
+- 新增 `@xlt-token/jwt` 独立包
+- 新增 `@xlt-token/store-contract` 契约测试包
+- 新增 2.0 迁移指南、JWT 密钥轮换文档、Store 原子契约文档和审计事件文档
+
+### Migration
+
+请阅读 [2.0 迁移指南](./docs/guide/migration-2-0.md)。
+
 ## [1.2.1] - 2026-06-15
 
 ### Added

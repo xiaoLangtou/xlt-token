@@ -61,7 +61,7 @@ pnpm start:whitelist # 白名单模式（defaultCheck=false）
 | `POST /session/*` | 顶号、踢人、在线统计 |
 | `GET /whitelist/*` | 白名单模式（需 `XLT_DEFAULT_CHECK=false`） |
 | `GET /profile/me` | `XltAbstractLoginGuard` + `request.user` |
-| `GET /admin/*` | 管理员 + Hooks 观测 |
+| `GET /admin/*` | 管理员 + 审计事件观测 |
 | `POST /temp-token/*` | 临时 Token |
 
 ---
@@ -191,7 +191,7 @@ curl -s http://localhost:3000/public/product/42
 curl -s http://localhost:3000/public/product/42 -H "Authorization: Bearer $TOKEN"
 ```
 
-### 9. Hooks 审计（admin）
+### 9. 审计事件（admin）
 
 ```bash
 curl -s http://localhost:3000/admin/hooks -H "Authorization: Bearer $TOKEN"
@@ -207,7 +207,7 @@ src/
 ├── app.module.ts              # forRootAsync + 全局 Guard/Filter
 ├── config/
 │   ├── app-config.service.ts  # 配置中心（JWT/Redis/并发语义）
-│   └── audit.hooks.ts         # 生命周期 Hooks
+│   └── audit.hooks.ts         # 脱敏审计事件
 ├── stp/
 │   └── demo-stp-interface.ts  # 权限/角色数据源
 ├── guards/
@@ -221,7 +221,7 @@ src/
 ├── device/ session/           # 多端与会话
 ├── whitelist/                 # defaultCheck=false
 ├── profile/                   # 自定义 Guard
-├── admin/                     # 管理 + Hooks
+├── admin/                     # 管理 + 审计事件
 └── temp-token/                # 临时 Token
 ```
 

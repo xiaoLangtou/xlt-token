@@ -154,15 +154,15 @@ export class AppModule {}
 
 ## `providers`
 
-`providers` 会附加到动态模块，可用于 Store 或 Strategy 构造函数依赖的业务服务。
+`providers` 会附加到动态模块，可用于 Store、Strategy 或事件接收器依赖的业务服务。
 它不会自动导出这些 Provider。需要在其他模块复用时，应由业务模块自行提供和导出。
 
 ```ts
 XltTokenModule.forRoot({
   providers: [AuditService],
-  hooks: {
-    onLogin(loginId, token, device) {
-      console.log('login', { loginId, token, device });
+  eventSink: {
+    emit(event) {
+      console.log('audit', event);
     },
   },
 });
