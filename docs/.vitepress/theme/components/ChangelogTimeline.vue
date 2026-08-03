@@ -1,6 +1,11 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import releaseCodeHtml from 'virtual:xlt-release-code-html';
+import v210 from '../../../../.github/releases/v2.1.0.md?raw';
+import v121 from '../../../../.github/releases/v1.2.1.md?raw';
+import v120 from '../../../../.github/releases/v1.2.0.md?raw';
+import v110 from '../../../../.github/releases/v1.1.0.md?raw';
+import v100 from '../../../../.github/releases/v1.0.0.md?raw';
 import v102 from '../../../../.github/releases/v1.0.2.md?raw';
 import rc1 from '../../../../.github/releases/v1.0.0-rc.1.md?raw';
 import rc2 from '../../../../.github/releases/v1.0.0-rc.2.md?raw';
@@ -36,10 +41,40 @@ interface ReleaseFile {
 
 const RELEASE_FILES: ReleaseFile[] = [
   {
+    date: 'Aug 3, 2026',
+    source: 'v2.1.0.md',
+    url: 'https://raw.githubusercontent.com/xiaoLangtou/xlt-token/master/.github/releases/v2.1.0.md',
+    fallbackRaw: v210,
+  },
+  {
+    date: 'Jun 15, 2026',
+    source: 'v1.2.1.md',
+    url: 'https://raw.githubusercontent.com/xiaoLangtou/xlt-token/master/.github/releases/v1.2.1.md',
+    fallbackRaw: v121,
+  },
+  {
+    date: 'Jun 14, 2026',
+    source: 'v1.2.0.md',
+    url: 'https://raw.githubusercontent.com/xiaoLangtou/xlt-token/master/.github/releases/v1.2.0.md',
+    fallbackRaw: v120,
+  },
+  {
+    date: 'Jun 11, 2026',
+    source: 'v1.1.0.md',
+    url: 'https://raw.githubusercontent.com/xiaoLangtou/xlt-token/master/.github/releases/v1.1.0.md',
+    fallbackRaw: v110,
+  },
+  {
     date: 'Jun 8, 2026',
     source: 'v1.0.2.md',
     url: 'https://raw.githubusercontent.com/xiaoLangtou/xlt-token/master/.github/releases/v1.0.2.md',
     fallbackRaw: v102,
+  },
+  {
+    date: 'Jun 6, 2026',
+    source: 'v1.0.0.md',
+    url: 'https://raw.githubusercontent.com/xiaoLangtou/xlt-token/master/.github/releases/v1.0.0.md',
+    fallbackRaw: v100,
   },
   {
     date: 'May 29, 2026',
