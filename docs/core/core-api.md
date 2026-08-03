@@ -166,12 +166,12 @@ StpLogic.login(loginId, options?)
   ├─ 校验 loginId 合法性
   ├─ store.get(sessionKey(loginId)) → oldToken
   ├─ 决策：
-  │    ├─ !isConcurrent         → oldToken 存在则 update(tokenKey(oldToken), 'BE_REPLACED') → 生成新 token
+  │    ├─ !isConcurrent         → oldToken 存在则 compareAndSet(tokenKey(oldToken), loginId, 'BE_REPLACED', keepTtl()) → 生成新 token
   │    ├─ isConcurrent & isShare → oldToken 存在则复用，否则生成
   │    └─ isConcurrent & !isShare → 生成新 token
-  ├─ store.set(tokenKey, loginId, timeout)
-  ├─ store.set(sessionKey, token, timeout)
-  ├─ activeTimeout > 0 时 store.set(lastActiveKey, Date.now(), timeout)
+  ├─ store.set(tokenKey, loginId, finiteTtl(timeout))
+  ├─ store.set(sessionKey, token, finiteTtl(timeout))
+  ├─ activeTimeout > 0 时 store.set(lastActiveKey, Date.now(), finiteTtl(timeout))
   └─ return token
 ```
 
@@ -180,7 +180,7 @@ StpLogic.login(loginId, options?)
 ```
 StpLogic.kickout(loginId)
   ├─ store.get(sessionKey(loginId)) → token
-  ├─ store.update(tokenKey(token), 'KICK_OUT')   // 保留 TTL，只改值
+  ├─ compareAndSet(tokenKey(token), loginId, 'KICK_OUT', keepTtl())   // 保留 TTL，只改值
   └─ store.delete(sessionKey(loginId))
 ```
 
@@ -215,11 +215,11 @@ StpLogic.logout(token)
 | `deleteTempToken(tempToken)` | ✅ | ✅ | `Promise<void>` |
 | `getLoginId(req)` | ❌ | ✅ | `Promise<string \| null>` |
 | `logoutByDevice(loginId, device)` | ✅ | ✅ | `Promise<boolean \| null>` |
-| `refreshToken(token, timeout?)` | ✅ | ✅ | `Promise<string \| null>` |
+| `refreshToken(token, timeout?)` | ✅ | ✅ | `Promise<RefreshResult>` |
 
 ¹ `StpUtil` 的 `getTokenValue` / `isLogin` / `checkLogin` 在 NestJS 中仍接受 Express `Request`，内部自动包装为 `HttpContext`。
 
-> **JWT 模式差异**：`logout`、`logoutByLoginId`、`logoutByDevice` 在 JWT 模式下通过 jti 黑名单吊销 token，而非删除 tokenKey（JWT 模式不存在 tokenKey）。`renewTimeout` 在 JWT 模式下延长 Store TTL（JWT 内嵌的 `exp` 不可修改）。`refreshToken` 为 JWT 模式专用方法，UUID 模式下返回 `null`。
+> **JWT 模式差异**：`logout`、`logoutByLoginId`、`logoutByDevice` 在 JWT 模式下通过 jti 黑名单吊销 token，而非删除 tokenKey（JWT 模式不存在 tokenKey）。`renewTimeout` 在 JWT 模式下延长 Store TTL（JWT 内嵌的 `exp` 不可修改）。`refreshToken` 需要启用 `config.lifecycle.refresh.enabled`，成功返回 `{ ok: true, accessToken, family }`，失败返回 `{ ok: false, code }`。
 
 ## 下一步
 

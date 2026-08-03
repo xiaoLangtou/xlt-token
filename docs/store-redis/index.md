@@ -171,15 +171,24 @@ cluster.on('error', (error) => {
 const store = new IORedisStore(cluster);
 ```
 
-普通键命令由 ioredis 根据 slot 自动路由。`keys(pattern)` 无法只访问一个 slot，因此
-Store 会调用 `cluster.nodes('master')`，对每个 master 分别执行完整 SCAN，再按节点
+普通键命令由 ioredis 根据 slot 自动路由。`scan(pattern)` 无法只访问一个 slot，因此
+Store 会调用 `cluster.nodes('master')`，对每个 master 分别执行分页 SCAN，再按节点
 顺序拼接结果。
 
 集群扩缩容或 slot 迁移期间，同一个逻辑键可能短暂出现在多个 master 的扫描结果中。
 当前 Store 保留原始结果，不主动去重。业务代码要求严格唯一时使用：
 
 ```ts
-const uniqueKeys = [...new Set(await store.keys('authorization:login:*'))];
+const keys: string[] = [];
+let cursor: string | null = null;
+
+do {
+  const page = await store.scan('authorization:login:*', { cursor, count: 100 });
+  keys.push(...page.keys);
+  cursor = page.cursor;
+} while (cursor !== null);
+
+const uniqueKeys = [...new Set(keys)];
 ```
 
 ## Store 契约与命令映射
@@ -189,43 +198,43 @@ const uniqueKeys = [...new Set(await store.keys('authorization:login:*'))];
 
 | Store 方法 | Redis 命令 | 行为 |
 | --- | --- | --- |
-| `get(key)` | `GET key` | 不存在时返回 `null` |
-| `set(key, value, -1)` | `SET key value` | 写入永久键 |
-| `set(key, value, n)` | `SET key value EX n` | 写入并设置 `n` 秒 TTL |
+| `get(key)` | `GET key` + `TTL key` | 不存在时返回 `null`；存在时返回 `{ value, expiresAt }` |
+| `set(key, value, persistentTtl())` | `SET key value` | 写入永久键 |
+| `set(key, value, finiteTtl(n))` | `SET key value EX n` | 写入并设置 `n` 秒 TTL |
 | `delete(key)` | `DEL key` | 删除键；键不存在也不抛错 |
-| `has(key)` | `EXISTS key` | 返回值等于 `1` 时为 `true` |
-| `update(key, value)` | `SET key value XX KEEPTTL` | 只更新已存在的键并保留 TTL |
-| `updateTimeout(key, -1)` | `PERSIST key` | 移除过期时间 |
-| `updateTimeout(key, n)` | `EXPIRE key n` | 把 TTL 改为 `n` 秒 |
-| `getTimeout(key)` | `TTL key` | 返回 `-2`、`-1` 或剩余秒数 |
-| `keys(pattern)` | 分页 `SCAN` | 非阻塞地收集匹配键 |
+| `setIfAbsent(key, value, ttl)` | `SET key value NX ...` | 键不存在才写入 |
+| `compareAndSet(key, expected, next, keepTtl())` | Lua + `SET key next KEEPTTL` | 当前值匹配才更新并保留 TTL |
+| `compareAndSet(key, expected, next, persistentTtl())` | Lua + `SET key next` | 当前值匹配才更新并移除过期时间 |
+| `compareAndSet(key, expected, next, finiteTtl(n))` | Lua + `SET key next EX n` | 当前值匹配才更新并设置 TTL |
+| `compareAndDelete(key, expected)` | Lua + `DEL key` | 当前值匹配才删除 |
+| `touch(key, persistentTtl())` | Lua + `PERSIST key` | 键存在才移除过期时间 |
+| `touch(key, finiteTtl(n))` | Lua + `EXPIRE key n` | 键存在才更新 TTL |
+| `scan(pattern, options)` | 分页 `SCAN` | 返回一页匹配 key 和下一页 cursor |
 
 ### TTL 返回值
 
-`getTimeout()` 保留 Redis `TTL` 的返回约定：
+`get(key)` 会读取 Redis `TTL` 并换算为 `StoreEntry.expiresAt`：
 
 | 返回值 | 含义 |
 | --- | --- |
-| `-2` | 键不存在 |
-| `-1` | 键存在，但没有过期时间 |
-| `0` 或正整数 | 剩余秒数；接近过期时可能返回 `0` |
+| `null` | 键不存在 |
+| `{ value, expiresAt: null }` | 键存在，但没有过期时间 |
+| `{ value, expiresAt: number }` | 键存在，`expiresAt` 为 Unix 毫秒时间戳 |
 
-`timeoutSec = -1` 在 xlt-token 中始终表示永久有效。自定义配置不要把 `-1` 当成
-立即过期。
+`persistentTtl()` 在 xlt-token 中表示永久有效；`finiteTtl(0)` 表示立即过期。自定义配置不要把旧版的 `-1` 秒数语义继续传入 Store。
 
-### 更新缺失键
+### 条件更新缺失键
 
-`update()` 和 `updateTimeout()` 都要求键已经存在。缺失时 Store 抛出
-`Key not found: <key>`，因为静默创建新键会破坏 token 状态和 TTL 的一致性。
+`compareAndSet()`、`compareAndDelete()` 和 `touch()` 都要求键已经存在且当前值匹配或可触达。缺失时返回 `false`，因为静默创建新键会破坏 token 状态和 TTL 的一致性。
 
 ```ts
-await store.update('missing', 'value');
-// Error: Key not found: missing
+const changed = await store.compareAndSet('missing', 'old', 'value', keepTtl());
+// changed === false
 ```
 
 ### SCAN 行为
 
-`keys(pattern)` 每页使用 `COUNT 100`。`COUNT` 是 Redis 给扫描器的工作量提示，不保证
+`scan(pattern, { count })` 默认每页使用 `COUNT 100`。`COUNT` 是 Redis 给扫描器的工作量提示，不保证
 每页正好返回 100 个键，也不保证没有空页。Store 会持续使用服务器返回的 cursor，
 直到 cursor 回到 `0`。
 
@@ -496,7 +505,7 @@ XltTokenModule.forRoot({
 
 ### 在线扫描
 
-- `keys(pattern)` 使用 SCAN，但仍是完整键空间操作。
+- `scan(pattern)` 使用 SCAN，但完整遍历仍是完整键空间操作。
 - 在线统计应设置调用频率、缓存结果或维护专用索引。
 - Cluster 会扫描所有 master，成本约随 master 数量增长。
 
@@ -507,10 +516,9 @@ XltTokenModule.forRoot({
 node-redis 尚未 `connect()`，或应用已经提前关闭连接。确保开始处理请求前完成连接，
 并把 `quit()` 放到应用关闭阶段。
 
-### `Key not found`
+### 条件更新返回 `false`
 
-`update()` 或 `updateTimeout()` 的目标键已经过期、被删除或从未创建。该错误不是
-Redis 连接错误，应检查 token 生命周期和调用顺序。
+`compareAndSet()`、`compareAndDelete()` 或 `touch()` 返回 `false`，通常表示目标键已经过期、被删除、从未创建，或当前值不等于期望值。该结果不是 Redis 连接错误，应检查 token 生命周期和调用顺序。
 
 ### 登录成功但下一次请求立即失效
 

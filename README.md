@@ -455,17 +455,30 @@ export class AppModule {}
 实现 `XltTokenStore` 接口（定义于 `@xlt-token/core`）：
 
 ```ts
-import { XltTokenStore } from '@xlt-token/core';
+import {
+  finiteTtl,
+  keepTtl,
+  type StoreEntry,
+  type StoreScanOptions,
+  type StoreScanResult,
+  type StoreTtl,
+  type StoreTtlUpdate,
+  type XltTokenStore,
+} from '@xlt-token/core';
 
 export class CustomStore implements XltTokenStore {
-  async get(key: string): Promise<string | null> { /* ... */ }
-  async set(key: string, value: string, timeoutSec: number): Promise<void> { /* ... */ }
+  async get(key: string): Promise<StoreEntry | null> { /* ... */ }
+  async set(key: string, value: string, ttl: StoreTtl): Promise<void> { /* ... */ }
   async delete(key: string): Promise<void> { /* ... */ }
-  async has(key: string): Promise<boolean> { /* ... */ }
-  async update(key: string, value: string): Promise<void> { /* ... */ }
-  async updateTimeout(key: string, timeoutSec: number): Promise<void> { /* ... */ }
-  async getTimeout(key: string): Promise<number> { /* ... */ }
+  async setIfAbsent(key: string, value: string, ttl: StoreTtl): Promise<boolean> { /* ... */ }
+  async compareAndSet(key: string, expectedValue: string, nextValue: string, ttl: StoreTtlUpdate): Promise<boolean> { /* ... */ }
+  async compareAndDelete(key: string, expectedValue: string): Promise<boolean> { /* ... */ }
+  async touch(key: string, ttl: StoreTtl): Promise<boolean> { /* ... */ }
+  async scan(pattern: string, options?: StoreScanOptions): Promise<StoreScanResult> { /* ... */ }
 }
+
+await store.set('authorization:demo', '1001', finiteTtl(60));
+await store.compareAndSet('authorization:demo', '1001', '1002', keepTtl());
 ```
 
 ### 全局守卫

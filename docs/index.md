@@ -40,6 +40,6 @@ features:
     title: Sa-Token 语义
     details: 顶号、踢人、活跃过期、多端并发等能力原生支持。
   - icon: ✨
-    title: 1.1.0 新能力
-    details: 多端 device、二级认证、JWT 黑名单、审计事件与在线观测。
+    title: 2.x 生命周期能力
+    details: 多端 device、二级认证、JWT 密钥轮换、刷新重放检测、审计事件与在线观测。
 ---

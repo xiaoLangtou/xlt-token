@@ -394,17 +394,20 @@ api.use(
 
 | 异常 | HTTP 状态码 | `code` |
 | --- | --- | --- |
-| `NotLoginException` | `401` | `NOT_LOGIN` |
-| `NotPermissionException` | `403` | `NOT_PERMISSION` |
-| `NotRoleException` | `403` | `NOT_ROLE` |
-| `NotSafeException` | `403` | `NOT_SAFE` |
+| `NotLoginException(NOT_TOKEN)` | `401` | `TOKEN_MISSING` |
+| `NotLoginException(INVALID_TOKEN)` | `401` | `TOKEN_INVALID` |
+| `NotLoginException(BE_REPLACED)` | `401` | `TOKEN_REPLACED` |
+| `NotLoginException(KICK_OUT)` | `401` | `TOKEN_KICKED_OUT` |
+| `NotPermissionException` | `403` | `PERMISSION_DENIED` |
+| `NotRoleException` | `403` | `ROLE_DENIED` |
+| `NotSafeException` | `403` | `SAFE_REQUIRED` |
 
 未携带 token 时，响应体类似下面这样：
 
 ```json
 {
   "statusCode": 401,
-  "code": "NOT_LOGIN",
+  "code": "TOKEN_MISSING",
   "type": "NOT_TOKEN",
   "message": "未提供 Token"
 }
@@ -432,7 +435,7 @@ export const errorHandler: ErrorRequestHandler = (error, _req, res, next) => {
 ```
 
 Redis 连接失败不是 `XltError`。应继续交给基础设施错误处理和监控，不能返回
-`NOT_LOGIN`。
+`TOKEN_MISSING` 或其他鉴权错误码。
 
 ## 客户端验证
 

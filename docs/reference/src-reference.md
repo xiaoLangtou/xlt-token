@@ -337,14 +337,14 @@ constructor(private readonly stp: StpLogic) {}
 
 ```ts twoslash
 interface XltTokenStore {
-  get(key: string): Promise<string | null>;
-  set(key: string, value: string, timeoutSec: number): Promise<void>;  // timeoutSec = -1 永不过期
+  get(key: string): Promise<StoreEntry | null>;
+  set(key: string, value: string, ttl: StoreTtl): Promise<void>;
   delete(key: string): Promise<void>;
-  has(key: string): Promise<boolean>;
-  update(key: string, value: string): Promise<void>;                    // 只改值，不动 TTL，key 不存在抛错
-  updateTimeout(key: string, timeoutSec: number): Promise<void>;        // 只改 TTL
-  getTimeout(key: string): Promise<number>;
-  keys(pattern: string): Promise<string[]>;
+  setIfAbsent(key: string, value: string, ttl: StoreTtl): Promise<boolean>;
+  compareAndSet(key: string, expectedValue: string, nextValue: string, ttl: StoreTtlUpdate): Promise<boolean>;
+  compareAndDelete(key: string, expectedValue: string): Promise<boolean>;
+  touch(key: string, ttl: StoreTtl): Promise<boolean>;
+  scan(pattern: string, options?: StoreScanOptions): Promise<StoreScanResult>;
 }
 ```
 
@@ -366,12 +366,13 @@ interface XltTokenStore {
 
 - 构造函数接收 node-redis 客户端，兼容 `redis@4` / `redis@5` API。
 - 语义映射：
-  - `set(key, val, -1)` → `SET key val`
-  - `set(key, val, n)` → `SET key val EX n`
-  - `update` → `SET key val XX KEEPTTL`（保留 TTL）
-  - `updateTimeout(-1)` → `PERSIST`
-  - `updateTimeout(n)`  → `EXPIRE key n`
-  - `getTimeout` → `TTL`（返回值与接口约定一致：`-2` / `-1` / `>0`）
+  - `set(key, val, persistentTtl())` → `SET key val`
+  - `set(key, val, finiteTtl(n))` → `SET key val EX n`
+  - `setIfAbsent` → `SET key val NX ...`
+  - `compareAndSet` / `compareAndDelete` → Lua 原子比较后写入或删除
+  - `touch(persistentTtl())` → `PERSIST`
+  - `touch(finiteTtl(n))`  → `EXPIRE key n`
+  - `scan` → 分页 `SCAN`
 
 ---
 
@@ -615,7 +616,7 @@ Guard.canActivate
 ```
 StpLogic.kickout
   ├─ store.get(sessionKey(loginId)) → token
-  ├─ store.update(tokenKey(token), 'KICK_OUT')  // 保留 TTL，只改值
+  ├─ compareAndSet(tokenKey(token), loginId, 'KICK_OUT', keepTtl())  // 保留 TTL，只改值
   └─ store.delete(sessionKey(loginId))
 ```
 

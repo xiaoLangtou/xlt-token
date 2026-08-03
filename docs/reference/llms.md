@@ -53,7 +53,7 @@
 - `StpLogic` 是登录态和 token 生命周期的实例 API。
 - `StpUtil` 是静态门面，必须由框架初始化流程绑定实例后再使用。
 - `StpPermLogic` 通过 `StpInterface` 获取权限和角色。
-- `XltTokenStore` 实现必须保持 timeout 语义。
+- `XltTokenStore` 实现必须保持 `StoreTtl` / `StoreTtlUpdate` 语义，并保证条件写入原子性。
 - `TokenStrategy` 负责创建 token，JWT 策略还负责校验和 jti 处理。
 - `HttpContext` 是框架无关请求抽象。
 

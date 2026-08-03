@@ -61,7 +61,7 @@ sequenceDiagram
   alt 窗口有效
     API-->>Client: 200 执行转账
   else 未开启或已过期
-    API-->>Client: 403 NOT_SAFE
+    API-->>Client: 403 SAFE_REQUIRED
   end
 ```
 
@@ -101,6 +101,8 @@ export class PaymentController {
 ```json
 {
   "statusCode": 403,
+  "code": "SAFE_REQUIRED",
+  "business": "pay",
   "message": "二级认证未开启：pay"
 }
 ```

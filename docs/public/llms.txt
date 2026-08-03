@@ -73,7 +73,7 @@ xlt-token is a pnpm monorepo that provides token login, logout, session, permiss
 - `StpLogic` is the main instance API for login state and token lifecycle.
 - `StpUtil` is the static facade and must be bound by framework initialization before use.
 - `StpPermLogic` handles permission and role checks through `StpInterface`.
-- `XltTokenStore` implementations must preserve timeout semantics.
+- `XltTokenStore` implementations must preserve `StoreTtl` / `StoreTtlUpdate` semantics and provide atomic conditional writes.
 - `TokenStrategy` implementations create and optionally verify token values.
 - `HttpContext` is the framework-neutral request abstraction.
 - NestJS decorators and Express route helpers should describe route auth metadata, not duplicate core auth logic.
