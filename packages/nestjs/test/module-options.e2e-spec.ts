@@ -55,7 +55,7 @@ describe("XltTokenModule 配置分支 (e2e)", () => {
 
     // 直接用 sharedStore 验证 token 存在（确认 useValue 注入生效）
     const stored = await sharedStore.get(`authorization:login:token:${token}`);
-    expect(stored).toBe("100");
+    expect(stored).toMatchObject({ value: "100" });
 
     const res = await request(app.getHttpServer())
       .get("/opt/me")

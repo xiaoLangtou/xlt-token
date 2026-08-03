@@ -4,7 +4,7 @@ import { StpLogic } from "@xlt-token/nestjs";
 import { buildTestApp } from "./fixtures/test-app.module";
 
 describe("二级认证 (e2e)", () => {
-  it("@XltCheckSafe 未开启时 → 403 + NOT_SAFE", async () => {
+  it("@XltCheckSafe 未开启时 → 403 + SAFE_REQUIRED", async () => {
     const { app, moduleRef } = await buildTestApp();
     const stp = moduleRef.get(StpLogic);
     const token = await stp.login("6001");
@@ -14,7 +14,8 @@ describe("二级认证 (e2e)", () => {
       .set("authorization", token)
       .expect(403);
 
-    expect(res.body.type).toBe("NOT_SAFE");
+    expect(res.body.code).toBe("SAFE_REQUIRED");
+    expect(res.body.business).toBe("pay");
     expect(res.body.message).toContain("pay");
 
     await app.close();
@@ -48,7 +49,8 @@ describe("二级认证 (e2e)", () => {
       .set("authorization", token)
       .expect(403);
 
-    expect(res.body.type).toBe("NOT_SAFE");
+    expect(res.body.code).toBe("SAFE_REQUIRED");
+    expect(res.body.business).toBe("pay");
 
     await app.close();
   });
@@ -66,7 +68,8 @@ describe("二级认证 (e2e)", () => {
       .set("authorization", token)
       .expect(403);
 
-    expect(res.body.type).toBe("NOT_SAFE");
+    expect(res.body.code).toBe("SAFE_REQUIRED");
+    expect(res.body.business).toBe("pay");
 
     await app.close();
   });

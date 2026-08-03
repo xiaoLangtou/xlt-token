@@ -1,6 +1,6 @@
 {
   "name": "@xlt-token/core",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Framework-agnostic core contracts and utilities for xlt-token",
   "keywords": [
     "auth",

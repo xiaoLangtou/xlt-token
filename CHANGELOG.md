@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.1.0] - 2026-08-03
+
+### Fixed
+
+- 修复 JWT 策略下 `refreshToken` 刷新成功后仍按 opaque token Store key 更新，导致 JWT refresh lifecycle 无法完成的问题。
+
+### Tests
+
+- 更新 Express 与 NestJS E2E 断言到 2.x 稳定错误码和 Store 原子契约。
+- 补齐 JWT refresh E2E 的 lifecycle 配置，覆盖刷新后新 JWT 可访问、旧 JWT 失效、踢出后不可刷新以及多设备刷新场景。
+
 ## [2.0.0] - 2026-07-15
 
 ### Breaking Changes

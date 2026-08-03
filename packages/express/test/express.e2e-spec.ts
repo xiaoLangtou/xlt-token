@@ -26,7 +26,7 @@ describe("Express adapter (e2e)", () => {
 
     it("ignore 策略：近似前缀 /api/publicity 不应被 /api/public 放行", async () => {
       const res = await request(app).get("/api/publicity").expect(401);
-      expect(res.body).toMatchObject({ code: "NOT_LOGIN", type: "NOT_TOKEN" });
+      expect(res.body).toMatchObject({ code: "TOKEN_MISSING", type: "NOT_TOKEN" });
     });
 
     it("登录接口公开：无 token 即可签发 token", async () => {
@@ -39,7 +39,11 @@ describe("Express adapter (e2e)", () => {
   describe("登录校验", () => {
     it("无 token 访问 /api/me → 401 NOT_TOKEN", async () => {
       const res = await request(app).get("/api/me").expect(401);
-      expect(res.body).toMatchObject({ statusCode: 401, code: "NOT_LOGIN", type: "NOT_TOKEN" });
+      expect(res.body).toMatchObject({
+        statusCode: 401,
+        code: "TOKEN_MISSING",
+        type: "NOT_TOKEN",
+      });
     });
 
     it("无效 token → 401 INVALID_TOKEN", async () => {
@@ -71,7 +75,7 @@ describe("Express adapter (e2e)", () => {
     it("无权限访问 /api/admin → 403 NOT_PERMISSION", async () => {
       const token = await login(app, "1001");
       const res = await request(app).get("/api/admin").set("authorization", token).expect(403);
-      expect(res.body).toMatchObject({ statusCode: 403, code: "NOT_PERMISSION" });
+      expect(res.body).toMatchObject({ statusCode: 403, code: "PERMISSION_DENIED" });
       expect(res.body.permission).toContain("admin:write");
     });
 
@@ -90,7 +94,7 @@ describe("Express adapter (e2e)", () => {
     it("无角色 → 403 NOT_ROLE", async () => {
       const token = await login(app, "2002");
       const res = await request(app).get("/api/role-admin").set("authorization", token).expect(403);
-      expect(res.body.code).toBe("NOT_ROLE");
+      expect(res.body.code).toBe("ROLE_DENIED");
     });
   });
 
@@ -98,7 +102,7 @@ describe("Express adapter (e2e)", () => {
     it("未开启安全窗口 → 403 NOT_SAFE", async () => {
       const token = await login(app, "1001");
       const res = await request(app).post("/api/pay").set("authorization", token).expect(403);
-      expect(res.body.code).toBe("NOT_SAFE");
+      expect(res.body.code).toBe("SAFE_REQUIRED");
       expect(res.body.business).toBe("pay");
     });
 
@@ -141,7 +145,7 @@ describe("Express adapter (e2e)", () => {
     it("requireLogin 在白名单模式中要求登录", async () => {
       const { app: wlApp } = createTestApp({ defaultCheck: false });
       const res = await request(wlApp).get("/helper/required").expect(401);
-      expect(res.body).toMatchObject({ code: "NOT_LOGIN", type: "NOT_TOKEN" });
+      expect(res.body).toMatchObject({ code: "TOKEN_MISSING", type: "NOT_TOKEN" });
 
       const token = await login(wlApp, "1001");
       await request(wlApp)
@@ -162,7 +166,7 @@ describe("Express adapter (e2e)", () => {
         .get("/helper/order")
         .set("authorization", userToken)
         .expect(403);
-      expect(res.body.code).toBe("NOT_PERMISSION");
+      expect(res.body.code).toBe("PERMISSION_DENIED");
     });
 
     it("checkRole 在真实 route chain 中执行角色校验", async () => {
@@ -177,13 +181,13 @@ describe("Express adapter (e2e)", () => {
         .get("/helper/role-admin")
         .set("authorization", userToken)
         .expect(403);
-      expect(res.body.code).toBe("NOT_ROLE");
+      expect(res.body.code).toBe("ROLE_DENIED");
     });
 
     it("checkSafe 在真实 route chain 中执行二级认证校验", async () => {
       const token = await login(app, "7007");
       const res = await request(app).post("/helper/pay").set("authorization", token).expect(403);
-      expect(res.body).toMatchObject({ code: "NOT_SAFE", business: "pay" });
+      expect(res.body).toMatchObject({ code: "SAFE_REQUIRED", business: "pay" });
 
       await ctx.xlt.stpLogic.openSafe(token, "pay", 300);
       await request(app).post("/helper/pay").set("authorization", token).expect(200, { ok: true });

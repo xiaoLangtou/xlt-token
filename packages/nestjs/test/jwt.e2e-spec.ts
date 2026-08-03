@@ -19,6 +19,15 @@ const jwtAppOpts = {
     isConcurrent: false,
     isShare: false,
     timeout: 3600,
+    lifecycle: {
+      expiration: { mode: "fixed", ttl: "30m" },
+      refresh: {
+        enabled: true,
+        ttl: "7d",
+        rotate: true,
+        replayDetection: "family",
+      },
+    },
   },
 } as const;
 
@@ -45,7 +54,10 @@ describe("JWT Strategy (e2e)", () => {
     const token = await stp.login("7002");
     await stp.kickout("7002");
 
-    await request(app.getHttpServer()).get("/api/me").set("authorization", token).expect(401);
+    const res = await request(app.getHttpServer())
+      .get("/api/me")
+      .set("authorization", token)
+      .expect(401);
 
     expect(res.body.type).toBe("KICK_OUT");
 
@@ -110,7 +122,10 @@ describe("JWT Strategy (e2e)", () => {
     const token = await stp.login("7006");
     await stp.kickoutByToken(token);
 
-    await request(app.getHttpServer()).get("/api/me").set("authorization", token).expect(401);
+    const res = await request(app.getHttpServer())
+      .get("/api/me")
+      .set("authorization", token)
+      .expect(401);
 
     expect(res.body.type).toBe("KICK_OUT");
 
@@ -149,13 +164,14 @@ describe("JWT Strategy (e2e)", () => {
       const stp = moduleRef.get(StpLogic);
       const token = await stp.login("7009");
 
-      const newToken = await stp.refreshToken(token);
-      expect(newToken).not.toBeNull();
-      expect(newToken).not.toBe(token);
+      const refreshed = await stp.refreshToken(token);
+      expect(refreshed).toMatchObject({ ok: true });
+      if (!refreshed.ok) throw new Error("expected refreshToken to succeed");
+      expect(refreshed.accessToken).not.toBe(token);
 
       const res = await request(app.getHttpServer())
         .get("/api/me")
-        .set("authorization", newToken!)
+        .set("authorization", refreshed.accessToken)
         .expect(200);
       expect(res.body.id).toBe("7009");
 
@@ -170,7 +186,10 @@ describe("JWT Strategy (e2e)", () => {
       const token = await stp.login("7010");
       await stp.kickout("7010");
 
-      await expect(stp.refreshToken(token)).resolves.toBeNull();
+      await expect(stp.refreshToken(token)).resolves.toMatchObject({
+        ok: false,
+        code: "TOKEN_INVALID",
+      });
 
       await app.close();
     });
@@ -186,12 +205,13 @@ describe("JWT Strategy (e2e)", () => {
       await request(app.getHttpServer()).get("/api/me").set("authorization", pcToken).expect(401);
 
       // app 设备的 token 仍然可刷新
-      const newAppToken = await stp.refreshToken(appToken);
-      expect(newAppToken).not.toBeNull();
+      const refreshed = await stp.refreshToken(appToken);
+      expect(refreshed).toMatchObject({ ok: true });
+      if (!refreshed.ok) throw new Error("expected refreshToken to succeed");
 
       await request(app.getHttpServer())
         .get("/api/me")
-        .set("authorization", newAppToken!)
+        .set("authorization", refreshed.accessToken)
         .expect(200);
 
       await app.close();

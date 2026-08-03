@@ -506,6 +506,24 @@ export class StpLogic {
     const lifecycle = this.getLifecycleConfig();
     if (!token || !lifecycle?.refresh.enabled) return { ok: false, code: "TOKEN_INVALID" };
 
+    let currentJti: string | undefined;
+    if (this._isJwtMode()) {
+      try {
+        const payload = this.strategy.verifyToken(token);
+        currentJti = payload.jti;
+        if (!payload.sub || !currentJti) return { ok: false, code: "TOKEN_INVALID" };
+        const blacklisted = await getStoreValue(this.store, this.keys.jwtBlacklistKey(currentJti));
+        if (blacklisted) return { ok: false, code: "TOKEN_INVALID" };
+      } catch {
+        return { ok: false, code: "TOKEN_INVALID" };
+      }
+    } else {
+      const loginId = await getStoreValue(this.store, this.keys.tokenKey(token));
+      if (!loginId || loginId === NotLoginType.KICK_OUT || loginId === NotLoginType.BE_REPLACED) {
+        return { ok: false, code: "TOKEN_INVALID" };
+      }
+    }
+
     const stateKey = this.keys.tokenFamilyStateKey(token);
     const raw = await getStoreValue(this.store, stateKey);
     if (!raw) return { ok: false, code: "TOKEN_INVALID" };
@@ -543,14 +561,60 @@ export class StpLogic {
       return { ok: false, code: "TOKEN_REPLAYED" };
     }
 
-    await setStoreValue(this.store, this.keys.tokenKey(nextToken), state.loginId, resolvedTimeout);
     await setStoreValue(
       this.store,
-      this.keys.sessionKey(state.loginId, state.device),
-      nextToken,
-      resolvedTimeout,
+      this.keys.tokenFamilyStateKey(nextToken),
+      nextRaw,
+      lifecycle.refresh.ttl,
     );
-    await replaceStoreValueKeepingTtl(this.store, this.keys.tokenKey(token), NotLoginType.KICK_OUT);
+    await setStoreValue(
+      this.store,
+      this.keys.tokenFamilyGenerationKey(nextToken, nextState.generation),
+      nextToken,
+      lifecycle.refresh.ttl,
+    );
+
+    if (this._isJwtMode()) {
+      const nextPayload = this.strategy.verifyToken(nextToken);
+      await setStoreValue(
+        this.store,
+        this.keys.jwtBlacklistKey(currentJti!),
+        NotLoginType.KICK_OUT,
+        resolvedTimeout,
+      );
+      await setStoreValue(
+        this.store,
+        this.keys.sessionKey(state.loginId, state.device),
+        nextPayload.jti,
+        resolvedTimeout,
+      );
+      if (this.config.activeTimeout > 0) {
+        await setStoreValue(
+          this.store,
+          this.keys.lastActiveKey(nextPayload.jti),
+          String(now),
+          resolvedTimeout,
+        );
+      }
+    } else {
+      await setStoreValue(
+        this.store,
+        this.keys.tokenKey(nextToken),
+        state.loginId,
+        resolvedTimeout,
+      );
+      await setStoreValue(
+        this.store,
+        this.keys.sessionKey(state.loginId, state.device),
+        nextToken,
+        resolvedTimeout,
+      );
+      await replaceStoreValueKeepingTtl(
+        this.store,
+        this.keys.tokenKey(token),
+        NotLoginType.KICK_OUT,
+      );
+    }
     await this._addToSessionList(
       state.loginId,
       { device: state.device, token: nextToken, loginTime: now },
