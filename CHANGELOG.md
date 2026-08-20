@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.1.1] - 2026-08-20
+
+### Fixed
+
+- 修复 `@xlt-token/jwt` 在 ESM 环境中具名导入 `jsonwebtoken` 导致模块加载失败的问题。
+
 ## [2.1.0] - 2026-08-03
 
 ### Fixed

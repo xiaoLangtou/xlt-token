@@ -5,11 +5,11 @@
 ## 安装
 
 ```bash
-pnpm add @xlt-token/core@^2.1.0
-pnpm add @xlt-token/nestjs@^2.1.0        # NestJS
-pnpm add @xlt-token/express@^2.1.0       # Express
-pnpm add @xlt-token/store-redis@^2.1.0   # Redis Store
-pnpm add @xlt-token/jwt@^2.1.0           # JWT 策略
+pnpm add @xlt-token/core@^2.1.1
+pnpm add @xlt-token/nestjs@^2.1.1        # NestJS
+pnpm add @xlt-token/express@^2.1.1       # Express
+pnpm add @xlt-token/store-redis@^2.1.1   # Redis Store
+pnpm add @xlt-token/jwt@^2.1.1           # JWT 策略
 ```
 
 ## 迁移总览

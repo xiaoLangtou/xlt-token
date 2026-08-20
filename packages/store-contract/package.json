@@ -1,6 +1,6 @@
 {
   "name": "@xlt-token/store-contract",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "Shared XltTokenStore contract tests for xlt-token stores",
   "keywords": [
     "auth",
@@ -52,7 +52,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@xlt-token/core": "^2.1.0",
+    "@xlt-token/core": "^2.1.1",
     "vitest": "^2.0.0"
   },
   "devDependencies": {
