@@ -1,8 +1,10 @@
 import { randomUUID } from "node:crypto";
-import { decode, sign, verify } from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 import type { JwtPayload, SignOptions } from "jsonwebtoken";
 import type { DurationInput, TokenStrategy, XltTokenConfig } from "@xlt-token/core";
 import type { JwtKey, JwtStrategyConfig } from "./jwt-config.js";
+
+const { decode, sign, verify } = jwt;
 
 export type XltJwtPayload = JwtPayload & { sub: string; jti: string };
 

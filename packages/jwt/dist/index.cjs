@@ -1,6 +1,34 @@
 Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+//#region \0rolldown/runtime.js
+var __create = Object.create;
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __getProtoOf = Object.getPrototypeOf;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __copyProps = (to, from, except, desc) => {
+	if (from && typeof from === "object" || typeof from === "function") {
+		for (var keys = __getOwnPropNames(from), i = 0, n = keys.length, key; i < n; i++) {
+			key = keys[i];
+			if (!__hasOwnProp.call(to, key) && key !== except) {
+				__defProp(to, key, {
+					get: ((k) => from[k]).bind(null, key),
+					enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable
+				});
+			}
+		}
+	}
+	return to;
+};
+var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", {
+	value: mod,
+	enumerable: true
+}) : target, mod));
+
+//#endregion
 let node_crypto = require("node:crypto");
 let jsonwebtoken = require("jsonwebtoken");
+jsonwebtoken = __toESM(jsonwebtoken);
 
 //#region src/jwt-config.ts
 const supportedAlgorithms = new Set([
@@ -53,6 +81,7 @@ function assertStrongHmacSecret(kid, secret) {
 
 //#endregion
 //#region src/jwt-strategy.ts
+const { decode, sign, verify } = jsonwebtoken.default;
 var JwtStrategy = class {
 	constructor(jwtConfig) {
 		this.jwtConfig = jwtConfig;
@@ -70,14 +99,14 @@ var JwtStrategy = class {
 		return this.signPayload(payload);
 	}
 	verifyToken(token) {
-		const decoded = (0, jsonwebtoken.decode)(token, { complete: true });
+		const decoded = decode(token, { complete: true });
 		if (!decoded || typeof decoded === "string") throw new Error("JWT token is malformed");
 		const { kid, alg } = decoded.header;
 		if (!kid) throw new Error("JWT token header is missing kid");
 		const key = this.jwtConfig.keys.get(kid);
 		if (!key) throw new Error(`JWT key "${kid}" is not configured`);
 		if (alg !== key.algorithm) throw new Error(`JWT algorithm "${String(alg)}" does not match configured key algorithm`);
-		const payload = (0, jsonwebtoken.verify)(token, key.verificationKey, {
+		const payload = verify(token, key.verificationKey, {
 			algorithms: [key.algorithm],
 			...this.jwtConfig.issuer && { issuer: this.jwtConfig.issuer },
 			...this.jwtConfig.audience && { audience: this.jwtConfig.audience }
@@ -95,7 +124,7 @@ var JwtStrategy = class {
 			...this.jwtConfig.audience && { audience: this.jwtConfig.audience },
 			...expiresIn !== void 0 && { expiresIn }
 		};
-		return (0, jsonwebtoken.sign)(payload, signingKeyFor(key), options);
+		return sign(payload, signingKeyFor(key), options);
 	}
 };
 function resolveExpiresIn(timeout) {

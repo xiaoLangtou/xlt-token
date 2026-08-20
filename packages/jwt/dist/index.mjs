@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { decode, sign, verify } from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 
 //#region src/jwt-config.ts
 const supportedAlgorithms = new Set([
@@ -52,6 +52,7 @@ function assertStrongHmacSecret(kid, secret) {
 
 //#endregion
 //#region src/jwt-strategy.ts
+const { decode, sign, verify } = jwt;
 var JwtStrategy = class {
 	constructor(jwtConfig) {
 		this.jwtConfig = jwtConfig;
