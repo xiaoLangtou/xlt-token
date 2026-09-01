@@ -56,6 +56,7 @@ const markdown = {
 const virtualReleaseCodeHtmlId = 'virtual:xlt-release-code-html'
 const resolvedVirtualReleaseCodeHtmlId = `\0${virtualReleaseCodeHtmlId}`
 const releaseSources = [
+  'v2.2.0.md',
   'v2.1.0.md',
   'v1.2.1.md',
   'v1.2.0.md',
@@ -246,7 +247,7 @@ export default defineConfig({
       },
       { text: 'AI 指南', link: '/reference/llms' },
       {
-        text: 'v1.2.1',
+        text: 'v2.2.0',
         items: [
           { text: '更新日志', link: '/reference/changelog' },
           { text: 'GitHub Releases', link: 'https://github.com/xiaoLangtou/xlt-token/releases' },
@@ -301,10 +302,13 @@ export default defineConfig({
       },
       {
         text: '进阶指南',
-        collapsed: true,
+        collapsed: false,
         items: [
           { text: '架构设计', link: '/guide/architecture' },
           { text: '工程化门禁', link: '/guide/engineering' },
+          { text: '发布检查清单', link: '/guide/release-checklist' },
+          { text: '多实例与适配器契约', link: '/guide/multi-instance-contract' },
+          { text: 'Cookie 契约决策', link: '/guide/cookie-contract' },
           { text: '迁移指南', link: '/guide/migration-2-0' },
           { text: 'LLMs.txt', link: '/guide/llms' },
           { text: 'Skills 指南', link: '/guide/skills' },

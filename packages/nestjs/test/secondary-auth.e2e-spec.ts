@@ -109,3 +109,31 @@ describe("临时 Token (e2e)", () => {
     await app.close();
   });
 });
+
+describe("临时 Token 原子消费 (e2e)", () => {
+  it("首次 consumeTempToken 返回关联值，重复消费返回 null", async () => {
+    const { app, moduleRef } = await buildTestApp();
+    const stp = moduleRef.get(StpLogic);
+
+    const tempToken = await stp.createTempToken("resetPwd:1004", 600);
+    expect(await stp.consumeTempToken(tempToken)).toBe("resetPwd:1004");
+    expect(await stp.consumeTempToken(tempToken)).toBeNull();
+    expect(await stp.parseTempToken(tempToken)).toBeNull();
+
+    await app.close();
+  });
+
+  it("并发消费同一 tempToken 恰好一个赢家", async () => {
+    const { app, moduleRef } = await buildTestApp();
+    const stp = moduleRef.get(StpLogic);
+
+    const tempToken = await stp.createTempToken("resetPwd:1005", 600);
+    const results = await Promise.all(
+      Array.from({ length: 20 }, () => stp.consumeTempToken(tempToken)),
+    );
+
+    expect(results.filter((value) => value !== null)).toEqual(["resetPwd:1005"]);
+
+    await app.close();
+  });
+});

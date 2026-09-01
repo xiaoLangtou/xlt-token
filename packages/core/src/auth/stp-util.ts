@@ -120,6 +120,10 @@ export class StpUtil {
     return getStpLogic().parseTempToken(tempToken);
   }
 
+  static async consumeTempToken(tempToken: string): Promise<string | null> {
+    return getStpLogic().consumeTempToken(tempToken);
+  }
+
   static async deleteTempToken(tempToken: string): Promise<void> {
     return getStpLogic().deleteTempToken(tempToken);
   }

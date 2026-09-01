@@ -10,6 +10,8 @@
 archive/
 ├── README.md                          # 本文件
 ├── 10-roadmap-1.1.0.md                # 1.1.0 功能规划（已实现）
+├── 14-v2-next-execution-roadmap.md     # v2.2+ 可执行路线图与进度表
+├── 15-v2.2-prd.md                       # v2.2 产品需求文档
 ├── 12-multi-framework-architecture.md # 2.0 多框架适配架构方案
 ├── 13-1.1.0-implementation-design.md  # 1.1.0 实现设计摘要
 ├── core-extraction-implementation.md  # Phase 1：@xlt-token/core 抽离
@@ -22,6 +24,8 @@ archive/
 | 文件 / 目录 | 用途 | 状态 |
 | --- | --- | --- |
 | `10-roadmap-1.1.0.md` | 1.1.0 四大方向规划 | ✅ 已实现，用户文档见 [多端登录](../core/multi-device.md) 等 |
+| `14-v2-next-execution-roadmap.md` | v2.2+ 功能路线图、验收标准与周进度表 | 📋 待立项 |
+| `15-v2.2-prd.md` | v2.2 范围、需求、验收标准与发布门禁 | 📋 待立项 |
 | `13-1.1.0-implementation-design.md` | 1.1.0 实施摘要 | ✅ 归档 |
 | `12-multi-framework-architecture.md` | 2.0 多框架「核心 + 适配器」总方案 | Phase 1/2 完成，Phase 3 进行中 |
 | `core-extraction-implementation.md` | core 包抽离任务分解 | ✅ Phase 1 完成 |

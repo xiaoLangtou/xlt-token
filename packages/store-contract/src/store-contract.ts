@@ -21,6 +21,39 @@ export function defineStoreContract(
       });
     });
 
+    it("returns and deletes the entry in one atomic operation", async () => {
+      const store = await createStore();
+
+      await store.set("{contract}:consume", "v1", finiteTtl(60));
+
+      await expect(store.getAndDelete("{contract}:consume")).resolves.toMatchObject({
+        value: "v1",
+      });
+      await expect(store.getAndDelete("{contract}:consume")).resolves.toBeNull();
+      await expect(store.get("{contract}:consume")).resolves.toBeNull();
+    });
+
+    it("returns null when getAndDelete misses", async () => {
+      const store = await createStore();
+
+      await expect(store.getAndDelete("{contract}:consume-missing")).resolves.toBeNull();
+    });
+
+    it("keeps one winner for concurrent getAndDelete", async () => {
+      const store = await createStore();
+
+      await store.set("{contract}:consume-race", "v1", persistentTtl());
+
+      const results = await Promise.all(
+        Array.from({ length: 20 }, () => store.getAndDelete("{contract}:consume-race")),
+      );
+
+      const winners = results.filter((entry) => entry !== null);
+      expect(winners).toHaveLength(1);
+      expect(winners[0]).toMatchObject({ value: "v1" });
+      await expect(store.get("{contract}:consume-race")).resolves.toBeNull();
+    });
+
     it("keeps value and ttl unchanged when compareAndSet misses", async () => {
       const store = await createStore();
 

@@ -48,6 +48,20 @@ export class RedisStore implements XltTokenStore {
     await this.redisClient.del(key);
   }
 
+  async getAndDelete(key: string): Promise<StoreEntry | null> {
+    const reply = await this.redisClient.eval(GET_AND_DELETE_SCRIPT, {
+      keys: [key],
+      arguments: [],
+    });
+    if (!Array.isArray(reply) || reply.length !== 2) return null;
+
+    const [value, ttl] = reply as [string, number];
+    return {
+      value,
+      expiresAt: ttl < 0 ? null : Date.now() + ttl * 1000,
+    };
+  }
+
   async setIfAbsent(key: string, value: string, ttl: StoreTtl): Promise<boolean> {
     if (ttl.kind === "persistent") {
       return (await this.redisClient.set(key, value, { NX: true })) === "OK";
@@ -148,4 +162,14 @@ else
   redis.call("EXPIRE", KEYS[1], tonumber(ARGV[2]))
 end
 return 1
+`;
+
+const GET_AND_DELETE_SCRIPT = `
+local value = redis.call("GET", KEYS[1])
+if not value then
+  return nil
+end
+local ttl = redis.call("TTL", KEYS[1])
+redis.call("DEL", KEYS[1])
+return {value, ttl}
 `;

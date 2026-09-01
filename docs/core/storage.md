@@ -9,6 +9,7 @@ export interface XltTokenStore {
   get(key: string): Promise<StoreEntry | null>;
   set(key: string, value: string, ttl: StoreTtl): Promise<void>;
   delete(key: string): Promise<void>;
+  getAndDelete(key: string): Promise<StoreEntry | null>;
   setIfAbsent(key: string, value: string, ttl: StoreTtl): Promise<boolean>;
   compareAndSet(key: string, expectedValue: string, nextValue: string, ttl: StoreTtlUpdate): Promise<boolean>;
   compareAndDelete(key: string, expectedValue: string): Promise<boolean>;
@@ -36,6 +37,7 @@ await store.compareAndSet('k', 'old', 'next', keepTtl());
 | `get` | 不存在返回 `null`，存在返回 `{ value, expiresAt }` |
 | `set` | 覆盖值和 TTL |
 | `delete` | 删除键；不存在也安全完成 |
+| `getAndDelete` | 原子读取并删除；并发消费同一键时恰好一个调用拿到条目，其余返回 `null`（v2.2 新增，`consumeTempToken` 的底层语义） |
 | `setIfAbsent` | 键不存在才写入，必须原子 |
 | `compareAndSet` | 当前值等于 `expectedValue` 才写入，必须原子 |
 | `compareAndDelete` | 当前值等于 `expectedValue` 才删除，必须原子 |

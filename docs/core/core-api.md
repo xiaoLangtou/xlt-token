@@ -212,6 +212,7 @@ StpLogic.logout(token)
 | `openSafe(token, business, timeout)` | ✅ | ✅ | `Promise<void>` |
 | `createTempToken(value, timeout)` | ✅ | ✅ | `Promise<string>` |
 | `parseTempToken(tempToken)` | ✅ | ✅ | `Promise<string \| null>` |
+| `consumeTempToken(tempToken)` | ✅ | ✅ | `Promise<string \| null>` |
 | `deleteTempToken(tempToken)` | ✅ | ✅ | `Promise<void>` |
 | `getLoginId(req)` | ❌ | ✅ | `Promise<string \| null>` |
 | `logoutByDevice(loginId, device)` | ✅ | ✅ | `Promise<boolean \| null>` |

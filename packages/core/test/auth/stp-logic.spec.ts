@@ -656,4 +656,68 @@ describe("StpLogic", () => {
       await expect(logic.parseTempToken(t2)).resolves.toBe("action:b");
     });
   });
+
+  describe("临时 Token 原子消费", () => {
+    it("首次 consumeTempToken 返回关联值且立即失效", async () => {
+      const tempToken = await logic.createTempToken("resetPwd:1001", 600);
+
+      await expect(logic.consumeTempToken(tempToken)).resolves.toBe("resetPwd:1001");
+      await expect(logic.consumeTempToken(tempToken)).resolves.toBeNull();
+      await expect(storeHas(tempTokenKey(config, tempToken))).resolves.toBe(false);
+    });
+
+    it("消费后 parseTempToken 也返回 null", async () => {
+      const tempToken = await logic.createTempToken("invite:2002", 600);
+
+      await expect(logic.consumeTempToken(tempToken)).resolves.toBe("invite:2002");
+      await expect(logic.parseTempToken(tempToken)).resolves.toBeNull();
+    });
+
+    it("parseTempToken 不消费，后续 consumeTempToken 仍可取值", async () => {
+      const tempToken = await logic.createTempToken("action:a", 600);
+
+      await expect(logic.parseTempToken(tempToken)).resolves.toBe("action:a");
+      await expect(logic.consumeTempToken(tempToken)).resolves.toBe("action:a");
+      await expect(logic.consumeTempToken(tempToken)).resolves.toBeNull();
+    });
+
+    it("并发消费同一 tempToken 恰好一个赢家", async () => {
+      const tempToken = await logic.createTempToken("resetPwd:1001", 600);
+
+      const results = await Promise.all(
+        Array.from({ length: 20 }, () => logic.consumeTempToken(tempToken)),
+      );
+
+      expect(results.filter((value) => value !== null)).toEqual(["resetPwd:1001"]);
+    });
+
+    it("过期 Token 消费返回 null", async () => {
+      const tempToken = await logic.createTempToken("resetPwd:1001", 1);
+      await new Promise((r) => setTimeout(r, 1100));
+      await expect(logic.consumeTempToken(tempToken)).resolves.toBeNull();
+    });
+
+    it("不存在的 tempToken 消费返回 null", async () => {
+      await expect(logic.consumeTempToken("not-exist-token")).resolves.toBeNull();
+    });
+
+    it("JWT 策略下行为与 UUID 策略一致", async () => {
+      const jwtLikeStrategy = {
+        kind: "jwt" as const,
+        generateToken: (payload: { sub: string; jti: string }) =>
+          `header.${Buffer.from(JSON.stringify(payload)).toString("base64url")}.signature`,
+        verifyToken: (token: string) =>
+          JSON.parse(Buffer.from(token.split(".")[1]!, "base64url").toString()),
+        createToken: (loginId: string) =>
+          `header.${Buffer.from(JSON.stringify({ sub: loginId, jti: crypto.randomUUID() })).toString("base64url")}.signature`,
+      };
+      const { logic: jwtLogic } = createStpLogic({ strategy: jwtLikeStrategy });
+
+      const tempToken = await jwtLogic.createTempToken("resetPwd:1001", 600);
+      expect(tempToken).toContain(".");
+
+      await expect(jwtLogic.consumeTempToken(tempToken)).resolves.toBe("resetPwd:1001");
+      await expect(jwtLogic.consumeTempToken(tempToken)).resolves.toBeNull();
+    });
+  });
 });

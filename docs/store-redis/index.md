@@ -202,6 +202,7 @@ const uniqueKeys = [...new Set(keys)];
 | `set(key, value, persistentTtl())` | `SET key value` | 写入永久键 |
 | `set(key, value, finiteTtl(n))` | `SET key value EX n` | 写入并设置 `n` 秒 TTL |
 | `delete(key)` | `DEL key` | 删除键；键不存在也不抛错 |
+| `getAndDelete(key)` | Lua（`GET` + `TTL` + `DEL`） | 原子读取并删除，返回 `{ value, expiresAt }`；键不存在返回 `null`（v2.2 新增） |
 | `setIfAbsent(key, value, ttl)` | `SET key value NX ...` | 键不存在才写入 |
 | `compareAndSet(key, expected, next, keepTtl())` | Lua + `SET key next KEEPTTL` | 当前值匹配才更新并保留 TTL |
 | `compareAndSet(key, expected, next, persistentTtl())` | Lua + `SET key next` | 当前值匹配才更新并移除过期时间 |
@@ -255,6 +256,7 @@ authorization:login:session:<loginId>
 authorization:login:session-list:<loginId>
 authorization:login:lastActive:<token>
 authorization:safe:<token>:<business>
+authorization:temp-token:<tempToken>
 ```
 
 实际键取决于登录模式、多端配置、活跃过期和二级认证功能。修改 `tokenName` 会同时

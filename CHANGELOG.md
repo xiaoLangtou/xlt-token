@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.2.0] - 2026-09-01
+
+### Added
+
+- 新增临时 Token 原子消费 API：`StpLogic` 与 `StpUtil` 提供 `consumeTempToken(tempToken)`，在单一原子操作中读取关联业务值并销毁存储记录；并发消费同一 Token 时恰好一个调用返回业务值，其余返回 `null`（OpenSpec：`temp-token-atomic-consume`）。
+- `XltTokenStore` 契约新增 `getAndDelete(key): Promise<StoreEntry | null>` 原子读取并删除方法：MemoryStore 在同一临界段完成，RedisStore / IORedisStore 通过 Lua（`GET` + `TTL` + `DEL`）在 Redis 服务端单次执行完成；`@xlt-token/store-contract` 共享契约测试新增对应断言。
+- 新增发布治理文档：[发布检查清单](./docs/guide/release-checklist.md)（依赖锁定、质量检查、测试覆盖、breaking change、构建产物、发布干跑、CHANGELOG 与发布说明）与手动维护的 CHANGELOG 流程。
+
+### Architecture Decisions
+
+- 冻结多实例与适配器契约设计（[多实例与适配器契约](./docs/guide/multi-instance-contract.md)）：`XltInstance` 类型草案、适配器只接收显式实例的输入契约、`StpUtil` 保留为默认实例语法糖；Core 实例化重构将在独立 OpenSpec 变更获批后实施（v2.3 Fastify / v2.4 Hono 的前置依赖）。
+- 冻结 Cookie 契约决策（[Cookie 契约决策](./docs/guide/cookie-contract.md)）：v2.x 保持同步 `HttpCookies.get`，异步迁移推迟到 v3.0；Hono/Elysia 适配器（v2.4 计划）将仅支持 Header/Query，Cookie 配置在初始化阶段明确拒绝。
+- 归档三项已完成 OpenSpec 变更：`docs-eng-governance`、`fix-redis-store-cursor-type`、`jwt-lifecycle-logout-deps`（delta specs 已同步到 `openspec/specs/`）。
+
+### Documentation
+
+- 二级认证、核心 API、Store 契约与 Redis Store 文档补充 `consumeTempToken` / `getAndDelete` 说明与原子消费示例。
+- 工程化门禁新增发布检查清单与 CHANGELOG 维护流程入口。
+
+### Compatibility
+
+- 无 breaking change：`getAndDelete` 为 Store 接口的新增方法（自定义 Store 需要补齐，可用 `get` + `delete` 非原子实现过渡）；`parseTempToken` 与 `deleteTempToken` 行为不变。
+
 ## [2.1.1] - 2026-08-20
 
 ### Fixed

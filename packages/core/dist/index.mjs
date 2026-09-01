@@ -253,6 +253,17 @@ var MemoryStore = class MemoryStore {
 		this.clearTimer(key);
 		this.store.delete(key);
 	}
+	async getAndDelete(key) {
+		const entry = this.peek(key);
+		if (!entry) return null;
+		const snapshot = {
+			value: entry.value,
+			expiresAt: entry.expiresAt
+		};
+		this.clearTimer(key);
+		this.store.delete(key);
+		return snapshot;
+	}
 	async setIfAbsent(key, value, ttl) {
 		if (this.peek(key)) return false;
 		this.write(key, value, ttl);
@@ -796,6 +807,18 @@ var StpLogic = class {
 	*/
 	async deleteTempToken(tempToken) {
 		await this.store.delete(this.keys.tempTokenKey(tempToken));
+	}
+	/**
+	* 原子消费临时token：读取关联业务值并在同一原子操作中销毁记录
+	* 用于一次性邀请、密码重置等并发安全场景
+	* @param tempToken  临时token字符串
+	* @returns 首次消费返回关联业务值；Token 不存在、已过期或已被消费时返回 null
+	*/
+	async consumeTempToken(tempToken) {
+		const entry = await this.store.getAndDelete(this.keys.tempTokenKey(tempToken));
+		if (!entry) return null;
+		if (entry.expiresAt !== null && entry.expiresAt <= Date.now()) return null;
+		return entry.value;
 	}
 	/**
 	* 获取 token 值
@@ -1560,6 +1583,9 @@ var StpUtil = class {
 	}
 	static async parseTempToken(tempToken) {
 		return getStpLogic().parseTempToken(tempToken);
+	}
+	static async consumeTempToken(tempToken) {
+		return getStpLogic().consumeTempToken(tempToken);
 	}
 	static async deleteTempToken(tempToken) {
 		return getStpLogic().deleteTempToken(tempToken);

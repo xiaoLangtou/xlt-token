@@ -304,6 +304,19 @@ export class StpLogic {
   }
 
   /**
+   * 原子消费临时token：读取关联业务值并在同一原子操作中销毁记录
+   * 用于一次性邀请、密码重置等并发安全场景
+   * @param tempToken  临时token字符串
+   * @returns 首次消费返回关联业务值；Token 不存在、已过期或已被消费时返回 null
+   */
+  async consumeTempToken(tempToken: string): Promise<string | null> {
+    const entry = await this.store.getAndDelete(this.keys.tempTokenKey(tempToken));
+    if (!entry) return null;
+    if (entry.expiresAt !== null && entry.expiresAt <= Date.now()) return null;
+    return entry.value;
+  }
+
+  /**
    * 获取 token 值
    * @param req
    */

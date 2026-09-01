@@ -24,6 +24,7 @@ function createMockStpLogic() {
     closeSafe: vi.fn().mockResolvedValue(undefined),
     createTempToken: vi.fn().mockResolvedValue("temp-xxx"),
     parseTempToken: vi.fn().mockResolvedValue("data"),
+    consumeTempToken: vi.fn().mockResolvedValue("data"),
     deleteTempToken: vi.fn().mockResolvedValue(undefined),
     getDeviceList: vi.fn().mockResolvedValue([]),
     forceLogout: vi.fn().mockResolvedValue(true),
@@ -168,6 +169,12 @@ describe("StpUtil 静态门面", () => {
     it("parseTempToken", async () => {
       await StpUtil.parseTempToken("temp-xxx");
       expect(mockLogic.parseTempToken).toHaveBeenCalledWith("temp-xxx");
+    });
+
+    it("consumeTempToken", async () => {
+      const value = await StpUtil.consumeTempToken("temp-xxx");
+      expect(value).toBe("data");
+      expect(mockLogic.consumeTempToken).toHaveBeenCalledWith("temp-xxx");
     });
 
     it("deleteTempToken", async () => {

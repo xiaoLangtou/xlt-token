@@ -28,6 +28,7 @@ declare class RedisStore implements XltTokenStore {
   get(key: string): Promise<StoreEntry | null>;
   set(key: string, value: string, ttl: StoreTtl): Promise<void>;
   delete(key: string): Promise<void>;
+  getAndDelete(key: string): Promise<StoreEntry | null>;
   setIfAbsent(key: string, value: string, ttl: StoreTtl): Promise<boolean>;
   compareAndSet(key: string, expectedValue: string, nextValue: string, ttl: StoreTtlUpdate): Promise<boolean>;
   compareAndDelete(key: string, expectedValue: string): Promise<boolean>;
@@ -54,6 +55,7 @@ declare class IORedisStore implements XltTokenStore {
   get(key: string): Promise<StoreEntry | null>;
   set(key: string, value: string, ttl: StoreTtl): Promise<void>;
   delete(key: string): Promise<void>;
+  getAndDelete(key: string): Promise<StoreEntry | null>;
   setIfAbsent(key: string, value: string, ttl: StoreTtl): Promise<boolean>;
   compareAndSet(key: string, expectedValue: string, nextValue: string, ttl: StoreTtlUpdate): Promise<boolean>;
   compareAndDelete(key: string, expectedValue: string): Promise<boolean>;

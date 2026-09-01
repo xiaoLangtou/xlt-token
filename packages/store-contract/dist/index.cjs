@@ -10,6 +10,24 @@ function defineStoreContract(name, createStore) {
 			(0, vitest.expect)((await Promise.all(Array.from({ length: 20 }, (_, index) => store.setIfAbsent("{contract}:lock", String(index), (0, _xlt_token_core.finiteTtl)(30))))).filter(Boolean)).toHaveLength(1);
 			await (0, vitest.expect)(store.get("{contract}:lock")).resolves.toMatchObject({ value: vitest.expect.any(String) });
 		});
+		(0, vitest.it)("returns and deletes the entry in one atomic operation", async () => {
+			const store = await createStore();
+			await store.set("{contract}:consume", "v1", (0, _xlt_token_core.finiteTtl)(60));
+			await (0, vitest.expect)(store.getAndDelete("{contract}:consume")).resolves.toMatchObject({ value: "v1" });
+			await (0, vitest.expect)(store.getAndDelete("{contract}:consume")).resolves.toBeNull();
+			await (0, vitest.expect)(store.get("{contract}:consume")).resolves.toBeNull();
+		});
+		(0, vitest.it)("returns null when getAndDelete misses", async () => {
+			await (0, vitest.expect)((await createStore()).getAndDelete("{contract}:consume-missing")).resolves.toBeNull();
+		});
+		(0, vitest.it)("keeps one winner for concurrent getAndDelete", async () => {
+			const store = await createStore();
+			await store.set("{contract}:consume-race", "v1", (0, _xlt_token_core.persistentTtl)());
+			const winners = (await Promise.all(Array.from({ length: 20 }, () => store.getAndDelete("{contract}:consume-race")))).filter((entry) => entry !== null);
+			(0, vitest.expect)(winners).toHaveLength(1);
+			(0, vitest.expect)(winners[0]).toMatchObject({ value: "v1" });
+			await (0, vitest.expect)(store.get("{contract}:consume-race")).resolves.toBeNull();
+		});
 		(0, vitest.it)("keeps value and ttl unchanged when compareAndSet misses", async () => {
 			const store = await createStore();
 			await store.set("{contract}:cas", "v1", (0, _xlt_token_core.finiteTtl)(60));

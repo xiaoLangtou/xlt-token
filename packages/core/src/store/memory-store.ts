@@ -31,6 +31,15 @@ export class MemoryStore implements XltTokenStore {
     this.store.delete(key);
   }
 
+  async getAndDelete(key: string): Promise<StoreEntry | null> {
+    const entry = this.peek(key);
+    if (!entry) return null;
+    const snapshot = { value: entry.value, expiresAt: entry.expiresAt };
+    this.clearTimer(key);
+    this.store.delete(key);
+    return snapshot;
+  }
+
   async setIfAbsent(key: string, value: string, ttl: StoreTtl): Promise<boolean> {
     if (this.peek(key)) return false;
     this.write(key, value, ttl);

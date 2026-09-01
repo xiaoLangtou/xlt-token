@@ -30,6 +30,11 @@ describe("RedisStore", () => {
     client.eval.mockImplementation(async (_script: string, options: any) => {
       const [key] = options.keys;
       const entry = values.get(key);
+      if (options.arguments.length === 0) {
+        if (!entry) return null;
+        values.delete(key);
+        return [entry.value, entry.ttl];
+      }
       if (options.arguments.length === 2) {
         if (!entry) return 0;
         const [mode, ttlSeconds] = options.arguments;
@@ -90,6 +95,29 @@ describe("RedisStore", () => {
 
     await expect(store.compareAndSet("missing", "old", "value", keepTtl())).resolves.toBe(false);
     await expect(store.touch("missing", finiteTtl(60))).resolves.toBe(false);
+  });
+
+  it("reads and deletes atomically via a single eval script", async () => {
+    const client = createClient();
+    const store = new RedisStore(client);
+    client.eval.mockResolvedValueOnce(["value", 60]);
+
+    await expect(store.getAndDelete("key")).resolves.toEqual({
+      value: "value",
+      expiresAt: expect.any(Number),
+    });
+    expect(client.eval).toHaveBeenCalledWith(expect.stringContaining("DEL"), {
+      keys: ["key"],
+      arguments: [],
+    });
+  });
+
+  it("returns null when getAndDelete misses", async () => {
+    const client = createClient();
+    const store = new RedisStore(client);
+    client.eval.mockResolvedValueOnce(null);
+
+    await expect(store.getAndDelete("missing")).resolves.toBeNull();
   });
 
   it("collects keys from all scan pages", async () => {

@@ -206,6 +206,7 @@ interface XltTokenStore {
   get(key: string): Promise<StoreEntry | null>;
   set(key: string, value: string, ttl: StoreTtl): Promise<void>;
   delete(key: string): Promise<void>;
+  getAndDelete(key: string): Promise<StoreEntry | null>;
   setIfAbsent(key: string, value: string, ttl: StoreTtl): Promise<boolean>;
   compareAndSet(key: string, expectedValue: string, nextValue: string, ttl: StoreTtlUpdate): Promise<boolean>;
   compareAndDelete(key: string, expectedValue: string): Promise<boolean>;
@@ -223,6 +224,7 @@ declare class MemoryStore implements XltTokenStore {
   get(key: string): Promise<StoreEntry | null>;
   set(key: string, value: string, ttl: StoreTtl): Promise<void>;
   delete(key: string): Promise<void>;
+  getAndDelete(key: string): Promise<StoreEntry | null>;
   setIfAbsent(key: string, value: string, ttl: StoreTtl): Promise<boolean>;
   compareAndSet(key: string, expectedValue: string, nextValue: string, ttl: StoreTtlUpdate): Promise<boolean>;
   compareAndDelete(key: string, expectedValue: string): Promise<boolean>;
@@ -532,6 +534,13 @@ declare class StpLogic {
    */
   deleteTempToken(tempToken: string): Promise<void>;
   /**
+   * 原子消费临时token：读取关联业务值并在同一原子操作中销毁记录
+   * 用于一次性邀请、密码重置等并发安全场景
+   * @param tempToken  临时token字符串
+   * @returns 首次消费返回关联业务值；Token 不存在、已过期或已被消费时返回 null
+   */
+  consumeTempToken(tempToken: string): Promise<string | null>;
+  /**
    * 获取 token 值
    * @param req
    */
@@ -683,6 +692,7 @@ declare class StpUtil {
   static closeSafe(token: string, business: string): Promise<void>;
   static createTempToken(value: string, timeout: number): Promise<string>;
   static parseTempToken(tempToken: string): Promise<string | null>;
+  static consumeTempToken(tempToken: string): Promise<string | null>;
   static deleteTempToken(tempToken: string): Promise<void>;
   static getDeviceList(loginId: string): Promise<DeviceInfo[]>;
   static forceLogout(loginId: string): Promise<boolean>;

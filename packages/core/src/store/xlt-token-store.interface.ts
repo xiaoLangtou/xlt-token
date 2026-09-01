@@ -24,6 +24,8 @@ export interface XltTokenStore {
 
   delete(key: string): Promise<void>;
 
+  getAndDelete(key: string): Promise<StoreEntry | null>;
+
   setIfAbsent(key: string, value: string, ttl: StoreTtl): Promise<boolean>;
 
   compareAndSet(

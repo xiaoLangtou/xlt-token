@@ -1,6 +1,6 @@
 {
   "name": "@xlt-token/store-redis",
-  "version": "2.1.1",
+  "version": "2.2.0",
   "description": "Framework-agnostic Redis stores for xlt-token",
   "keywords": [
     "auth",
@@ -56,11 +56,11 @@
     "test:cov": "vitest run --coverage"
   },
   "dependencies": {
-    "@xlt-token/core": "^2.1.1"
+    "@xlt-token/core": "^2.2.0"
   },
   "devDependencies": {
     "@vitest/coverage-v8": "^2.1.9",
-    "@xlt-token/store-contract": "^2.1.1",
+    "@xlt-token/store-contract": "^2.2.0",
     "tsdown": "^0.20.0",
     "typescript": "^5.1.0",
     "vitest": "^2.0.0"

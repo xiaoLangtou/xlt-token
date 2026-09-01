@@ -24,6 +24,38 @@ describe("MemoryStore atomic contract", () => {
     await expect(store.get("lock")).resolves.toMatchObject({ value: expect.any(String) });
   });
 
+  it("getAndDelete 原子读取并删除条目", async () => {
+    await store.set("key", "v1", finiteTtl(60));
+
+    await expect(store.getAndDelete("key")).resolves.toMatchObject({ value: "v1" });
+    await expect(store.getAndDelete("key")).resolves.toBeNull();
+    await expect(store.get("key")).resolves.toBeNull();
+  });
+
+  it("getAndDelete 对不存在的 key 返回 null", async () => {
+    await expect(store.getAndDelete("missing")).resolves.toBeNull();
+  });
+
+  it("getAndDelete 并发消费只有一个赢家", async () => {
+    await store.set("key", "v1", persistentTtl());
+
+    const results = await Promise.all(Array.from({ length: 20 }, () => store.getAndDelete("key")));
+
+    const winners = results.filter((entry) => entry !== null);
+    expect(winners).toHaveLength(1);
+    expect(winners[0]).toMatchObject({ value: "v1" });
+    await expect(store.get("key")).resolves.toBeNull();
+  });
+
+  it("getAndDelete 对持久条目返回 null 过期时间", async () => {
+    await store.set("key", "v1", persistentTtl());
+
+    await expect(store.getAndDelete("key")).resolves.toEqual({
+      value: "v1",
+      expiresAt: null,
+    });
+  });
+
   it("compareAndSet 比较失败时不改变值和 TTL", async () => {
     await store.set("key", "v1", finiteTtl(60));
 

@@ -144,11 +144,14 @@ createTempToken(value: string, timeout: number): Promise<string>
 // 读取（不自动删除）
 parseTempToken(tempToken: string): Promise<string | null>
 
-// 销毁（一次性消费后调用）
+// 原子消费：读取并在同一原子操作中销毁（v2.2 新增，推荐）
+consumeTempToken(tempToken: string): Promise<string | null>
+
+// 销毁（不返回值）
 deleteTempToken(tempToken: string): Promise<void>
 ```
 
-### 典型场景：邮件重置密码
+### 典型场景：邮件重置密码（原子消费，推荐）
 
 ```ts twoslash
 // ── 发送邮件时 ──
@@ -157,20 +160,26 @@ const link = `https://app.com/reset?t=${tempToken}`;
 await emailService.send(user.email, link);
 
 // ── 用户点击链接 ──
-const value = await stp.parseTempToken(tempToken);
-if (!value) throw new BadRequestException('链接无效或已过期');
+// consumeTempToken 原子完成"读取 + 销毁"：并发点击链接时恰好一次拿到业务值
+const value = await stp.consumeTempToken(tempToken);
+if (!value) throw new BadRequestException('链接无效、已过期或已被使用');
 
 const [, userId] = value.split(':');
-await stp.deleteTempToken(tempToken);  // 一次性消费
 await userService.resetPassword(userId, newPassword);
 ```
+
+> **为什么用 `consumeTempToken` 而不是 `parseTempToken` + `deleteTempToken`？**
+> 后者是两次独立调用，存在竞态窗口：用户双击链接时两个请求都可能读到业务值，
+> 一次性语义被破坏。`consumeTempToken` 在 Store 层用原子操作（MemoryStore 临界段 /
+> Redis Lua）保证并发下恰好一个调用返回业务值，其余返回 `null`。
+> `parseTempToken` / `deleteTempToken` 保留原有行为，适合"读多次、最后手动删"的场景。
 
 ### 与登录 token 的区别
 
 | | 登录 token | 临时 token |
 | --- | --- | --- |
 | 用途 | 标识已登录用户 | 承载单次业务数据 |
-| 校验 | `checkLogin` / Guard | 自行 `parseTempToken` |
+| 校验 | `checkLogin` / Guard | 自行 `consumeTempToken` / `parseTempToken` |
 | 键前缀 | `login:token:` | `temp-token:` |
 | 是否需要 loginId | 是 | 否 |
 
@@ -182,7 +191,8 @@ await userService.resetPassword(userId, newPassword);
 | `checkSafe(token, business)` | 校验窗口，失败抛 403 |
 | `closeSafe(token, business)` | 关闭窗口 |
 | `createTempToken(value, timeout)` | 创建临时 token |
-| `parseTempToken(tempToken)` | 读取关联值 |
+| `parseTempToken(tempToken)` | 读取关联值（不消费） |
+| `consumeTempToken(tempToken)` | 原子消费：读取并销毁，并发安全 |
 | `deleteTempToken(tempToken)` | 销毁临时 token |
 
 ## 下一步
