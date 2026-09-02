@@ -1,3 +1,8 @@
+---
+title: NestJS Token 模块配置
+description: 配置 XltTokenModule.forRoot 和 forRootAsync，将 xlt-token 的 Token 鉴权能力接入 NestJS 依赖注入系统。
+---
+
 # NestJS 模块配置
 
 `@xlt-token/nestjs` 通过 `XltTokenModule.forRoot()` 或 `XltTokenModule.forRootAsync()` 接入 NestJS DI 系统。本页只说明 NestJS 模块注册方式；底层配置字段见 [Core 配置参考](/core/configuration)。

@@ -460,9 +460,9 @@ interface AuthResult {
   reason?: NotLoginType;
 }
 declare class StpLogic {
-  private config;
-  private store;
-  private strategy;
+  readonly config: XltTokenConfig;
+  readonly store: XltTokenStore;
+  readonly strategy: TokenStrategy;
   private eventSink;
   constructor(config: XltTokenConfig, store: XltTokenStore, strategy: TokenStrategy, eventSink?: XltEventSink);
   private readonly keys;
@@ -712,14 +712,59 @@ declare class StpUtil {
   } | null>;
 }
 //#endregion
-//#region src/factory.d.ts
-interface CreateOptions {
+//#region src/instance/xlt-instance.d.ts
+/**
+ * 一个完整隔离的 xlt-token 认证实例。
+ *
+ * 实例间不共享任何可变全局状态；Store 与 Strategy 由使用者显式提供。
+ * 适配器（Fastify / Hono 等）与多实例业务代码只允许经由实例成员访问认证能力，
+ * 禁止依赖 `StpUtil` 或默认实例。
+ */
+interface XltInstance {
+  /** 已归一化的配置快照（只读） */
+  readonly config: XltTokenConfig;
+  /** 该实例绑定的存储后端 */
+  readonly store: XltTokenStore;
+  /** 该实例的 token 生成策略（UUID / JWT / 自定义） */
+  readonly strategy: TokenStrategy;
+  /** 认证逻辑入口：login / logout / kickout / consumeTempToken / ... */
+  readonly stpLogic: StpLogic;
+  /** 权限逻辑入口：hasPermission / hasRole / ... */
+  readonly stpPermLogic: StpPermLogic;
+}
+interface CreateInstanceOptions {
   config?: Partial<XltTokenConfigInput>;
   store?: XltTokenStore;
   strategy?: TokenStrategy;
   stpInterface?: StpInterface;
   eventSink?: XltEventSink;
 }
+/**
+ * 创建一个隔离的 xlt-token 实例。
+ *
+ * 纯函数语义：不读取、不写入任何全局状态（包括默认实例）。
+ * 与 `createXltToken()` 的唯一差异是不注册默认实例——
+ * 如需让 `StpUtil` 路由到该实例，显式调用 `setDefaultXltInstance()`。
+ */
+declare function createXltInstance(options?: CreateInstanceOptions): XltInstance;
+/**
+ * 显式把某个实例注册为默认实例（`StpUtil` 的委托目标）。
+ *
+ * 后注册者覆盖先注册者——与 `createXltToken()` 的隐式覆盖行为一致，
+ * 但把"隐式副作用"变为"显式声明"。
+ */
+declare function setDefaultXltInstance(instance: XltInstance): void;
+/**
+ * 读取当前默认实例；未注册时抛出与 `StpUtil` 一致的初始化错误。
+ *
+ * 返回值是默认实例的只读视图：`stpLogic` / `stpPermLogic` 来自
+ * `setStpLogic` / `setStpPermLogic` / `setDefaultXltInstance` 写入的同一存储，
+ * `config` / `store` / `strategy` 从默认 `StpLogic` 实例派生。
+ */
+declare function getDefaultXltInstance(): XltInstance;
+//#endregion
+//#region src/factory.d.ts
+type CreateOptions = CreateInstanceOptions;
 interface XltTokenContext {
   config: XltTokenConfig;
   store: XltTokenStore;
@@ -728,6 +773,13 @@ interface XltTokenContext {
   stpPermLogic: StpPermLogic;
   stpUtil: typeof StpUtil;
 }
+/**
+ * 便捷工厂：构造实例并把它注册为默认实例（`StpUtil` 的委托目标）。
+ *
+ * 行为等价于 `createXltInstance()` + `setDefaultXltInstance()`，
+ * 多次调用时后创建者覆盖先创建者（v2.2 及之前的既有语义）。
+ * 多实例进程中请改用 `createXltInstance()` 并持有实例句柄。
+ */
 declare function createXltToken(options?: CreateOptions): XltTokenContext;
 //#endregion
 //#region src/time/duration.d.ts
@@ -745,5 +797,5 @@ declare function normalizeDuration(value: DurationInput, options: NormalizeDurat
  */
 declare function normalizeXltTokenConfig(input?: Partial<XltTokenConfigInput>): XltTokenConfig;
 //#endregion
-export { type AuthResult, type CookieOptions, type CreateOptions, DEFAULT_XLT_TOKEN_CONFIG, type DeviceInfo, type DurationInput, type DurationString, type DurationUnit, type ExpressLikeRequest, type ExpressLikeResponse, type HttpContext, type HttpCookies, type HttpHeaders, type HttpQuery, MemoryStore, type MockHttpContextOptions, type NormalizeDurationOptions, type NormalizedTokenExpirationConfig, type NormalizedTokenLifecycleConfig, type NormalizedTokenRefreshConfig, NotLoginException, NotLoginType, NotPermissionException, NotRoleException, NotSafeException, type RefreshResult, type RevokeResult, type RevokeScope, type StoreEntry, type StoreScanOptions, type StoreScanResult, type StoreTtl, type StoreTtlUpdate, type StpInterface, StpLogic, StpPermLogic, StpUtil, type TokenExpirationConfig, type TokenFamilyState, type TokenFamilyStatus, type TokenLifecycleConfig, type TokenRefreshConfig, type TokenStrategy, UuidStrategy, XLT_CHECK_LOGIN_KEY, XLT_EVENT_SINK, XLT_IGNORE_KEY, XLT_PERMISSION_KEY, XLT_ROLE_KEY, XLT_STP_INTERFACE, XLT_TOKEN_CONFIG, XLT_TOKEN_STORE, XLT_TOKEN_STRATEGY, type XltAuditEvent, type XltAuditEventType, XltError, type XltErrorCode, type XltErrorDetails, type XltEventSink, XltMode, XltSession, type XltTokenConfig, type XltTokenConfigInput, type XltTokenContext, XltTokenKeys, type XltTokenStore, createExpressContext, createMockHttpContext, createXltToken, finiteTtl, keepTtl, matchPermission, normalizeDuration, normalizeTokenLifecycleConfig, normalizeXltTokenConfig, persistentTtl, setStpLogic, setStpPermLogic };
+export { type AuthResult, type CookieOptions, type CreateInstanceOptions, type CreateOptions, DEFAULT_XLT_TOKEN_CONFIG, type DeviceInfo, type DurationInput, type DurationString, type DurationUnit, type ExpressLikeRequest, type ExpressLikeResponse, type HttpContext, type HttpCookies, type HttpHeaders, type HttpQuery, MemoryStore, type MockHttpContextOptions, type NormalizeDurationOptions, type NormalizedTokenExpirationConfig, type NormalizedTokenLifecycleConfig, type NormalizedTokenRefreshConfig, NotLoginException, NotLoginType, NotPermissionException, NotRoleException, NotSafeException, type RefreshResult, type RevokeResult, type RevokeScope, type StoreEntry, type StoreScanOptions, type StoreScanResult, type StoreTtl, type StoreTtlUpdate, type StpInterface, StpLogic, StpPermLogic, StpUtil, type TokenExpirationConfig, type TokenFamilyState, type TokenFamilyStatus, type TokenLifecycleConfig, type TokenRefreshConfig, type TokenStrategy, UuidStrategy, XLT_CHECK_LOGIN_KEY, XLT_EVENT_SINK, XLT_IGNORE_KEY, XLT_PERMISSION_KEY, XLT_ROLE_KEY, XLT_STP_INTERFACE, XLT_TOKEN_CONFIG, XLT_TOKEN_STORE, XLT_TOKEN_STRATEGY, type XltAuditEvent, type XltAuditEventType, XltError, type XltErrorCode, type XltErrorDetails, type XltEventSink, type XltInstance, XltMode, XltSession, type XltTokenConfig, type XltTokenConfigInput, type XltTokenContext, XltTokenKeys, type XltTokenStore, createExpressContext, createMockHttpContext, createXltInstance, createXltToken, finiteTtl, getDefaultXltInstance, keepTtl, matchPermission, normalizeDuration, normalizeTokenLifecycleConfig, normalizeXltTokenConfig, persistentTtl, setDefaultXltInstance, setStpLogic, setStpPermLogic };
 //# sourceMappingURL=index.d.mts.map

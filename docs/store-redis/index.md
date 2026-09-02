@@ -1,3 +1,8 @@
+---
+title: Redis Token Store 使用指南
+description: 使用 @xlt-token/store-redis 接入 node-redis 或 ioredis，为 Core、NestJS、Express 和 Fastify 提供分布式 Token 会话存储。
+---
+
 # Redis Store 完整指南
 
 `@xlt-token/store-redis` 为 xlt-token 提供框架无关的 Redis 存储实现。它只依赖

@@ -1,12 +1,12 @@
 ---
 title: 多实例与适配器契约
-description: v2.2 冻结的实例化契约设计：调用点盘点、XltInstance 类型草案、适配器输入契约、默认实例兼容策略与迁移方向。
+description: v2.2 冻结、v2.3 已实施的实例化契约：XltInstance 公开 API、适配器输入契约、默认实例兼容策略与迁移方向。
 ---
 
 # 多实例与适配器契约
 
-> **状态：** v2.2 已冻结的架构决策（设计 + 类型草案 + 兼容策略）。
-> **实施边界：** Core 实例化重构不在 v2.2 落地；任何公开 API 变更必须通过独立 OpenSpec 变更评审后实施。
+> **状态：** v2.3 已实施（OpenSpec 变更 `core-instance-contract` 落地为 Core 公开 API）。
+> **实施边界：** `XltInstance` / `createXltInstance` / `setDefaultXltInstance` / `getDefaultXltInstance` 已在 `@xlt-token/core` 发布；适配器只允许依赖显式实例。
 > **下游依赖：** v2.3 Fastify 适配器与 v2.4 Hono 适配器只依赖本文档定义的契约，不需要读取 `StpUtil`。
 
 ## 1. 问题陈述
@@ -69,12 +69,12 @@ export function setStpPermLogic(stpPermLogic: StpPermLogic) { ... }
 
 **盘点结论：** 全仓 41 个业务调用点全部位于 examples；核心链路（Core 内核 + 适配器内核）已实例化。这使契约落地的主要工作集中在"默认实例管理规则"，而不是大规模改写。
 
-## 3. 实例化公开契约（R2.2）——类型草案
+## 3. 实例化公开契约（R2.2）——v2.3 已实施
 
-以现有 `XltTokenContext`（factory.ts）为基础演进为 `XltInstance`。**以下为类型草案，最终签名以获批的 OpenSpec 变更实现为准：**
+以现有 `XltTokenContext`（factory.ts）为基础演进为 `XltInstance`。以下即 `packages/core/src/instance/xlt-instance.ts` 的实际公开 API（草案与实现一致）：
 
 ```ts
-// packages/core/src/instance/xlt-instance.ts（规划路径）
+// packages/core/src/instance/xlt-instance.ts（v2.3 已落地）
 
 import type { XltTokenConfig } from "../config/xlt-token-config.js";
 import type { XltTokenStore } from "../store/xlt-token-store.interface.js";
@@ -150,7 +150,7 @@ export interface XltAdapterOptions<TInstance extends XltInstance = XltInstance> 
   instance: TInstance;
 }
 
-// Fastify（v2.3 规划）——使用方负责传入实例：
+// Fastify（v2.3 已实现，@xlt-token/fastify）——使用方负责传入实例：
 // fastify.register(xltFastifyPlugin, { instance })
 //
 // Hono（v2.4 规划）——中间件工厂接收实例：
@@ -198,7 +198,7 @@ await appAuth.stpLogic.login("2");
 // 危险：StpUtil 现在指向 appAuth（最后创建者），不要在多实例进程中使用 StpUtil
 ```
 
-**限制（现状）：** `createXltToken()` 会隐式覆盖全局单例，因此多实例进程中 `StpUtil` 的指向取决于最后一次创建——这是当前唯一已知陷阱，文档已声明。目标契约落地后 `createXltInstance()` 消除该副作用，默认实例只能通过 `setDefaultXltInstance()` 显式变更。
+**限制（v2.3 起）：** `createXltInstance()` 不再写入全局单例，多实例隔离由类型系统保证；`createXltToken()` 保持"构造默认实例的便捷工厂"语义（等价于 `createXltInstance()` + `setDefaultXltInstance()`），多实例进程中默认实例的指向仍由最后一次 `createXltToken()` / `setDefaultXltInstance()` 显式决定，不要在多实例进程中混用 `StpUtil`。
 
 ### 6.3 默认实例与多实例并存
 
@@ -214,18 +214,18 @@ await adminAuth.stpLogic.login("u2");    // 路由到 adminAuth
 | 场景 | 用法 | 限制 |
 | --- | --- | --- |
 | 单实例 | `createXltToken()` + `StpUtil` | 无 |
-| 多实例 | 实例句柄 `stpLogic` / `stpPermLogic` | 现状：勿混用 `StpUtil`；目标：无 |
+| 多实例 | `createXltInstance()` + 实例句柄 `stpLogic` / `stpPermLogic` | 勿混用 `StpUtil` |
 | 并存 | `setDefaultXltInstance()` 显式声明默认 | 同一时刻只有一个默认实例 |
 
 ### 计划废弃项
 
-- `createXltToken()` 的隐式全局写入：目标契约落地时改为"构造默认实例的便捷工厂"（等价于 `createXltInstance()` + `setDefaultXltInstance()`），语义向后兼容，不构成 breaking change；隐式覆盖行为以 deprecation 文档标注一个主版本。
+- `createXltToken()` 的隐式全局写入：v2.3 起已改为"构造默认实例的便捷工厂"（等价于 `createXltInstance()` + `setDefaultXltInstance()`），语义向后兼容，不构成 breaking change；隐式覆盖行为以 deprecation 文档标注一个主版本。
 
 ## 7. 实施路线与门禁
 
 | 阶段 | 内容 | 前置条件 |
 | --- | --- | --- |
 | v2.2（本文档） | 设计冻结 + 类型草案 + 兼容策略 | 已完成 |
-| v2.3 前 | OpenSpec 变更 `core-instance-contract` 提案（实现 `XltInstance` / `createXltInstance` / `setDefaultXltInstance`） | 本文档评审通过 |
-| v2.3 | Fastify 适配器按 §4 契约开发 | 上一行变更归档 |
+| v2.3 | OpenSpec 变更 `core-instance-contract` 落地（`XltInstance` / `createXltInstance` / `setDefaultXltInstance` / `getDefaultXltInstance`） | 已完成 |
+| v2.3 | Fastify 适配器按 §4 契约开发（`@xlt-token/fastify`） | 上一行变更归档 |
 | v2.4 | Hono / Elysia 适配器按 §4 契约开发 | 同上 + [Cookie 契约决策](./cookie-contract.md) |

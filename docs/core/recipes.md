@@ -1,3 +1,8 @@
+---
+title: Token 鉴权实战场景手册
+description: 通过 xlt-token 示例实现顶号、多端登录、活跃超时、滑动续期、踢人、权限校验和匿名接口等常见鉴权场景。
+---
+
 # 09 · 场景手册（Recipes）
 
 常见业务场景的实操代码片段。每个 recipe 都可以直接拷贝改造。
@@ -14,6 +19,7 @@
 - [8. 同时支持登录/匿名访问的接口](#8-同时支持登录匿名访问的接口)
 - [9. 查询当前在线人数 / 在线列表](#9-查询当前在线人数--在线列表)
 - [10. 运维调试：观察存储键](#10-运维调试观察存储键)
+- [11. 一次性临时 token（用完即焚）](#11-一次性临时-token用完即焚)
 
 ---
 
@@ -237,11 +243,34 @@ protected async onAuthFail(result, request) {
 
 ---
 
+## 11. 一次性临时 token（用完即焚）
+
+邮件重置密码、邀请注册、一次性下载链接：**首次消费返回业务值并立即销毁**，重复或并发访问拿不到数据。v2.2 起用 `consumeTempToken`（原子消费）：
+
+```ts twoslash
+import { StpUtil } from '@xlt-token/nestjs';
+
+// 发邮件时创建，30 分钟有效
+const tempToken = await StpUtil.createTempToken(`resetPwd:${userId}`, 1800);
+
+// 用户点击链接 —— 并发双击也只有一个请求能拿到值
+const value = await StpUtil.consumeTempToken(tempToken);
+if (!value) throw new Error('链接无效、已过期或已被使用');
+
+const [, userId] = value.split(':');
+await userService.resetPassword(userId, newPassword);
+```
+
+为什么不用 `parseTempToken` + `deleteTempToken`？两次调用之间存在竞态窗口，双击链接时两个请求都可能读到值。`consumeTempToken` 在 Store 层原子完成（MemoryStore 临界段 / Redis Lua），并发下恰好一个调用返回业务值，其余返回 `null`。
+
+详见 [二级认证与临时 Token](/core/secondary-auth#临时-token)。
+
+---
+
 ## 还缺什么？
 
 如果你的业务场景这里没覆盖，欢迎提 Issue。常见还没写的：
 
 - ☐ 二维码扫码登录
-- ☐ 临时 token（一次性，用完即焚）
 - ☐ 验证码登录 + 信任设备
 - ☐ SSO / OAuth2 接入

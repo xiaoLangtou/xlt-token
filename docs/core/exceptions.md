@@ -1,3 +1,8 @@
+---
+title: Token 鉴权异常与错误处理
+description: 处理 xlt-token 的未登录、权限不足、角色不足和二级认证异常，并在 NestJS 中返回一致的鉴权错误响应。
+---
+
 # 08 · 异常与错误处理
 
 > 核心异常定义于 `@xlt-token/core`；NestJS 项目抛出的是 `@xlt-token/nestjs` 包装版（继承 `UnauthorizedException` / `ForbiddenException`）。

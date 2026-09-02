@@ -1,3 +1,8 @@
+---
+title: xlt-token 快速开始
+description: 按 Core、NestJS、Express、Fastify 和 Redis Store 的使用场景选择 xlt-token 接入方式，快速搭建 TypeScript Token 鉴权。
+---
+
 # 快速开始
 
 xlt-token 把鉴权核心、Redis 存储和框架适配器拆成独立包。先按运行环境选择入口；

@@ -1,3 +1,8 @@
+---
+title: xlt-token AI 编码代理指南
+description: 为 AI 编码代理提供 xlt-token 的项目地图、包职责、关键 API、文档入口和测试验证方式。
+---
+
 # AI 编码代理指南
 
 这份页面是给 AI 编码代理使用的项目地图。更紧凑的纯文本入口见 [`llms.txt`](/llms.txt)。

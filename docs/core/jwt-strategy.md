@@ -1,3 +1,8 @@
+---
+title: 状态型 JWT Token 策略
+description: 在 xlt-token 中使用状态型 JWT、密钥轮换、kid、算法白名单和 Store 黑名单，兼顾验签与会话撤销能力。
+---
+
 # JWT 策略
 
 2.0 将 JWT 策略拆到独立包 `@xlt-token/jwt`。Core 只依赖 `TokenStrategy` 接口；NestJS/Express 通过 `strategy.useValue` 注入已配置好的策略实例。

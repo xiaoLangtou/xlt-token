@@ -41,9 +41,9 @@ export interface AuthResult {
 
 export class StpLogic {
   constructor(
-    private config: XltTokenConfig,
-    private store: XltTokenStore,
-    private strategy: TokenStrategy,
+    readonly config: XltTokenConfig,
+    readonly store: XltTokenStore,
+    readonly strategy: TokenStrategy,
     private eventSink: XltEventSink = {},
   ) {
     this.keys = new XltTokenKeys(this.config.tokenName);
@@ -925,7 +925,7 @@ export class StpLogic {
     if (!token) return { ok: false, reason: NotLoginType.NOT_TOKEN };
 
     if (this._isJwtMode()) {
-      return this._resolveLoginIdJwt(token);
+      return this._resolveLoginIdJwt(ctx, token);
     }
 
     const loginId = await getStoreValue(this.store, this.keys.tokenKey(token));
@@ -956,48 +956,44 @@ export class StpLogic {
     return { ok: true, loginId, token };
   }
 
-  private async _resolveLoginIdJwt(token: string) {
+  private async _resolveLoginIdJwt(ctx: HttpContext, token: string) {
+    let payload: { sub?: string; jti?: string };
     try {
-      const payload = this.strategy.verifyToken(token);
-      const { sub: loginId, jti } = payload;
-
-      if (!loginId || !jti) return { ok: false, reason: NotLoginType.INVALID_TOKEN, token };
-
-      const jwtBlacklistKey = this.keys.jwtBlacklistKey(jti);
-      const blacklisted = await getStoreValue(this.store, jwtBlacklistKey);
-
-      if (blacklisted === NotLoginType.KICK_OUT)
-        return { ok: false, reason: NotLoginType.KICK_OUT, token };
-      if (blacklisted === NotLoginType.BE_REPLACED)
-        return { ok: false, reason: NotLoginType.BE_REPLACED, token };
-      if (blacklisted) return { ok: false, reason: NotLoginType.INVALID_TOKEN, token };
-
-      if (this.config.activeTimeout > 0) {
-        const lastActiveKey = this.keys.lastActiveKey(jti);
-        const lastStr = await getStoreValue(this.store, lastActiveKey);
-
-        if (!lastStr) return { ok: false, reason: NotLoginType.TOKEN_FREEZE, token };
-
-        const idle = (Date.now() - Number(lastStr)) / 1000;
-        if (idle > this.config.activeTimeout)
-          return { ok: false, reason: NotLoginType.TOKEN_TIMEOUT, token };
-
-        await replaceStoreValueKeepingTtl(this.store, lastActiveKey, String(Date.now()));
-      }
-
-      return { ok: true, loginId, token };
-    } catch (error: unknown) {
-      // 只捕获 JWT 校验相关异常，意外错误往上抛
-      if (
-        error instanceof Error &&
-        (error.name === "JsonWebTokenError" ||
-          error.name === "TokenExpiredError" ||
-          error.name === "NotBeforeError")
-      ) {
-        return { ok: false, reason: NotLoginType.INVALID_TOKEN, token };
-      }
-      throw error;
+      // verifyToken 的契约：token 无效即抛错（jsonwebtoken 系异常或策略自定义异常）
+      payload = this.strategy.verifyToken(token);
+    } catch {
+      return { ok: false, reason: NotLoginType.INVALID_TOKEN, token };
     }
+
+    const { sub: loginId, jti } = payload;
+
+    if (!loginId || !jti) return { ok: false, reason: NotLoginType.INVALID_TOKEN, token };
+
+    const jwtBlacklistKey = this.keys.jwtBlacklistKey(jti);
+    const blacklisted = await getStoreValue(this.store, jwtBlacklistKey);
+
+    if (blacklisted === NotLoginType.KICK_OUT)
+      return { ok: false, reason: NotLoginType.KICK_OUT, token };
+    if (blacklisted === NotLoginType.BE_REPLACED)
+      return { ok: false, reason: NotLoginType.BE_REPLACED, token };
+    if (blacklisted) return { ok: false, reason: NotLoginType.INVALID_TOKEN, token };
+
+    if (this.config.activeTimeout > 0) {
+      const lastActiveKey = this.keys.lastActiveKey(jti);
+      const lastStr = await getStoreValue(this.store, lastActiveKey);
+
+      if (!lastStr) return { ok: false, reason: NotLoginType.TOKEN_FREEZE, token };
+
+      const idle = (Date.now() - Number(lastStr)) / 1000;
+      if (idle > this.config.activeTimeout)
+        return { ok: false, reason: NotLoginType.TOKEN_TIMEOUT, token };
+
+      await replaceStoreValueKeepingTtl(this.store, lastActiveKey, String(Date.now()));
+    }
+
+    ctx.state.stpLoginId = loginId;
+    ctx.state.stpToken = token;
+    return { ok: true, loginId, token };
   }
 
   /**

@@ -1,3 +1,8 @@
+---
+title: Token 生成策略与 JWT 集成
+description: 使用 xlt-token 的 TokenStrategy、UuidStrategy 和 JWT 策略生成、校验并自定义 Token。
+---
+
 # 07 · Token 策略
 
 > 接口与 `UuidStrategy`：`@xlt-token/core`；内置 `JwtStrategy`：`@xlt-token/nestjs`。

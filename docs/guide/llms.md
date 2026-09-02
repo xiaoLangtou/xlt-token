@@ -1,3 +1,8 @@
+---
+title: xlt-token LLMs.txt 指南
+description: 了解 xlt-token 为 AI 编码代理提供的 llms.txt 项目入口，以及推荐阅读路径和验证命令。
+---
+
 # LLMs.txt
 
 `llms.txt` 是给 AI 编码代理使用的项目入口文件。它应该简短、稳定，并回答三个问题：

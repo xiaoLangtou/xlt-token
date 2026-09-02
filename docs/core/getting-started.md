@@ -1,3 +1,8 @@
+---
+title: TypeScript Token 鉴权 Core 快速开始
+description: 使用 @xlt-token/core 在自定义框架、脚本、Serverless、WebSocket 或测试中创建框架无关的 Token 鉴权运行时。
+---
+
 # Core 独立使用
 
 `@xlt-token/core` 是框架无关的鉴权运行时。它不依赖 NestJS、Express 或任何 HTTP

@@ -536,11 +536,27 @@
 .VPSidebarItem.is-active > .item {
   background: var(--x-brand-soft);
   border-radius: var(--x-radius-sm);
+  position: relative;
+  &:before{
+    content: '';
+    position: absolute;
+    height: 50%;
+    width: 2px;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    border-radius: 2px;
+    transition: background-color 0.25s;
+    background-color: var(--x-brand);
+  }
 }
 
 .VPSidebarItem.is-active > .item > .indicator {
+  display: none;
   background: var(--x-brand) !important;
+  left: 0 !important;
 }
+
 
 .VPSidebarItem.is-active > .item > .link .text {
   color: var(--x-brand) !important;

@@ -1,3 +1,8 @@
+---
+title: NestJS Guard 与鉴权装饰器
+description: 使用 XltTokenGuard、登录态 Guard 和 xlt-token 装饰器，在 NestJS 中保护路由、获取登录用户并校验权限。
+---
+
 # 05 · 守卫与装饰器
 
 > 包：`@xlt-token/nestjs`。本章内容 **仅适用于 NestJS**。

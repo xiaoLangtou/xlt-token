@@ -12,6 +12,15 @@ import { FILE_IMPORTS } from './twoslash.ts';
 const dir = dirname(fileURLToPath(import.meta.url))
 const root = resolve(dir, '../..')
 const docsRoot = resolve(root, 'docs')
+const siteUrl = 'https://xlt-token.doc.weipc0110.cn'
+
+function toCanonicalUrl(page: string) {
+  const pathname = page === 'index.md'
+    ? '/'
+    : `/${page.replace(/index\.md$/, '').replace(/\.md$/, '')}`
+
+  return new URL(pathname, siteUrl).href
+}
 
 
 
@@ -193,6 +202,27 @@ export default defineConfig({
   lastUpdated: true,
   ignoreDeadLinks: true,
   appearance: true,
+  sitemap: {
+    hostname: siteUrl,
+  },
+
+  transformHead({ page, title, description }) {
+    const canonicalUrl = toCanonicalUrl(page)
+    const socialTitle = title
+
+    return [
+      ['link', { rel: 'canonical', href: canonicalUrl }],
+      ['meta', { property: 'og:type', content: 'website' }],
+      ['meta', { property: 'og:site_name', content: 'xlt-token' }],
+      ['meta', { property: 'og:locale', content: 'zh_CN' }],
+      ['meta', { property: 'og:url', content: canonicalUrl }],
+      ['meta', { property: 'og:title', content: socialTitle }],
+      ['meta', { property: 'og:description', content: description }],
+      ['meta', { name: 'twitter:card', content: 'summary' }],
+      ['meta', { name: 'twitter:title', content: socialTitle }],
+      ['meta', { name: 'twitter:description', content: description }],
+    ]
+  },
 
   vite: {
     plugins: [releaseCodeHtmlPlugin()],
@@ -206,11 +236,8 @@ export default defineConfig({
   markdown,
 
   head: [
-    ['link', { rel: 'icon', href: '/xlt-token/favicon.ico' }],
+    ['link', { rel: 'icon', type: 'image/png', href: '/logo.png' }],
     ['meta', { name: 'theme-color', content: '#4f46e5' }],
-    ['meta', { name: 'og:type', content: 'website' }],
-    ['meta', { name: 'og:title', content: 'xlt-token' }],
-    ['meta', { name: 'og:description', content: '框架无关 Token 鉴权库，NestJS 与 Express 可直接接入' }],
     // Geist 字体（fonts.loli.net 国内镜像）
     ['link', { rel: 'preconnect', href: 'https://fonts.loli.net' }],
     ['link', { rel: 'preconnect', href: 'https://gstatic.loli.net', crossorigin: '' }],
@@ -223,7 +250,7 @@ export default defineConfig({
     ],
   ],
 
-  srcExclude: ['README.md', 'archive/**', 'juejin/**'],
+  srcExclude: ['README.md', 'archive/**', 'juejin/**', 'superpowers/**'],
 
   themeConfig: {
     siteTitle: 'xlt-token',
@@ -243,6 +270,7 @@ export default defineConfig({
         items: [
           { text: 'NestJS', link: '/adapters/nestjs/getting-started' },
           { text: 'Express', link: '/adapters/express' },
+          { text: 'Fastify', link: '/adapters/fastify' },
         ],
       },
       { text: 'AI 指南', link: '/reference/llms' },
@@ -298,6 +326,7 @@ export default defineConfig({
           { text: 'NestJS 模块配置', link: '/adapters/nestjs/module-config' },
           { text: 'NestJS 守卫与装饰器', link: '/adapters/nestjs/guards-and-decorators' },
           { text: 'Express 完整指南', link: '/adapters/express' },
+          { text: 'Fastify 完整指南', link: '/adapters/fastify' },
         ],
       },
       {

@@ -1,8 +1,6 @@
 ---
-title: "AI Agent Skills"
-description: "Install the xlt-token skill to give AI coding agents deep knowledge of token auth, NestJS and Express integration, permissions, sessions, JWT, Redis, and common recipes."
-canonical_url: "https://xiaolangtou.github.io/xlt-token/guide/skills"
-last_updated: "2026-06-09"
+title: xlt-token AI Agent Skill
+description: 为 AI 编码代理安装 xlt-token Skill，获取 Token 鉴权、NestJS、Express、Fastify、Redis、JWT、权限和会话的上下文。
 ---
 
 # 22 · AI Agent Skills

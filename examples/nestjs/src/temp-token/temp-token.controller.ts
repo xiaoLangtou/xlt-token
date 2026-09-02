@@ -15,19 +15,18 @@ export class TempTokenController {
     };
   }
 
-  /** 消费临时 token（一次性） */
+  /** 消费临时 token（一次性，原子消费：读取即销毁） */
   @XltIgnore()
   @Post("consume")
   async consume(@Body() dto: { tempToken: string; newPassword?: string }) {
-    const value = await StpUtil.parseTempToken(dto.tempToken);
-    if (!value) throw new BadRequestException("链接无效或已过期");
+    // consumeTempToken 原子完成"读取 + 销毁"：并发重复提交时恰好一次拿到业务值
+    const value = await StpUtil.consumeTempToken(dto.tempToken);
+    if (!value) throw new BadRequestException("链接无效、已过期或已被使用");
 
     const [action, userId] = value.split(":");
     if (action !== "resetPwd" || !userId) {
       throw new BadRequestException("无效的临时 token 载荷");
     }
-
-    await StpUtil.deleteTempToken(dto.tempToken);
 
     return {
       ok: true,

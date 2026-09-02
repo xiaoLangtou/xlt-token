@@ -1,3 +1,8 @@
+---
+title: 框架适配器总览
+description: 了解 xlt-token 的 NestJS、Express 与 Fastify 适配器，按项目框架选择 Token 鉴权接入方式。
+---
+
 # 框架适配器
 
 适配器把框架的 Request 和 Response 转换成 Core 的 `HttpContext`，并提供该框架习惯的
@@ -9,6 +14,7 @@
 | --- | --- | --- | --- |
 | NestJS | `pnpm add @xlt-token/nestjs` | Module、DI、Guard、Decorator、Fastify 支持 | [NestJS 快速开始](/adapters/nestjs/getting-started) |
 | Express | `pnpm add express @xlt-token/express` | middleware、Router policy、route helper、错误处理 | [Express 完整指南](/adapters/express) |
+| Fastify | `pnpm add fastify @xlt-token/fastify` | Plugin、preHandler Hook、路由策略、显式实例 | [Fastify 完整指南](/adapters/fastify) |
 
 ## NestJS 适合什么项目
 
@@ -35,6 +41,18 @@ Express 适配器不引入 Module 或装饰器。它提供：
 - `xltErrorHandler()` 错误响应
 
 [Express 完整指南](/adapters/express) 从实例创建一直覆盖到生产中间件顺序和测试。
+
+## Fastify 适合什么项目
+
+Fastify 适配器面向纯 Fastify 应用（不引入 NestJS）。它提供：
+
+- `xltFastifyPlugin` 插件（`preHandler` Hook 鉴权）
+- 插件级 `ignore` / `policies` 与路由级 `config.xlt` 策略
+- 显式 `XltInstance` 绑定，支持同进程多实例隔离
+- `@fastify/cookie` 同步 Cookie 桥接（v2.x Cookie 契约）
+- `xltFastifyErrorHandler()` 错误响应
+
+[Fastify 完整指南](/adapters/fastify) 从实例创建一直覆盖到多实例与 Cookie 前置条件。
 
 ## 其他框架
 

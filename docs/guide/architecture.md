@@ -1,3 +1,8 @@
+---
+title: Token 鉴权架构设计
+description: 了解 xlt-token 的框架无关 Core、Redis Store 和框架适配器分层，以及 Token、会话和存储键的设计。
+---
+
 # 02 · 架构设计
 
 xlt-token 采用 **「框架无关核心 + 可选实现 + 框架适配器」** 的 monorepo 结构。鉴权语义集中在 `@xlt-token/core`；Redis 实现在 `@xlt-token/store-redis`；NestJS 和 Express 只负责框架接入。

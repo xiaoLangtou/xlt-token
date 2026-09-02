@@ -1,3 +1,8 @@
+---
+title: Express Token 鉴权集成
+description: 在 Express 项目中使用 @xlt-token/express 配置 Token 鉴权中间件、路由保护、权限校验和错误处理。
+---
+
 # Express 适配器
 
 [![Cloud Studio Template](https://cs-res.codehub.cn/common/assets/icon-badge.svg)](https://cloudstudio.net/a/35979106969571328?channel=share&sharetype=Markdown)

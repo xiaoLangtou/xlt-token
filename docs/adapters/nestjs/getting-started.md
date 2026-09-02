@@ -1,3 +1,8 @@
+---
+title: NestJS Token 鉴权快速开始
+description: 在 NestJS 中使用 @xlt-token/nestjs 完成模块注册、登录签发 Token、Guard 路由保护和登出。
+---
+
 # NestJS 快速开始
 
 5 分钟跑通最小登录流程：**注册模块 → 登录签发 token → 守卫自动校验 → 登出**。

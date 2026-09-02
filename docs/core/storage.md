@@ -1,3 +1,8 @@
+---
+title: Token Store 契约与内存存储
+description: 了解 xlt-token 的 XltTokenStore 契约、MemoryStore 和自定义存储实现，为 Token 登录态提供可靠持久化。
+---
+
 # Store 契约与内存存储
 
 `@xlt-token/core` 通过 `XltTokenStore` 访问登录态、会话、生命周期和权限缓存。2.0 的 Store 契约以原子条件写入为核心，不再提供 1.x 的 `has/update/updateTimeout/getTimeout/keys` 兼容方法。

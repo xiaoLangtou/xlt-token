@@ -33,7 +33,11 @@ export function setStpPermLogic(stpPermLogic: StpPermLogic) {
   _stpPermLogic = stpPermLogic;
 }
 
-function getStpLogic(): StpLogic {
+/**
+ * 读取默认实例的 `StpLogic`；未初始化时抛出与既有语义一致的错误。
+ * 供实例 API（`getDefaultXltInstance`）复用同一存储。
+ */
+export function getStpLogic(): StpLogic {
   if (!_stpLogic) {
     throw new Error(
       "StpLogic not initialized. Please ensure XltTokenModule is imported correctly.",
@@ -42,7 +46,11 @@ function getStpLogic(): StpLogic {
   return _stpLogic;
 }
 
-function getStpPermLogic(): StpPermLogic {
+/**
+ * 读取默认实例的 `StpPermLogic`；未初始化时抛出与既有语义一致的错误。
+ * 供实例 API（`getDefaultXltInstance`）复用同一存储。
+ */
+export function getStpPermLogic(): StpPermLogic {
   if (!_stpPermLogic) {
     throw new Error(
       "StpPermLogic not initialized. Please ensure XltTokenModule is imported with stpInterface.",

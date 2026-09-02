@@ -1262,7 +1262,7 @@ var StpLogic = class {
 			ok: false,
 			reason: NotLoginType.NOT_TOKEN
 		};
-		if (this._isJwtMode()) return this._resolveLoginIdJwt(token);
+		if (this._isJwtMode()) return this._resolveLoginIdJwt(ctx, token);
 		const loginId = await getStoreValue(this.store, this.keys.tokenKey(token));
 		if (!loginId) return {
 			ok: false,
@@ -1301,59 +1301,62 @@ var StpLogic = class {
 			token
 		};
 	}
-	async _resolveLoginIdJwt(token) {
+	async _resolveLoginIdJwt(ctx, token) {
+		let payload;
 		try {
-			const { sub: loginId, jti } = this.strategy.verifyToken(token);
-			if (!loginId || !jti) return {
-				ok: false,
-				reason: NotLoginType.INVALID_TOKEN,
-				token
-			};
-			const jwtBlacklistKey = this.keys.jwtBlacklistKey(jti);
-			const blacklisted = await getStoreValue(this.store, jwtBlacklistKey);
-			if (blacklisted === NotLoginType.KICK_OUT) return {
-				ok: false,
-				reason: NotLoginType.KICK_OUT,
-				token
-			};
-			if (blacklisted === NotLoginType.BE_REPLACED) return {
-				ok: false,
-				reason: NotLoginType.BE_REPLACED,
-				token
-			};
-			if (blacklisted) return {
-				ok: false,
-				reason: NotLoginType.INVALID_TOKEN,
-				token
-			};
-			if (this.config.activeTimeout > 0) {
-				const lastActiveKey = this.keys.lastActiveKey(jti);
-				const lastStr = await getStoreValue(this.store, lastActiveKey);
-				if (!lastStr) return {
-					ok: false,
-					reason: NotLoginType.TOKEN_FREEZE,
-					token
-				};
-				if ((Date.now() - Number(lastStr)) / 1e3 > this.config.activeTimeout) return {
-					ok: false,
-					reason: NotLoginType.TOKEN_TIMEOUT,
-					token
-				};
-				await replaceStoreValueKeepingTtl(this.store, lastActiveKey, String(Date.now()));
-			}
+			payload = this.strategy.verifyToken(token);
+		} catch {
 			return {
-				ok: true,
-				loginId,
-				token
-			};
-		} catch (error) {
-			if (error instanceof Error && (error.name === "JsonWebTokenError" || error.name === "TokenExpiredError" || error.name === "NotBeforeError")) return {
 				ok: false,
 				reason: NotLoginType.INVALID_TOKEN,
 				token
 			};
-			throw error;
 		}
+		const { sub: loginId, jti } = payload;
+		if (!loginId || !jti) return {
+			ok: false,
+			reason: NotLoginType.INVALID_TOKEN,
+			token
+		};
+		const jwtBlacklistKey = this.keys.jwtBlacklistKey(jti);
+		const blacklisted = await getStoreValue(this.store, jwtBlacklistKey);
+		if (blacklisted === NotLoginType.KICK_OUT) return {
+			ok: false,
+			reason: NotLoginType.KICK_OUT,
+			token
+		};
+		if (blacklisted === NotLoginType.BE_REPLACED) return {
+			ok: false,
+			reason: NotLoginType.BE_REPLACED,
+			token
+		};
+		if (blacklisted) return {
+			ok: false,
+			reason: NotLoginType.INVALID_TOKEN,
+			token
+		};
+		if (this.config.activeTimeout > 0) {
+			const lastActiveKey = this.keys.lastActiveKey(jti);
+			const lastStr = await getStoreValue(this.store, lastActiveKey);
+			if (!lastStr) return {
+				ok: false,
+				reason: NotLoginType.TOKEN_FREEZE,
+				token
+			};
+			if ((Date.now() - Number(lastStr)) / 1e3 > this.config.activeTimeout) return {
+				ok: false,
+				reason: NotLoginType.TOKEN_TIMEOUT,
+				token
+			};
+			await replaceStoreValueKeepingTtl(this.store, lastActiveKey, String(Date.now()));
+		}
+		ctx.state.stpLoginId = loginId;
+		ctx.state.stpToken = token;
+		return {
+			ok: true,
+			loginId,
+			token
+		};
 	}
 	/**
 	* 处理被顶下线
@@ -1527,10 +1530,18 @@ function setStpLogic(stpLogic) {
 function setStpPermLogic(stpPermLogic) {
 	_stpPermLogic = stpPermLogic;
 }
+/**
+* 读取默认实例的 `StpLogic`；未初始化时抛出与既有语义一致的错误。
+* 供实例 API（`getDefaultXltInstance`）复用同一存储。
+*/
 function getStpLogic() {
 	if (!_stpLogic) throw new Error("StpLogic not initialized. Please ensure XltTokenModule is imported correctly.");
 	return _stpLogic;
 }
+/**
+* 读取默认实例的 `StpPermLogic`；未初始化时抛出与既有语义一致的错误。
+* 供实例 API（`getDefaultXltInstance`）复用同一存储。
+*/
 function getStpPermLogic() {
 	if (!_stpPermLogic) throw new Error("StpPermLogic not initialized. Please ensure XltTokenModule is imported with stpInterface.");
 	return _stpPermLogic;
@@ -1623,8 +1634,15 @@ var StpUtil = class {
 };
 
 //#endregion
-//#region src/factory.ts
-function createXltToken(options = {}) {
+//#region src/instance/xlt-instance.ts
+/**
+* 创建一个隔离的 xlt-token 实例。
+*
+* 纯函数语义：不读取、不写入任何全局状态（包括默认实例）。
+* 与 `createXltToken()` 的唯一差异是不注册默认实例——
+* 如需让 `StpUtil` 路由到该实例，显式调用 `setDefaultXltInstance()`。
+*/
+function createXltInstance(options = {}) {
 	const config = normalizeXltTokenConfig(options.config);
 	const store = options.store ?? new MemoryStore();
 	const strategy = options.strategy ?? new UuidStrategy();
@@ -1636,20 +1654,68 @@ function createXltToken(options = {}) {
 			throw new Error("StpInterface not registered: getRoleList");
 		}
 	};
-	const stpLogic = new StpLogic(config, store, strategy, options.eventSink ?? {});
-	const stpPermLogic = new StpPermLogic(stpInterface, store, config);
-	setStpLogic(stpLogic);
-	setStpPermLogic(stpPermLogic);
 	return {
 		config,
 		store,
 		strategy,
+		stpLogic: new StpLogic(config, store, strategy, options.eventSink ?? {}),
+		stpPermLogic: new StpPermLogic(stpInterface, store, config)
+	};
+}
+/**
+* 显式把某个实例注册为默认实例（`StpUtil` 的委托目标）。
+*
+* 后注册者覆盖先注册者——与 `createXltToken()` 的隐式覆盖行为一致，
+* 但把"隐式副作用"变为"显式声明"。
+*/
+function setDefaultXltInstance(instance) {
+	if (!instance) throw new Error("setDefaultXltInstance requires an XltInstance.");
+	if (!instance.stpLogic) throw new Error("setDefaultXltInstance requires instance.stpLogic to be present. Use createXltInstance() to build a valid instance.");
+	if (!instance.stpPermLogic) throw new Error("setDefaultXltInstance requires instance.stpPermLogic to be present. Use createXltInstance() to build a valid instance.");
+	setStpLogic(instance.stpLogic);
+	setStpPermLogic(instance.stpPermLogic);
+}
+/**
+* 读取当前默认实例；未注册时抛出与 `StpUtil` 一致的初始化错误。
+*
+* 返回值是默认实例的只读视图：`stpLogic` / `stpPermLogic` 来自
+* `setStpLogic` / `setStpPermLogic` / `setDefaultXltInstance` 写入的同一存储，
+* `config` / `store` / `strategy` 从默认 `StpLogic` 实例派生。
+*/
+function getDefaultXltInstance() {
+	const stpLogic = getStpLogic();
+	const stpPermLogic = getStpPermLogic();
+	return {
+		config: stpLogic.config,
+		store: stpLogic.store,
+		strategy: stpLogic.strategy,
 		stpLogic,
-		stpPermLogic,
+		stpPermLogic
+	};
+}
+
+//#endregion
+//#region src/factory.ts
+/**
+* 便捷工厂：构造实例并把它注册为默认实例（`StpUtil` 的委托目标）。
+*
+* 行为等价于 `createXltInstance()` + `setDefaultXltInstance()`，
+* 多次调用时后创建者覆盖先创建者（v2.2 及之前的既有语义）。
+* 多实例进程中请改用 `createXltInstance()` 并持有实例句柄。
+*/
+function createXltToken(options = {}) {
+	const instance = createXltInstance(options);
+	setDefaultXltInstance(instance);
+	return {
+		config: instance.config,
+		store: instance.store,
+		strategy: instance.strategy,
+		stpLogic: instance.stpLogic,
+		stpPermLogic: instance.stpPermLogic,
 		stpUtil: StpUtil
 	};
 }
 
 //#endregion
-export { DEFAULT_XLT_TOKEN_CONFIG, MemoryStore, NotLoginException, NotLoginType, NotPermissionException, NotRoleException, NotSafeException, StpLogic, StpPermLogic, StpUtil, UuidStrategy, XLT_CHECK_LOGIN_KEY, XLT_EVENT_SINK, XLT_IGNORE_KEY, XLT_PERMISSION_KEY, XLT_ROLE_KEY, XLT_STP_INTERFACE, XLT_TOKEN_CONFIG, XLT_TOKEN_STORE, XLT_TOKEN_STRATEGY, XltError, XltMode, XltSession, XltTokenKeys, createExpressContext, createMockHttpContext, createXltToken, finiteTtl, keepTtl, matchPermission, normalizeDuration, normalizeTokenLifecycleConfig, normalizeXltTokenConfig, persistentTtl, setStpLogic, setStpPermLogic };
+export { DEFAULT_XLT_TOKEN_CONFIG, MemoryStore, NotLoginException, NotLoginType, NotPermissionException, NotRoleException, NotSafeException, StpLogic, StpPermLogic, StpUtil, UuidStrategy, XLT_CHECK_LOGIN_KEY, XLT_EVENT_SINK, XLT_IGNORE_KEY, XLT_PERMISSION_KEY, XLT_ROLE_KEY, XLT_STP_INTERFACE, XLT_TOKEN_CONFIG, XLT_TOKEN_STORE, XLT_TOKEN_STRATEGY, XltError, XltMode, XltSession, XltTokenKeys, createExpressContext, createMockHttpContext, createXltInstance, createXltToken, finiteTtl, getDefaultXltInstance, keepTtl, matchPermission, normalizeDuration, normalizeTokenLifecycleConfig, normalizeXltTokenConfig, persistentTtl, setDefaultXltInstance, setStpLogic, setStpPermLogic };
 //# sourceMappingURL=index.mjs.map

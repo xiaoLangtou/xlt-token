@@ -1,3 +1,8 @@
+---
+title: xlt-token 2.0 迁移指南
+description: 从 xlt-token 1.x 升级到 2.x，迁移 Core、Store、JWT、Hooks、NestJS 和 Express 的 Token 鉴权 API。
+---
+
 # xlt-token 2.0 迁移指南
 
 > 适用范围：从 `1.x` 升级到 `2.x`。2.x 不提供 1.x 后向兼容层，旧 Store、JWT 和 Hooks API 需要按表迁移。

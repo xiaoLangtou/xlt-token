@@ -1,3 +1,8 @@
+---
+title: StpLogic 与 StpUtil 核心 API
+description: 查阅 xlt-token 的 StpLogic 与 StpUtil API，处理登录、登出、Token 校验、会话、权限与在线用户。
+---
+
 # 04 · 核心 API（StpLogic / StpUtil）
 
 > 包：`@xlt-token/core`（NestJS 用户通过 `@xlt-token/nestjs` re-export 使用）
@@ -12,6 +17,41 @@
 | 拦截器 / 过滤器 / 脚本 / 工具类（DI 不便） | `StpUtil` | `StpUtil.login(userId)` |
 
 两者方法签名基本一致。NestJS 场景下 `StpUtil.getLoginId(req)` 仍接受 Express `Request`（内部转为 `HttpContext`）；直接使用 core 时请传 `HttpContext`。
+
+## 实例化 API（v2.3）
+
+`StpUtil` 背后是"默认实例"。v2.3 起可以显式创建和管理隔离的认证实例（`packages/core/src/instance/xlt-instance.ts`），多实例进程（如同一服务内隔离用户端与管理端认证）不再依赖全局状态：
+
+```ts
+import {
+  createXltInstance,
+  setDefaultXltInstance,
+  getDefaultXltInstance,
+  MemoryStore,
+} from "@xlt-token/core";
+
+// 纯函数语义：不读取、不写入任何全局状态（包括默认实例）
+const appAuth = createXltInstance({
+  config: { tokenName: "authorization" },
+  store: new MemoryStore(),
+  stpInterface: { /* getPermissionList / getRoleList */ },
+});
+
+// 缺省值与 createXltToken() 一致：MemoryStore + UuidStrategy
+const adminAuth = createXltInstance({ config: { tokenName: "admin-token" } });
+
+// 适配器与业务代码只经由实例句柄访问认证能力：
+await appAuth.stpLogic.login("1001");
+await adminAuth.stpLogic.login("1");
+```
+
+| API | 说明 |
+| --- | --- |
+| `createXltInstance(options?)` | 创建隔离实例；`options` 与 `createXltToken()` 相同（`config` / `store` / `strategy` / `stpInterface` / `eventSink`） |
+| `setDefaultXltInstance(instance)` | 显式把某实例注册为默认实例（`StpUtil` 的委托目标）；后注册者覆盖先注册者 |
+| `getDefaultXltInstance()` | 读取当前默认实例；未初始化时抛与 `StpUtil` 一致的错误 |
+
+`createXltToken()` 语义不变：等价于 `createXltInstance()` + `setDefaultXltInstance()`，是"构造默认实例的便捷工厂"。`StpUtil.xxx()` ≡ `getDefaultXltInstance().stpLogic.xxx()`，既有单实例代码无需任何迁移。完整契约见[多实例与适配器契约](/guide/multi-instance-contract)。
 
 ## 方法参考
 

@@ -1,3 +1,8 @@
+---
+title: 二级认证与临时 Token
+description: 使用 xlt-token 的 Safe 二级认证和临时 Token API，保护支付确认、敏感操作和邮件链接等高风险场景。
+---
+
 # 15 · 二级认证与临时 Token
 
 > 包：`@xlt-token/core`（`openSafe` / 临时 token API）；`@XltCheckSafe` 装饰器：`@xlt-token/nestjs`。

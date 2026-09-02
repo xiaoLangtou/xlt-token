@@ -1,3 +1,8 @@
+---
+title: xlt-token 源码 API 参考
+description: 集中查阅 xlt-token 的 Core、Redis Store、NestJS、Express 和 Fastify 包源码入口与 API 说明。
+---
+
 # xlt-token 源码参考文档
 
 > 版本：`1.0.0`（monorepo）

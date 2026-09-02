@@ -1,3 +1,8 @@
+---
+title: xlt-token MCP Server 设计指南
+description: 设计面向 AI 编码代理的 xlt-token MCP Server，结构化提供项目知识、API 索引、示例和诊断资源。
+---
+
 # MCP Server
 
 MCP Server 适合把项目知识、API 索引、示例和诊断工具以结构化方式暴露给 AI 编码代理。对 `xlt-token` 这类 TypeScript 鉴权库来说，MCP 的价值是让代理不用每次从零扫描仓库，而是通过稳定入口读取项目上下文。

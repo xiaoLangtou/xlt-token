@@ -1,3 +1,8 @@
+---
+title: xlt-token Core 配置参考
+description: 查阅 @xlt-token/core 的 XltTokenConfig、createXltToken 和 Token 鉴权运行时配置项。
+---
+
 # Core 配置参考
 
 > 包：`XltTokenConfig` 定义于 `@xlt-token/core`。

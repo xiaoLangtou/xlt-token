@@ -1,3 +1,8 @@
+---
+title: 多端登录与设备会话管理
+description: 使用 xlt-token 的 device、并发登录和共享 Token 配置，管理同一账号在多终端的登录态。
+---
+
 # 14 · 多端登录
 
 > 包：`@xlt-token/core`（API 实现）；NestJS 示例通过 `StpLogic` / `StpUtil` 调用。

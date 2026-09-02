@@ -1,3 +1,8 @@
+---
+title: Token 审计事件与观测性
+description: 使用 XltEventSink 记录 xlt-token 的登录、登出和会话事件，在不暴露原始 Token 的前提下构建审计与监控。
+---
+
 # 审计事件与观测性
 
 2.0 用 `XltEventSink` 取代 1.x 的 `XltHooks`。事件对象只包含明确允许的字段和 token 指纹，不包含原始 token、请求对象或 JWT payload。

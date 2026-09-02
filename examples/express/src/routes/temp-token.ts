@@ -23,15 +23,14 @@ export function createTempTokenRouter() {
     "/consume",
     asyncHandler(async (req, res) => {
       const { tempToken, newPassword } = req.body as { tempToken: string; newPassword?: string };
-      const value = await StpUtil.parseTempToken(tempToken);
-      if (!value) throw new HttpError(400, "链接无效或已过期");
+      // consumeTempToken 原子完成"读取 + 销毁"：并发重复提交时恰好一次拿到业务值
+      const value = await StpUtil.consumeTempToken(tempToken);
+      if (!value) throw new HttpError(400, "链接无效、已过期或已被使用");
 
       const [action, userId] = value.split(":");
       if (action !== "resetPwd" || !userId) {
         throw new HttpError(400, "无效的临时 token 载荷");
       }
-
-      await StpUtil.deleteTempToken(tempToken);
 
       res.json({
         ok: true,

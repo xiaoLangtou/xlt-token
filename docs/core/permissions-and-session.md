@@ -1,3 +1,8 @@
+---
+title: Token 权限校验与会话管理
+description: 使用 xlt-token 的 StpInterface、StpPermLogic 和 XltSession 实现权限、角色校验和与 Token 同生命周期的会话管理。
+---
+
 # 11 · 权限与会话
 
 > `StpInterface` / `StpPermLogic` / `XltSession`：`@xlt-token/core`；`@XltCheckPermission` 等装饰器：`@xlt-token/nestjs`。
