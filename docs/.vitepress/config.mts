@@ -98,6 +98,7 @@ function releaseCodeHtmlPlugin() {
 }
 
 async function renderReleaseCodeHtml() {
+  // @ts-ignore
   const renderer = await createMarkdownRenderer(docsRoot, markdown, '/xlt-token/')
   const codeHtml: Record<string, string> = {}
 
@@ -192,7 +193,7 @@ function codeBlockKey(version: string, sectionIndex: number, blockIndex: number)
   return `${version}:${sectionIndex}:${blockIndex}`
 }
 
-// @ts-ignore
+
 export default defineConfig({
   title: 'xlt-token',
   description: '框架无关 Token 鉴权库，灵感来源于 Sa-Token。核心 @xlt-token/core + NestJS / Express 适配器，轻量、可插拔。',
@@ -232,7 +233,7 @@ export default defineConfig({
       },
     },
   },
-
+  // @ts-ignore
   markdown,
 
   head: [
