@@ -9,7 +9,8 @@ export function createTempTokenRouter() {
   router.post(
     "/create",
     asyncHandler(async (req, res) => {
-      const { userId, timeout = 1800 } = req.body as { userId: string; timeout?: number };
+      const { timeout = 1800 } = req.body as { timeout?: number };
+      const userId = req.stpLoginId!;
       const value = `resetPwd:${userId}`;
       const tempToken = await StpUtil.createTempToken(value, timeout);
       res.json({

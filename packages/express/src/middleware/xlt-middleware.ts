@@ -24,16 +24,16 @@ export function xltMiddleware(
   options: XltMiddlewareOptions = {},
 ): RequestHandler {
   return async (req: Request, res: Response, next: NextFunction) => {
-    const httpCtx = createExpressContext(req, res);
-
-    req._xltRouteMeta = {
-      ...req._xltRouteMeta,
-      ...resolveRouteAuthMeta(req, options),
-    };
-
-    if (!shouldCheckLogin(req, xlt.config)) return next();
-
     try {
+      const httpCtx = createExpressContext(req, res);
+
+      req._xltRouteMeta = {
+        ...req._xltRouteMeta,
+        ...resolveRouteAuthMeta(req, options),
+      };
+
+      if (!shouldCheckLogin(req, xlt.config)) return next();
+
       await runAuth(xlt, httpCtx, req);
       syncExpressAuthState(req, httpCtx);
       next();

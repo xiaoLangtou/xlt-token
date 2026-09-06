@@ -9,10 +9,10 @@ importers:
   .:
     dependencies:
       '@xlt-token/core':
-        specifier: ^2.2.0
+        specifier: ^2.3.0
         version: link:packages/core
       '@xlt-token/nestjs':
-        specifier: ^2.2.0
+        specifier: ^2.3.0
         version: link:packages/nestjs
     devDependencies:
       '@nestjs/common':
@@ -94,7 +94,7 @@ importers:
   examples/express:
     dependencies:
       '@xlt-token/express':
-        specifier: ^2.2.0
+        specifier: ^2.3.0
         version: link:../../packages/express
       express:
         specifier: ^4.22.0
@@ -125,11 +125,17 @@ importers:
         specifier: ^10.0.0
         version: 10.4.22(@nestjs/common@10.4.22(reflect-metadata@0.1.14)(rxjs@7.8.2))(@nestjs/core@10.4.22)
       '@xlt-token/core':
-        specifier: ^2.2.0
+        specifier: ^2.3.0
         version: link:../../packages/core
       '@xlt-token/nestjs':
-        specifier: ^2.2.0
+        specifier: ^2.3.0
         version: link:../../packages/nestjs
+      jsonwebtoken:
+        specifier: ^9.0.3
+        version: 9.0.3
+      redis:
+        specifier: ^5.0.0
+        version: 5.12.1
       reflect-metadata:
         specifier: ^0.1.13
         version: 0.1.14
@@ -149,13 +155,6 @@ importers:
       typescript:
         specifier: ^5.1.0
         version: 5.9.3
-    optionalDependencies:
-      jsonwebtoken:
-        specifier: ^9.0.3
-        version: 9.0.3
-      redis:
-        specifier: ^5.0.0
-        version: 5.12.1
 
   packages/core:
     dependencies:
@@ -194,7 +193,7 @@ importers:
   packages/express:
     dependencies:
       '@xlt-token/core':
-        specifier: ^2.2.0
+        specifier: ^2.3.0
         version: link:../core
     devDependencies:
       '@types/express':
@@ -228,7 +227,7 @@ importers:
   packages/fastify:
     dependencies:
       '@xlt-token/core':
-        specifier: ^2.2.0
+        specifier: ^2.3.0
         version: link:../core
       fastify-plugin:
         specifier: ^5.0.0
@@ -244,10 +243,10 @@ importers:
         specifier: ^2.1.9
         version: 2.1.9(vitest@2.1.9)
       '@xlt-token/jwt':
-        specifier: ^2.2.0
+        specifier: ^2.3.0
         version: link:../jwt
       '@xlt-token/store-redis':
-        specifier: ^2.2.0
+        specifier: ^2.3.0
         version: link:../store-redis
       fastify:
         specifier: ^5.0.0
@@ -268,7 +267,7 @@ importers:
   packages/jwt:
     dependencies:
       '@xlt-token/core':
-        specifier: ^2.2.0
+        specifier: ^2.3.0
         version: link:../core
       jsonwebtoken:
         specifier: ^9.0.3
@@ -296,13 +295,13 @@ importers:
   packages/nestjs:
     dependencies:
       '@xlt-token/core':
-        specifier: ^2.2.0
+        specifier: ^2.3.0
         version: link:../core
       '@xlt-token/jwt':
-        specifier: ^2.2.0
+        specifier: ^2.3.0
         version: link:../jwt
       '@xlt-token/store-redis':
-        specifier: ^2.2.0
+        specifier: ^2.3.0
         version: link:../store-redis
       uuid:
         specifier: ^10.0.0
@@ -372,7 +371,7 @@ importers:
   packages/store-contract:
     dependencies:
       '@xlt-token/core':
-        specifier: ^2.2.0
+        specifier: ^2.3.0
         version: link:../core
       vitest:
         specifier: ^2.0.0
@@ -391,7 +390,7 @@ importers:
   packages/store-redis:
     dependencies:
       '@xlt-token/core':
-        specifier: ^2.2.0
+        specifier: ^2.3.0
         version: link:../core
       ioredis:
         specifier: ^5.0.0
@@ -404,7 +403,7 @@ importers:
         specifier: ^2.1.9
         version: 2.1.9(vitest@2.1.9)
       '@xlt-token/store-contract':
-        specifier: ^2.2.0
+        specifier: ^2.3.0
         version: link:../store-contract
       tsdown:
         specifier: ^0.20.0

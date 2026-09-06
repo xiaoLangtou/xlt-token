@@ -83,7 +83,7 @@ export class JwtStrategy implements TokenStrategy<XltJwtPayload> {
 }
 
 function resolveExpiresIn(timeout: DurationInput): DurationInput | undefined {
-  if (typeof timeout === "number" && timeout <= 0) {
+  if (timeout === -1) {
     return undefined;
   }
   return timeout;

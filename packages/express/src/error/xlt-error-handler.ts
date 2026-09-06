@@ -10,6 +10,7 @@ import { mapXltError } from "./map-xlt-error.js";
  */
 export function xltErrorHandler(): ErrorRequestHandler {
   return (err, _req, res, next) => {
+    if (res.headersSent) return next(err);
     const mapped = mapXltError(err);
     if (!mapped) {
       next(err);

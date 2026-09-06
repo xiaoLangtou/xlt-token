@@ -2,13 +2,16 @@
 
 > Framework-agnostic token authentication library for TypeScript, inspired by Sa-Token.
 
-xlt-token is a pnpm monorepo that provides token login, logout, session, permissions, roles, multi-device login, secondary authentication, JWT support, pluggable storage, token strategies, hooks, and framework adapters.
+xlt-token is a pnpm monorepo that provides token login, logout, session, permissions, roles, multi-device login, token lifecycle, secondary authentication, JWT support, pluggable storage, token strategies, audit events, and framework adapters.
 
 ## Primary Packages
 
 - `@xlt-token/core`: framework-agnostic authentication engine, store contracts, token strategies, permissions, sessions, hooks, HTTP context, and errors.
-- `@xlt-token/nestjs`: NestJS module, guards, decorators, RedisStore, JwtStrategy, and re-exports from core.
+- `@xlt-token/store-redis`: framework-agnostic RedisStore and IORedisStore for node-redis and ioredis.
+- `@xlt-token/jwt`: JWT strategy with `kid` key rotation.
+- `@xlt-token/nestjs`: NestJS module, guards, decorators, exception wrappers, and re-exports from core.
 - `@xlt-token/express`: Express middleware adapter, route helpers, request state sync, and error handler.
+- `@xlt-token/fastify`: Fastify plugin adapter with explicit `XltInstance`, `preHandler` auth, route policy metadata, request state sync, and error handling.
 - `xlt-token`: compatibility package that re-exports `@xlt-token/nestjs`.
 
 ## Read First
@@ -18,9 +21,11 @@ xlt-token is a pnpm monorepo that provides token login, logout, session, permiss
 - Source reference: `docs/reference/src-reference.md`
 - Architecture: `docs/guide/architecture.md`
 - Core API: `docs/core/core-api.md`
+- Redis Store guide: `docs/store-redis/index.md`
 - NestJS guards and decorators: `docs/adapters/nestjs/guards-and-decorators.md`
 - NestJS module config: `docs/adapters/nestjs/module-config.md`
 - Express adapter: `docs/adapters/express.md`
+- Fastify adapter: `docs/adapters/fastify.md`
 - AI coding agent guide: `docs/reference/llms.md`
 
 ## Important Source Entry Points
@@ -32,11 +37,14 @@ xlt-token is a pnpm monorepo that provides token login, logout, session, permiss
 - Core permission engine: `packages/core/src/auth/stp-perm-logic.ts`
 - Core static facade: `packages/core/src/auth/stp-util.ts`
 - Core HTTP context: `packages/core/src/http/context.ts`
+- Redis Store public export: `packages/store-redis/src/index.ts`
 - NestJS public export: `packages/nestjs/src/index.ts`
 - NestJS module: `packages/nestjs/src/xlt-token.module.ts`
 - NestJS guard: `packages/nestjs/src/guards/xlt-token.guard.ts`
 - Express public export: `packages/express/src/index.ts`
 - Express middleware: `packages/express/src/middleware/xlt-middleware.ts`
+- Fastify public export: `packages/fastify/src/index.ts`
+- Fastify plugin: `packages/fastify/src/plugin.ts`
 
 ## Development Rules
 
@@ -44,8 +52,10 @@ xlt-token is a pnpm monorepo that provides token login, logout, session, permiss
 - Do not start frontend or documentation dev servers unless explicitly requested.
 - If asked how to run the docs locally, tell the user to run `pnpm docs:dev`.
 - Keep framework-independent behavior in `@xlt-token/core`.
-- Keep NestJS DI, guards, decorators, RedisStore, and JwtStrategy in `@xlt-token/nestjs`.
+- Keep Redis client integrations in `@xlt-token/store-redis`.
+- Keep NestJS DI, guards, decorators, compatibility wrappers, and JwtStrategy in `@xlt-token/nestjs`.
 - Keep Express middleware, route helpers, and Express error handling in `@xlt-token/express`.
+- Keep Fastify plugins, route policy resolution, and Fastify error handling in `@xlt-token/fastify`.
 - Preserve public exports in each package `src/index.ts`.
 - When changing auth semantics, update tests before or alongside implementation.
 - When changing public API, update docs, README files, package README files, and examples.
@@ -60,6 +70,9 @@ xlt-token is a pnpm monorepo that provides token login, logout, session, permiss
 - Test NestJS: `pnpm --filter @xlt-token/nestjs test`
 - Test NestJS e2e: `pnpm --filter @xlt-token/nestjs test:e2e`
 - Test Express: `pnpm --filter @xlt-token/express test`
+- Test Express e2e: `pnpm --filter @xlt-token/express test:e2e`
+- Test Fastify: `pnpm --filter @xlt-token/fastify test`
+- Test Fastify e2e: `pnpm --filter @xlt-token/fastify test:e2e`
 - Run docs locally: `pnpm docs:dev`
 - Build docs: `pnpm docs:build`
 
@@ -67,15 +80,18 @@ xlt-token is a pnpm monorepo that provides token login, logout, session, permiss
 
 - `StpLogic` is the main instance API for login state and token lifecycle.
 - `StpUtil` is the static facade and must be bound by framework initialization before use.
+- Use `createXltInstance()` for isolated or multi-instance applications. `createXltToken()` binds the process-global `StpUtil` facade.
+- `config.lifecycle` enables refresh-token rotation and replay detection. `refreshToken()` requires the Store atomic conditional-write contract.
 - `StpPermLogic` handles permission and role checks through `StpInterface`.
-- `XltTokenStore` implementations must preserve timeout semantics.
+- `XltTokenStore` implementations must preserve `StoreTtl` / `StoreTtlUpdate` semantics and provide atomic conditional writes.
 - `TokenStrategy` implementations create and optionally verify token values.
 - `HttpContext` is the framework-neutral request abstraction.
-- NestJS decorators and Express route helpers should describe route auth metadata, not duplicate core auth logic.
+- NestJS decorators, Express route helpers, and Fastify route metadata should describe route auth metadata, not duplicate core auth logic.
 
 ## Validation Expectations
 
 - Core behavior changes should run `pnpm --filter @xlt-token/core test`.
 - NestJS integration changes should run `pnpm --filter @xlt-token/nestjs test` and, when route/module behavior changes, `pnpm --filter @xlt-token/nestjs test:e2e`.
 - Express adapter changes should run `pnpm --filter @xlt-token/express test` and, when middleware behavior changes, `pnpm --filter @xlt-token/express test:e2e`.
+- Fastify adapter changes should run `pnpm --filter @xlt-token/fastify test` and, when plugin or hook behavior changes, `pnpm --filter @xlt-token/fastify test:e2e`.
 - Workspace-level packaging changes should run `pnpm build:workspace`.

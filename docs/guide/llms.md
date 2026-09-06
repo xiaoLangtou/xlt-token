@@ -35,7 +35,7 @@ AI 编码代理进入项目后，建议按这个顺序读取：
 
 1. `llms.txt`
 2. `docs/README.md`
-3. `docs/SRC-REFERENCE.md`
+3. `docs/reference/src-reference.md`
 4. 与任务相关的包入口，例如 `packages/core/src/index.ts`
 5. 对应测试文件和示例
 

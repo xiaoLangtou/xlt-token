@@ -36,6 +36,22 @@ describe("shouldCheckLogin", () => {
       expect(shouldCheckLogin(mockReq({ requireLogin: true }), config(false))).toBe(true);
     });
 
+    it("仅声明权限、角色或二级认证时也需要校验", () => {
+      expect(
+        shouldCheckLogin(
+          mockReq({ permissions: { list: ["user:read"], mode: "and" as never } }),
+          config(false),
+        ),
+      ).toBe(true);
+      expect(
+        shouldCheckLogin(
+          mockReq({ roles: { list: ["admin"], mode: "and" as never } }),
+          config(false),
+        ),
+      ).toBe(true);
+      expect(shouldCheckLogin(mockReq({ safeBusiness: "pay" }), config(false))).toBe(true);
+    });
+
     it("仅标记 ignore 时仍放行", () => {
       expect(shouldCheckLogin(mockReq({ ignore: true }), config(false))).toBe(false);
     });

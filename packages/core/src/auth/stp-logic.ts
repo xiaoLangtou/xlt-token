@@ -27,6 +27,7 @@ import {
   replaceStoreValueKeepingTtl,
   scanStoreKeys,
   setStoreValue,
+  ttlFromSeconds,
   touchStoreValue,
 } from "../store/store-helpers.js";
 import type { TokenStrategy } from "../token/token-strategy.interface.js";
@@ -97,12 +98,26 @@ export class StpLogic {
       if (this._isJwtMode()) {
         const list = await this.getDeviceList(_loginId);
         const info = list.find((d) => d.device === device);
-        token =
-          info?.token ??
-          options.token ??
-          this.strategy.createToken(_loginId, this.config, { timeout });
+        const reusable = info?.token;
+        if (reusable) {
+          try {
+            const { jti } = this.strategy.verifyToken(reusable);
+            const blacklisted = await getStoreValue(this.store, this.keys.jwtBlacklistKey(jti));
+            token = blacklisted
+              ? (options.token ?? this.strategy.createToken(_loginId, this.config, { timeout }))
+              : reusable;
+          } catch {
+            token = options.token ?? this.strategy.createToken(_loginId, this.config, { timeout });
+          }
+        } else {
+          token = options.token ?? this.strategy.createToken(_loginId, this.config, { timeout });
+        }
       } else {
-        token = oldToken;
+        const mappedLoginId = await getStoreValue(this.store, this.keys.tokenKey(oldToken));
+        token =
+          mappedLoginId === _loginId
+            ? oldToken
+            : (options.token ?? this.strategy.createToken(_loginId, this.config, { timeout }));
       }
     } else {
       token = options.token ?? this.strategy.createToken(_loginId, this.config, { timeout });
@@ -160,18 +175,18 @@ export class StpLogic {
     timeout: DurationInput,
   ): Promise<void> {
     const key = this.keys.sessionListKey(loginId);
-    const raw = await getStoreValue(this.store, key);
-    const list: DeviceInfo[] = raw ? JSON.parse(raw) : [];
-    // 同 device 去重
-    const idx = list.findIndex((d) => d.device === info.device);
-    if (idx >= 0) list.splice(idx, 1);
-    list.push(info);
-    await setStoreValue(
-      this.store,
-      key,
-      JSON.stringify(list),
-      normalizeDuration(timeout, { field: "timeout", allowZero: true, allowNever: true }),
-    );
+    const ttl = normalizeDuration(timeout, { field: "timeout", allowZero: true, allowNever: true });
+    for (;;) {
+      const raw = await getStoreValue(this.store, key);
+      const list: DeviceInfo[] = raw ? JSON.parse(raw) : [];
+      const next = [...list.filter((entry) => entry.device !== info.device), info];
+      const serialized = JSON.stringify(next);
+      if (raw === null) {
+        if (await this.store.setIfAbsent(key, serialized, ttlFromSeconds(ttl))) return;
+      } else if (await this.store.compareAndSet(key, raw, serialized, ttlFromSeconds(ttl))) {
+        return;
+      }
+    }
   }
 
   /**
@@ -186,13 +201,17 @@ export class StpLogic {
     const list: DeviceInfo[] = JSON.parse(raw);
     for (const deviceInfo of list) {
       if (this._isJwtMode()) {
-        const { jti } = this.strategy.verifyToken(deviceInfo.token);
-        await setStoreValue(
-          this.store,
-          this.keys.jwtBlacklistKey(jti),
-          NotLoginType.KICK_OUT,
-          this.config.timeout,
-        );
+        try {
+          const { jti } = this.strategy.verifyToken(deviceInfo.token);
+          await setStoreValue(
+            this.store,
+            this.keys.jwtBlacklistKey(jti),
+            NotLoginType.KICK_OUT,
+            this.config.timeout,
+          );
+        } catch {
+          // 过期 JWT 已不可用，继续清理其他设备。
+        }
       } else {
         await replaceStoreValueKeepingTtl(
           this.store,
@@ -200,7 +219,9 @@ export class StpLogic {
           NotLoginType.KICK_OUT,
         );
       }
+      await this.store.delete(this.keys.sessionKey(loginId, deviceInfo.device));
     }
+    await this.store.delete(key);
   }
 
   /**
@@ -414,11 +435,14 @@ export class StpLogic {
 
     await this.store.delete(this.keys.tokenKey(token));
     await this.store.delete(this.keys.lastActiveKey(token));
-    await this.store.delete(this.keys.sessionKey(loginId));
-    await this.store.delete(this.keys.sessionDataKey(loginId));
     const list = await this.getDeviceList(loginId);
     const info = list.find((d) => d.token === token);
-    if (info) await this._removeFromSessionList(loginId, info.device);
+    if (info) {
+      await this.store.delete(this.keys.sessionKey(loginId, info.device));
+      await this._removeFromSessionList(loginId, info.device);
+    }
+    if ((await this.getDeviceList(loginId)).length === 0)
+      await this.store.delete(this.keys.sessionDataKey(loginId));
 
     this.emitAuditEvent("token.logged_out", {
       loginId,
@@ -505,7 +529,9 @@ export class StpLogic {
     }
 
     await this.store.delete(sessionKey);
-    await this.store.delete(this.keys.sessionDataKey(loginId));
+    await this._removeFromSessionList(loginId, device);
+    if ((await this.getDeviceList(loginId)).length === 0)
+      await this.store.delete(this.keys.sessionDataKey(loginId));
     this.writeOfflineRecord(fullToken, NotLoginType.KICK_OUT);
     this.emitAuditEvent("token.kicked_out", {
       loginId,
@@ -616,6 +642,14 @@ export class StpLogic {
         state.loginId,
         resolvedTimeout,
       );
+      if (this.config.activeTimeout > 0) {
+        await setStoreValue(
+          this.store,
+          this.keys.lastActiveKey(nextToken),
+          String(now),
+          resolvedTimeout,
+        );
+      }
       await setStoreValue(
         this.store,
         this.keys.sessionKey(state.loginId, state.device),
@@ -645,7 +679,7 @@ export class StpLogic {
 
   async revoke(target: string, scope: RevokeScope): Promise<RevokeResult> {
     if (scope !== "family") {
-      return { ok: true, alreadyRevoked: false, scope };
+      throw new Error(`Unsupported revoke scope: ${scope}`);
     }
 
     const stateKey = this.keys.tokenFamilyStateKey(target);
@@ -712,7 +746,9 @@ export class StpLogic {
     if (!loginId) return null;
 
     await touchStoreValue(this.store, this.keys.tokenKey(token), timeoutSec);
-    await touchStoreValue(this.store, this.keys.sessionKey(loginId), timeoutSec);
+    const info = (await this.getDeviceList(loginId)).find((entry) => entry.token === token);
+    if (!info) throw new Error("Token device session is missing");
+    await touchStoreValue(this.store, this.keys.sessionKey(loginId, info.device), timeoutSec);
 
     if (this.config.activeTimeout > 0) {
       await touchStoreValue(this.store, this.keys.lastActiveKey(token), timeoutSec);
@@ -1037,14 +1073,18 @@ export class StpLogic {
 
   private async _removeFromSessionList(loginId: string, device: string): Promise<void> {
     const key = this.keys.sessionListKey(loginId);
-    const raw = await getStoreValue(this.store, key);
-    if (!raw) return;
-    const list: DeviceInfo[] = JSON.parse(raw);
-    const filtered = list.filter((d) => d.device !== device);
-    if (filtered.length === 0) {
-      await this.store.delete(key);
-    } else {
-      await setStoreValue(this.store, key, JSON.stringify(filtered), -1); // 继承原 TTL 不变
+    for (;;) {
+      const raw = await getStoreValue(this.store, key);
+      if (!raw) return;
+      const list: DeviceInfo[] = JSON.parse(raw);
+      const filtered = list.filter((d) => d.device !== device);
+      if (filtered.length === 0) {
+        if (await this.store.compareAndDelete(key, raw)) return;
+      } else if (
+        await this.store.compareAndSet(key, raw, JSON.stringify(filtered), { kind: "keep" })
+      ) {
+        return;
+      }
     }
   }
 

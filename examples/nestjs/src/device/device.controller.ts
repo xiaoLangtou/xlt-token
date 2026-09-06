@@ -1,14 +1,13 @@
 import { Body, Controller, Get, Post } from "@nestjs/common";
-import { LoginId, StpUtil, TokenValue, XltIgnore } from "@xlt-token/nestjs";
+import { LoginId, StpUtil, TokenValue, XltCheckRole, XltMode } from "@xlt-token/nestjs";
 
 @Controller("device")
 export class DeviceController {
   /** 指定 device 登录（pc / app / h5） */
-  @XltIgnore()
   @Post("login")
-  async login(@Body() dto: { loginId: string; device: string }) {
-    const token = await StpUtil.login(dto.loginId, { device: dto.device });
-    return { token, loginId: dto.loginId, device: dto.device };
+  async login(@LoginId() loginId: string, @Body() dto: { device: string }) {
+    const token = await StpUtil.login(loginId, { device: dto.device });
+    return { token, loginId, device: dto.device };
   }
 
   @Get("list")
@@ -18,6 +17,7 @@ export class DeviceController {
   }
 
   /** 仅踢指定设备 */
+  @XltCheckRole("admin", { mode: XltMode.AND })
   @Post("kickout-by-device")
   async kickoutByDevice(@Body() dto: { loginId: string; device: string }) {
     const ok = await StpUtil.kickoutByDevice(dto.loginId, dto.device);
@@ -25,6 +25,7 @@ export class DeviceController {
   }
 
   /** 精确踢指定 token */
+  @XltCheckRole("admin", { mode: XltMode.AND })
   @Post("kickout-by-token")
   async kickoutByToken(@Body() dto: { token: string }) {
     const ok = await StpUtil.kickoutByToken(dto.token);
@@ -32,9 +33,10 @@ export class DeviceController {
   }
 
   /** 全端登出 */
+  @XltCheckRole("admin", { mode: XltMode.AND })
   @Post("force-logout")
-  async forceLogout(@LoginId() loginId: string) {
-    const ok = await StpUtil.forceLogout(loginId);
+  async forceLogout(@Body() dto: { loginId: string }) {
+    const ok = await StpUtil.forceLogout(dto.loginId);
     return { ok };
   }
 

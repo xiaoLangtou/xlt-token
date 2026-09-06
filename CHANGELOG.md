@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.3.0] - 2026-09-04
+
+### Added
+
+- 新增 `@xlt-token/fastify` 官方适配器。通过显式 `XltInstance`、`xltFastifyPlugin`、`preHandler` Hook、插件策略和路由 `config.xlt` 接入登录、权限、角色与二级认证校验。
+- Core 提供隔离实例 API：`createXltInstance()`、`setDefaultXltInstance()` 和 `getDefaultXltInstance()`。多认证域应用可以避免 `StpUtil` 的全局实例覆盖。
+- Token lifecycle 支持 refresh token 轮转、token family、原子重放检测和 family 撤销；`refreshToken()` 返回新的 access token 与 family 状态。
+- 发布门禁现在覆盖 `@xlt-token/fastify`，保证所有发布包的版本和内部依赖范围保持一致。
+
+### Documentation
+
+- 更新包总览、源码参考、`llms.txt`、AI Skill 和 MCP 实现契约，补充 Fastify、实例边界与 token lifecycle 的使用和验证信息。
+
+### Compatibility
+
+- 无 breaking change。`createXltToken()` 和 `StpUtil` 保持既有单实例语义；多实例应用应改用显式实例 API。
+
 ## [2.2.0] - 2026-09-01
 
 ### Added

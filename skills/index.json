@@ -3,7 +3,7 @@
     {
       "name": "xlt-token",
       "path": "xlt-token",
-      "description": "Use xlt-token for token authentication in TypeScript backend projects, including NestJS and Express integrations, login state, permissions, roles, sessions, multi-device login, JWT, Redis storage, hooks, and secondary authentication."
+      "description": "Use xlt-token for token authentication in TypeScript backend projects, including NestJS, Express, and Fastify integrations, login state, token lifecycle, permissions, roles, sessions, multi-device login, JWT, Redis storage, hooks, and secondary authentication."
     }
   ]
 }

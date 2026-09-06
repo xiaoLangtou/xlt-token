@@ -7,8 +7,9 @@ import type {
 } from "./types.js";
 
 function matchPathPrefix(path: string, prefix: string): boolean {
-  const pathname = path.split("?")[0] ?? path;
-  return prefix === "/" || pathname === prefix || pathname.startsWith(`${prefix}/`);
+  const pathname = decodeURI(path.split("?")[0]!);
+  const normalized = prefix.replace(/\/+$/, "") || "/";
+  return normalized === "/" || pathname === normalized || pathname.startsWith(`${normalized}/`);
 }
 
 function matchersOf(policy: XltRoutePolicy): XltAuthMatcher[] {
@@ -20,7 +21,7 @@ export function matchPolicy(request: FastifyRequest, policy: XltRoutePolicy): bo
   if (policy.methods?.length) {
     const method = request.method.toUpperCase();
     const allowed = policy.methods.map((m) => m.toUpperCase());
-    if (!allowed.includes(method)) return false;
+    if (!allowed.includes(method) && !(method === "HEAD" && allowed.includes("GET"))) return false;
   }
 
   return matchersOf(policy).some((matcher) => {
@@ -28,7 +29,7 @@ export function matchPolicy(request: FastifyRequest, policy: XltRoutePolicy): bo
     if (typeof matcher === "string") {
       return matchPathPrefix(request.url, matcher);
     }
-    return matcher.test(request.url);
+    return new RegExp(matcher.source, matcher.flags).test(decodeURI(request.url.split("?")[0]!));
   });
 }
 
@@ -102,5 +103,7 @@ export function shouldCheckLogin(meta: XltRouteAuthMeta, defaultCheck: boolean):
   if (defaultCheck) {
     return !meta?.ignore;
   }
-  return meta?.requireLogin ?? false;
+  return Boolean(
+    meta.requireLogin || meta.permissions || meta.roles || meta.safeBusiness !== undefined,
+  );
 }

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { StpUtil } from "@xlt-token/express";
+import { StpUtil, XltMode } from "@xlt-token/express";
 import { asyncHandler } from "../middleware/async-handler";
 
 export function createDeviceRouter() {
@@ -8,7 +8,8 @@ export function createDeviceRouter() {
   router.post(
     "/login",
     asyncHandler(async (req, res) => {
-      const { loginId, device } = req.body as { loginId: string; device: string };
+      const { device } = req.body as { device: string };
+      const loginId = req.stpLoginId!;
       const token = await StpUtil.login(loginId, { device });
       res.json({ token, loginId, device });
     }),
@@ -26,6 +27,7 @@ export function createDeviceRouter() {
   router.post(
     "/kickout-by-device",
     asyncHandler(async (req, res) => {
+      await StpUtil.checkRole(req.stpLoginId!, ["admin"], XltMode.AND);
       const { loginId, device } = req.body as { loginId: string; device: string };
       const ok = await StpUtil.kickoutByDevice(loginId, device);
       res.json({ ok });
@@ -35,6 +37,7 @@ export function createDeviceRouter() {
   router.post(
     "/kickout-by-token",
     asyncHandler(async (req, res) => {
+      await StpUtil.checkRole(req.stpLoginId!, ["admin"], XltMode.AND);
       const { token } = req.body as { token: string };
       const ok = await StpUtil.kickoutByToken(token);
       res.json({ ok });
@@ -44,7 +47,9 @@ export function createDeviceRouter() {
   router.post(
     "/force-logout",
     asyncHandler(async (req, res) => {
-      const ok = await StpUtil.forceLogout(req.stpLoginId!);
+      await StpUtil.checkRole(req.stpLoginId!, ["admin"], XltMode.AND);
+      const { loginId } = req.body as { loginId: string };
+      const ok = await StpUtil.forceLogout(loginId);
       res.json({ ok });
     }),
   );

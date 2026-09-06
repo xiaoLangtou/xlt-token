@@ -207,7 +207,7 @@ app.use(async (req, res, next) => {
 | `offlineRecordEnabled` | `boolean` | `false` | 是否记录被踢 / 被顶的下线原因 |
 | `offlineRecordTimeout` | `number` | `3600` | 下线记录保留秒数 |
 | `permCacheTimeout` | `number` | `0` | 权限 / 角色列表缓存秒数（`0` = 不缓存） |
-| `tokenLifecycle` | `TokenLifecycleConfig` | - | refresh token 轮转、复用检测与 token family 生命周期配置 |
+| `lifecycle` | `TokenLifecycleConfig` | - | refresh token 轮转、重放检测与 token family 生命周期配置 |
 
 ## API 文档
 

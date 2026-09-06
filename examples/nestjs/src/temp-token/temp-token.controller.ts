@@ -1,13 +1,12 @@
 import { BadRequestException, Body, Controller, Post } from "@nestjs/common";
-import { StpUtil, XltIgnore } from "@xlt-token/nestjs";
+import { LoginId, StpUtil, XltIgnore } from "@xlt-token/nestjs";
 
 @Controller("temp-token")
 export class TempTokenController {
   /** 创建临时 token（如邮件重置密码链接） */
-  @XltIgnore()
   @Post("create")
-  async create(@Body() dto: { userId: string; timeout?: number }) {
-    const value = `resetPwd:${dto.userId}`;
+  async create(@LoginId() userId: string, @Body() dto: { timeout?: number }) {
+    const value = `resetPwd:${userId}`;
     const tempToken = await StpUtil.createTempToken(value, dto.timeout ?? 1800);
     return {
       tempToken,

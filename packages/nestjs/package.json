@@ -1,6 +1,6 @@
 {
   "name": "@xlt-token/nestjs",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "description": "NestJS integration for xlt-token",
   "keywords": [
     "auth",
@@ -58,9 +58,9 @@
     "test:e2e:junit": "vitest run --config vitest.e2e.config.ts --reporter=junit --outputFile=reports/junit-e2e.xml"
   },
   "dependencies": {
-    "@xlt-token/core": "^2.2.0",
-    "@xlt-token/jwt": "^2.2.0",
-    "@xlt-token/store-redis": "^2.2.0",
+    "@xlt-token/core": "^2.3.0",
+    "@xlt-token/jwt": "^2.3.0",
+    "@xlt-token/store-redis": "^2.3.0",
     "uuid": "^10.0.0"
   },
   "devDependencies": {

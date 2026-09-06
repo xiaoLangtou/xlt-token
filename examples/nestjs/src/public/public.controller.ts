@@ -18,7 +18,7 @@ export class PublicController {
   @XltIgnore()
   @Get("product/:id")
   async productDetail(@Param("id") id: string, @Req() req: Request) {
-    const loginId = await StpUtil.getLoginId(req);
+    const loginId = (await StpUtil.isLogin(req)) ? await StpUtil.getLoginId(req) : null;
     return {
       id,
       title: `Product ${id}`,

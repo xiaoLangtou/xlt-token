@@ -86,7 +86,14 @@ export class XltTokenGuard implements CanActivate {
       context.getHandler(),
       context.getClass(),
     ]);
-    return shouldCheck ?? false;
+    return Boolean(
+      shouldCheck ||
+      [XLT_PERMISSION_KEY, XLT_ROLE_KEY, XLT_CHECK_SAFE_KEY].some(
+        (key) =>
+          this.reflector.getAllAndOverride(key, [context.getHandler(), context.getClass()]) !==
+          undefined,
+      ),
+    );
   }
 
   private getBusiness(context: ExecutionContext): string {

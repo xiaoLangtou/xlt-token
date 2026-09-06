@@ -29,6 +29,7 @@ export class RedisStore implements XltTokenStore {
     if (value === null) return null;
 
     const ttl = await this.redisClient.ttl(key);
+    if (ttl === -2) return null;
     return {
       value,
       expiresAt: ttl < 0 ? null : Date.now() + ttl * 1000,
@@ -36,6 +37,7 @@ export class RedisStore implements XltTokenStore {
   }
 
   async set(key: string, value: string, ttl: StoreTtl): Promise<void> {
+    if (ttl.kind === "finite" && ttl.seconds === 0) { await this.delete(key); return; }
     if (ttl.kind === "persistent") {
       await this.redisClient.set(key, value);
       return;

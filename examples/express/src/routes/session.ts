@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { StpUtil } from "@xlt-token/express";
+import { StpUtil, XltMode } from "@xlt-token/express";
 import { asyncHandler } from "../middleware/async-handler";
 
 export function createSessionRouter() {
@@ -8,7 +8,7 @@ export function createSessionRouter() {
   router.post(
     "/login-replace",
     asyncHandler(async (req, res) => {
-      const { loginId } = req.body as { loginId: string };
+      const loginId = req.stpLoginId!;
       const token = await StpUtil.login(loginId);
       res.json({ token, loginId });
     }),
@@ -17,7 +17,8 @@ export function createSessionRouter() {
   router.post(
     "/login-share",
     asyncHandler(async (req, res) => {
-      const { loginId, device = "default" } = req.body as { loginId: string; device?: string };
+      const { device = "default" } = req.body as { device?: string };
+      const loginId = req.stpLoginId!;
       const token = await StpUtil.login(loginId, { device });
       res.json({ token, hint: "需 config.isShare=true 才返回相同 token" });
     }),
@@ -26,6 +27,7 @@ export function createSessionRouter() {
   router.post(
     "/kickout",
     asyncHandler(async (req, res) => {
+      await StpUtil.checkRole(req.stpLoginId!, ["admin"], XltMode.AND);
       const { loginId, device } = req.body as { loginId: string; device?: string };
       const ok = await StpUtil.kickout(loginId, device);
       res.json({ ok });
@@ -35,6 +37,7 @@ export function createSessionRouter() {
   router.post(
     "/logout-by-login-id",
     asyncHandler(async (req, res) => {
+      await StpUtil.checkRole(req.stpLoginId!, ["admin"], XltMode.AND);
       const { loginId } = req.body as { loginId: string };
       const ok = await StpUtil.logoutByLoginId(loginId);
       res.json({ ok });
@@ -44,6 +47,7 @@ export function createSessionRouter() {
   router.get(
     "/online-count",
     asyncHandler(async (_req, res) => {
+      await StpUtil.checkRole(_req.stpLoginId!, ["admin"], XltMode.AND);
       const count = await StpUtil.getOnlineCount();
       res.json({ count });
     }),
@@ -52,6 +56,7 @@ export function createSessionRouter() {
   router.get(
     "/online-ids",
     asyncHandler(async (_req, res) => {
+      await StpUtil.checkRole(_req.stpLoginId!, ["admin"], XltMode.AND);
       const loginIds = await StpUtil.getOnlineLoginIds({ page: 0, pageSize: 50 });
       res.json({ loginIds });
     }),

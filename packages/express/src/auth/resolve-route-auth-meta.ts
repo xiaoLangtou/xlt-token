@@ -1,9 +1,10 @@
 import type { Request } from "express";
 import type { RouteAuthMeta, RouteAuthPolicy, XltMiddlewareOptions } from "../types.js";
 
-function matchPathPrefix(path: string, prefix: string): boolean {
-  const pathname = path.split("?")[0] ?? path;
-  return prefix === "/" || pathname === prefix || pathname.startsWith(`${prefix}/`);
+export function matchPathPrefix(path: string, prefix: string): boolean {
+  const pathname = path.split("?")[0]!.toLowerCase();
+  const normalized = prefix.replace(/\/+$/, "").toLowerCase() || "/";
+  return normalized === "/" || pathname === normalized || pathname.startsWith(`${normalized}/`);
 }
 
 /**
@@ -36,7 +37,7 @@ export function matchPolicy(req: Request, policy: RouteAuthPolicy): boolean {
   if (policy.methods?.length) {
     const method = req.method.toUpperCase();
     const allowed = policy.methods.map((m) => m.toUpperCase());
-    if (!allowed.includes(method)) return false;
+    if (!allowed.includes(method) && !(method === "HEAD" && allowed.includes("GET"))) return false;
   }
 
   const matchers = Array.isArray(policy.match) ? policy.match : [policy.match];
@@ -45,7 +46,7 @@ export function matchPolicy(req: Request, policy: RouteAuthPolicy): boolean {
     if (typeof matcher === "string") {
       return matchPathPrefix(req.originalUrl, matcher);
     }
-    return matcher.test(req.originalUrl);
+    return new RegExp(matcher.source, matcher.flags).test(req.originalUrl.split("?")[0]!);
   });
 }
 

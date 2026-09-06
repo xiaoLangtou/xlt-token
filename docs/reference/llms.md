@@ -9,7 +9,7 @@ description: 为 AI 编码代理提供 xlt-token 的项目地图、包职责、�
 
 ## 项目定位
 
-`xlt-token` 是一个 TypeScript monorepo，提供受 Sa-Token 启发的框架无关 Token 鉴权能力。核心能力包括登录、登出、会话、权限、角色、多端登录、二级认证、JWT、可插拔存储、Token 策略、审计事件，以及 NestJS / Express 适配器。
+`xlt-token` 是一个 TypeScript monorepo，提供受 Sa-Token 启发的框架无关 Token 鉴权能力。核心能力包括登录、登出、会话、权限、角色、多端登录、二级认证、JWT、可插拔存储、Token 策略、token lifecycle、审计事件，以及 NestJS / Express / Fastify 适配器。
 
 ## 包职责
 
@@ -19,19 +19,21 @@ description: 为 AI 编码代理提供 xlt-token 的项目地图、包职责、�
 | `@xlt-token/store-redis` | 框架无关的 RedisStore、IORedisStore | `packages/store-redis/src/index.ts` |
 | `@xlt-token/nestjs` | NestJS Module、Guard、Decorator、异常包装，并 re-export Core | `packages/nestjs/src/index.ts` |
 | `@xlt-token/express` | Express middleware、route helper、请求状态同步、错误处理器 | `packages/express/src/index.ts` |
+| `@xlt-token/fastify` | Fastify Plugin、`preHandler` Hook、路由策略、请求状态同步、错误处理器 | `packages/fastify/src/index.ts` |
 | `xlt-token` | 兼容包，等价于 re-export `@xlt-token/nestjs` | `src/index.ts` |
 
 ## 优先阅读
 
 - 项目总览：`README.md`
 - 文档导航：`docs/README.md`
-- 源码速查：`docs/SRC-REFERENCE.md`
+- 源码速查：`docs/reference/src-reference.md`
 - 架构设计：`guide/architecture.md`
 - Core API：`core/core-api.md`
 - Redis Store：`store-redis/index.md`
 - NestJS 守卫与装饰器：`adapters/nestjs/guards-and-decorators.md`
 - NestJS 模块配置：`adapters/nestjs/module-config.md`
 - Express 适配器：`adapters/express.md`
+- Fastify 适配器：`adapters/fastify.md`
 
 ## 核心源码入口
 
@@ -46,6 +48,7 @@ description: 为 AI 编码代理提供 xlt-token 的项目地图、包职责、�
 - NestJS 模块：`packages/nestjs/src/xlt-token.module.ts`
 - NestJS 全局守卫：`packages/nestjs/src/guards/xlt-token.guard.ts`
 - Express 全局中间件：`packages/express/src/middleware/xlt-middleware.ts`
+- Fastify Plugin：`packages/fastify/src/plugin.ts`
 
 ## 编码边界
 
@@ -53,10 +56,13 @@ description: 为 AI 编码代理提供 xlt-token 的项目地图、包职责、�
 - Redis Store 放在 `@xlt-token/store-redis`。
 - NestJS DI、Guard、Decorator、JwtStrategy 放在 `@xlt-token/nestjs`。
 - Express 中间件、route helper、错误处理器放在 `@xlt-token/express`。
+- Fastify Plugin、路由策略和 Fastify 错误处理放在 `@xlt-token/fastify`。
 - 各包的 `src/index.ts` 是公共 API 边界，修改导出前要考虑兼容性。
 - NestJS decorators 和 Express route helpers 应描述路由鉴权元信息，不要复制 Core 鉴权逻辑。
 - `StpLogic` 是登录态和 token 生命周期的实例 API。
 - `StpUtil` 是静态门面，必须由框架初始化流程绑定实例后再使用。
+- 多实例场景使用 `createXltInstance()` 并持有实例句柄；不要用 `StpUtil` 隔离多个认证域。
+- 启用 `config.lifecycle` 后，`refreshToken()` 依赖 Store 的原子 `compareAndSet`；多实例部署使用共享 Store。
 - `StpPermLogic` 通过 `StpInterface` 获取权限和角色。
 - `XltTokenStore` 实现必须保持 `StoreTtl` / `StoreTtlUpdate` 语义，并保证条件写入原子性。
 - `TokenStrategy` 负责创建 token，JWT 策略还负责校验和 jti 处理。
@@ -75,6 +81,8 @@ pnpm --filter @xlt-token/nestjs test
 pnpm --filter @xlt-token/nestjs test:e2e
 pnpm --filter @xlt-token/express test
 pnpm --filter @xlt-token/express test:e2e
+pnpm --filter @xlt-token/fastify test
+pnpm --filter @xlt-token/fastify test:e2e
 ```
 
 文档本地运行命令：
@@ -88,6 +96,7 @@ pnpm docs:dev
 - 修改 Core 鉴权语义时，优先补充或更新 Core 单测。
 - 修改 NestJS module / guard / decorator 行为时，补充 NestJS 单测；涉及请求链路时补 E2E。
 - 修改 Express middleware / route helper 行为时，补充 Express 单测；涉及完整请求链路时补 E2E。
+- 修改 Fastify Plugin / 路由策略行为时，补充 Fastify 单测；涉及 Hook 请求链路时补 E2E。
 - 修改公共 API 时，同步 `README.md`、`docs/`、包 README、示例和导出。
 - 优先复用现有 fixtures、测试布局和包内模式。
 - 不主动启动前端或文档服务；需要预览时只告诉使用者运行 `pnpm docs:dev`。

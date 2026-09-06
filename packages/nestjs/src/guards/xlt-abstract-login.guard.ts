@@ -78,14 +78,4 @@ export abstract class XltAbstractLoginGuard implements CanActivate {
     },
     request: any,
   ): void | Promise<void>;
-
-  protected onPermissionDenied?(
-    result: {
-      ok: boolean;
-      loginId?: string | undefined;
-      token?: string | undefined;
-      reason?: NotLoginType | undefined;
-    },
-    request: any,
-  ): void | Promise<void>;
 }

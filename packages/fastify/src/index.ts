@@ -20,4 +20,4 @@ export type {
 
 // 核心类型（来自 @xlt-token/core）
 export type { XltInstance } from "@xlt-token/core";
-export { createXltInstance, MemoryStore, UuidStrategy } from "@xlt-token/core";
+export { createXltInstance, MemoryStore, UuidStrategy, XltMode } from "@xlt-token/core";

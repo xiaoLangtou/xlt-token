@@ -11,7 +11,7 @@ description: 为 AI 编码代理安装 xlt-token Skill，获取 Token 鉴权、N
 
 Skills 是结构化知识文件，用来给 AI 编码代理补充某个库、框架或代码库的上下文。与 MCP server 提供实时工具访问不同，Skill 会被加载进代理上下文，让代理在对话中持续参考这些使用规则和示例。
 
-`xlt-token` 提供一个 **usage skill**：它教 AI 代理如何在 TypeScript 后端项目中正确接入 xlt-token，包括 NestJS、Express、Core API、权限、角色、会话、多端登录、JWT、Redis、审计事件和二级认证。
+`xlt-token` 提供一个 **usage skill**：它教 AI 代理如何在 TypeScript 后端项目中正确接入 xlt-token，包括 Core API、NestJS、Express、Fastify、权限、角色、会话、多端登录、token 生命周期、JWT、Redis、审计事件和二级认证。
 
 ## Usage
 
@@ -19,8 +19,9 @@ Skills 是结构化知识文件，用来给 AI 编码代理补充某个库、框
 
 - `@xlt-token/nestjs` 的模块注册、全局 Guard、装饰器和异常处理
 - `@xlt-token/express` 的中间件、路由策略、helper 和错误处理器
+- `@xlt-token/fastify` 的显式 `XltInstance`、Plugin、`preHandler` Hook、路由 `config.xlt` 和错误处理器
 - `@xlt-token/core` 的框架无关用法和自定义适配器
-- 登录、登出、踢人、顶号、多端登录和在线用户查询
+- 登录、登出、踢人、顶号、多端登录、在线用户查询和 refresh token 轮转
 - 权限、角色、会话、二级认证和临时 token
 - Redis Store 独立包、JwtStrategy、审计事件和生产建议
 
@@ -141,6 +142,7 @@ skills/
         ├── core.md
         ├── nestjs.md
         ├── express.md
+        ├── fastify.md
         └── recipes.md
 ```
 

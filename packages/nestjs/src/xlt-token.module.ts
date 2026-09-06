@@ -34,7 +34,9 @@ export interface XltTokenModuleOptions {
 }
 
 export interface XltTokenModuleAsyncOptions extends Pick<ModuleMetadata, "imports"> {
-  useFactory: (...args: any[]) => Promise<XltTokenModuleOptions> | XltTokenModuleOptions;
+  useFactory: (
+    ...args: any[]
+  ) => Promise<Pick<XltTokenModuleOptions, "config">> | Pick<XltTokenModuleOptions, "config">;
   inject?: any[];
   store?: { useClass: new (...args: any[]) => XltTokenStore } | { useValue: XltTokenStore };
   strategy?: { useClass: new (...args: any[]) => TokenStrategy } | { useValue: TokenStrategy };

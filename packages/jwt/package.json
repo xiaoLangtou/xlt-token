@@ -1,6 +1,6 @@
 {
   "name": "@xlt-token/jwt",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "description": "JWT token strategy with key rotation for xlt-token",
   "keywords": [
     "auth",
@@ -54,7 +54,7 @@
     "test:cov": "vitest run --coverage"
   },
   "dependencies": {
-    "@xlt-token/core": "^2.2.0",
+    "@xlt-token/core": "^2.3.0",
     "jsonwebtoken": "^9.0.3"
   },
   "devDependencies": {

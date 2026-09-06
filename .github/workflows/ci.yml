@@ -17,6 +17,7 @@ jobs:
   quality:
     name: Quality / Node ${{ matrix.node-version }}
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
@@ -25,7 +26,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa # v4
 
       - uses: actions/setup-node@v6
         with:
@@ -41,11 +42,12 @@ jobs:
   docs:
     name: Docs build
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
       - uses: actions/checkout@v5
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa # v4
 
       - uses: actions/setup-node@v6
         with:

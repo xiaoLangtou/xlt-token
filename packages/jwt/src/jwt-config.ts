@@ -1,4 +1,5 @@
 import type { Secret, SignOptions } from "jsonwebtoken";
+import { KeyObject } from "node:crypto";
 
 export type JwtAlgorithm = Extract<
   SignOptions["algorithm"],
@@ -111,7 +112,7 @@ function assertStrongHmacSecret(kid: string, secret: Secret): void {
       ? Buffer.byteLength(secret)
       : Buffer.isBuffer(secret)
         ? secret.byteLength
-        : 0;
+        : secret instanceof KeyObject && secret.type === "secret" ? secret.symmetricKeySize : 0;
 
   if (length < 32) {
     throw new Error(`JWT key "${kid}" uses a weak HMAC secret; use at least 32 bytes`);

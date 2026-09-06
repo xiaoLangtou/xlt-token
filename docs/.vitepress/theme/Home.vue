@@ -1,61 +1,81 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import { withBase } from 'vitepress';
+import { ref } from "vue";
+import { withBase } from "vitepress";
 
-const copied = ref(false)
+const copied = ref(false);
 
 async function copyInstall() {
   try {
-    await navigator.clipboard.writeText('pnpm add @xlt-token/core')
-    copied.value = true
-    setTimeout(() => { copied.value = false }, 2000)
+    await navigator.clipboard.writeText("pnpm add @xlt-token/core");
+    copied.value = true;
+    setTimeout(() => {
+      copied.value = false;
+    }, 2000);
+  } catch {
+    /* ignore */
   }
-  catch { /* ignore */ }
 }
 
 const guides = [
-  { title: '选择接入方式', desc: 'Core、NestJS 或 Express', link: '/guide/getting-started' },
-  { title: 'Redis Store', desc: 'node-redis 与 ioredis 完整指南', link: '/store-redis/' },
-  { title: '架构设计', desc: '分层与存储键结构', link: '/guide/architecture' },
-]
+  {
+    title: "选择接入方式",
+    desc: "Core、NestJS、Express 或 Fastify",
+    link: "/guide/getting-started",
+  },
+  { title: "Redis Store", desc: "node-redis 与 ioredis 完整指南", link: "/store-redis/" },
+  { title: "架构设计", desc: "分层与存储键结构", link: "/guide/architecture" },
+];
 
 const core = [
-  { title: 'Core 独立使用', link: '/core/getting-started' },
-  { title: '核心 API', link: '/core/core-api' },
-  { title: '权限与会话', link: '/core/permissions-and-session' },
-  { title: 'Store 契约与内存存储', link: '/core/storage' },
-  { title: 'Token 策略', link: '/core/token-strategy' },
-  { title: '异常处理', link: '/core/exceptions' },
-]
+  { title: "Core 独立使用", link: "/core/getting-started" },
+  { title: "核心 API", link: "/core/core-api" },
+  { title: "权限与会话", link: "/core/permissions-and-session" },
+  { title: "Store 契约与内存存储", link: "/core/storage" },
+  { title: "Token 策略", link: "/core/token-strategy" },
+  { title: "异常处理", link: "/core/exceptions" },
+];
 
 const v110 = [
-  { title: '多端登录', link: '/core/multi-device' },
-  { title: '二级认证', link: '/core/secondary-auth' },
-  { title: 'JWT 策略', link: '/core/jwt-strategy' },
-  { title: 'Hooks 与观测', link: '/core/hooks-and-observability' },
-  { title: '场景手册', link: '/core/recipes' },
-  { title: '源码参考', link: '/reference/src-reference' },
-]
+  { title: "多端登录", link: "/core/multi-device" },
+  { title: "二级认证", link: "/core/secondary-auth" },
+  { title: "JWT 策略", link: "/core/jwt-strategy" },
+  { title: "Hooks 与观测", link: "/core/hooks-and-observability" },
+  { title: "场景手册", link: "/core/recipes" },
+  { title: "源码参考", link: "/reference/src-reference" },
+];
 
 const features = [
-  { n: '01', title: '开箱即用', desc: 'Core 零框架依赖，默认配置即可跑通登录、鉴权、踢人与登出。' },
-  { n: '02', title: '可插拔架构', desc: 'Core、Redis Store 与框架适配器独立安装，Store 和 Token 策略均可替换。' },
-  { n: '03', title: 'Sa-Token 语义', desc: '顶号、踢人、活跃过期、多端并发等能力原生支持。' },
-  { n: '04', title: '多框架接入', desc: 'NestJS 提供 Guard 与装饰器；Express 提供 middleware 与路由策略。' },
-  { n: '05', title: '1.1.0 新能力', desc: '多端 device、二级认证、JWT 黑名单、Hooks 与在线观测。', wide: true },
-]
+  { n: "01", title: "开箱即用", desc: "Core 零框架依赖，默认配置即可跑通登录、鉴权、踢人与登出。" },
+  {
+    n: "02",
+    title: "可插拔架构",
+    desc: "Core、Redis Store 与框架适配器独立安装，Store 和 Token 策略均可替换。",
+  },
+  { n: "03", title: "Sa-Token 语义", desc: "顶号、踢人、活跃过期、多端并发等能力原生支持。" },
+  {
+    n: "04",
+    title: "多框架接入",
+    desc: "NestJS 提供 Guard 与装饰器；Express 与 Fastify 提供路由策略适配。",
+  },
+  {
+    n: "05",
+    title: "1.1.0 新能力",
+    desc: "多端 device、二级认证、JWT 黑名单、Hooks 与在线观测。",
+    wide: true,
+  },
+];
 
 const navGroups = [
-  { badge: 'Start', title: '快速开始', items: guides },
-  { badge: 'Core', title: '核心能力', items: core },
-  { badge: 'More', title: '进阶与参考', items: v110 },
-]
+  { badge: "Start", title: "快速开始", items: guides },
+  { badge: "Core", title: "核心能力", items: core },
+  { badge: "More", title: "进阶与参考", items: v110 },
+];
 
 const stats = [
-  { value: '274', label: '测试用例' },
-  { value: '96%+', label: '覆盖率' },
-  { value: 'MIT', label: '开源协议' },
-]
+  { value: "274", label: "测试用例" },
+  { value: "96%+", label: "覆盖率" },
+  { value: "MIT", label: "开源协议" },
+];
 </script>
 
 <template>
@@ -89,7 +109,7 @@ const stats = [
             <button type="button" class="xlt-install" @click="copyInstall">
               <span class="xlt-install__prompt">$</span>
               <code>pnpm add @xlt-token/core</code>
-              <span class="xlt-install__copy">{{ copied ? '已复制 ✓' : '复制' }}</span>
+              <span class="xlt-install__copy">{{ copied ? "已复制 ✓" : "复制" }}</span>
             </button>
           </div>
 
@@ -99,7 +119,13 @@ const stats = [
               <span class="xlt-btn__arrow">→</span>
             </a>
             <a class="xlt-btn xlt-btn--glass" :href="withBase('/store-redis/')">Redis Store</a>
-            <a class="xlt-btn xlt-btn--glass" href="https://github.com/xiaoLangtou/xlt-token" target="_blank" rel="noreferrer">GitHub</a>
+            <a
+              class="xlt-btn xlt-btn--glass"
+              href="https://github.com/xiaoLangtou/xlt-token"
+              target="_blank"
+              rel="noreferrer"
+              >GitHub</a
+            >
           </div>
 
           <dl class="xlt-hero__stats xlt-anim xlt-anim--6">
@@ -110,14 +136,16 @@ const stats = [
           </dl>
         </div>
 
-        <div class="xlt-preview  xlt-anim--4 xlt-preview--float">
+        <div class="xlt-preview xlt-anim--4 xlt-preview--float">
           <div class="xlt-preview__glow" aria-hidden="true" />
           <div class="xlt-preview__bar">
             <span /><span /><span />
             <span class="xlt-preview__name">auth.ts</span>
             <span class="xlt-preview__tag">Live</span>
           </div>
-          <pre class="xlt-preview__code"><code><span class="c-k">import</span> { createXltToken } <span class="c-k">from</span> <span class="c-s">'@xlt-token/core'</span>
+          <pre
+            class="xlt-preview__code"
+          ><code><span class="c-k">import</span> { createXltToken } <span class="c-k">from</span> <span class="c-s">'@xlt-token/core'</span>
 
 <span class="c-k">export const</span> xlt = createXltToken({
   config: {
@@ -203,7 +231,13 @@ const stats = [
           <h2>加入社区</h2>
           <p>扫码加入交流群，获取更新通知与用法答疑。</p>
         </div>
-        <img :src="withBase('/img.png')" alt="交流群二维码" width="300" height="300" loading="lazy" />
+        <img
+          :src="withBase('/img.png')"
+          alt="交流群二维码"
+          width="300"
+          height="300"
+          loading="lazy"
+        />
       </div>
     </section>
   </div>

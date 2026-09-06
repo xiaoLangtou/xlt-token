@@ -61,6 +61,23 @@ import { DEFAULT_XLT_TOKEN_CONFIG } from '@xlt-token/core';
 
 底层 Store 统一使用归一化后的数字秒数，所有运行时注入的 `XltTokenConfig` 只包含数字时长。
 
+## Token 生命周期
+
+设置 `lifecycle` 后，登录会创建 token family。`refreshToken(token)` 可以轮转 token，并按
+`replayDetection` 返回或处理重复刷新；refresh TTL 必须大于或等于 access TTL。该能力依赖
+Store 的原子条件写入，多实例应用应使用 Redis 或其他满足契约的共享 Store。
+
+```ts
+{
+  lifecycle: {
+    expiration: { mode: 'sliding', ttl: '15m', renewWhenRemainingBelow: '3m' },
+    refresh: { enabled: true, ttl: '30d', rotate: true, replayDetection: 'family' },
+  },
+}
+```
+
+`fixed` 过期模式不接受 `renewWhenRemainingBelow`。刷新接口应在成功后立即替换客户端保存的 token；生命周期 API 与返回结果见 [核心 API](/core/core-api)。
+
 ## 典型配置模板
 
 ### 生产环境（Redis，30 天会话，无活跃过期）

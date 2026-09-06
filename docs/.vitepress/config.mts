@@ -65,6 +65,7 @@ const markdown = {
 const virtualReleaseCodeHtmlId = 'virtual:xlt-release-code-html'
 const resolvedVirtualReleaseCodeHtmlId = `\0${virtualReleaseCodeHtmlId}`
 const releaseSources = [
+  'v2.3.0.md',
   'v2.2.0.md',
   'v2.1.0.md',
   'v1.2.1.md',
@@ -276,7 +277,7 @@ export default defineConfig({
       },
       { text: 'AI 指南', link: '/reference/llms' },
       {
-        text: 'v2.2.0',
+        text: 'v2.3.0',
         items: [
           { text: '更新日志', link: '/reference/changelog' },
           { text: 'GitHub Releases', link: 'https://github.com/xiaoLangtou/xlt-token/releases' },

@@ -7,7 +7,7 @@
 export const FILE_IMPORTS = `import type {
   StpInterface,
   TokenStrategy,
-  XltHooks,
+  XltEventSink,
   XltTokenConfig,
   XltTokenStore,
 } from '@xlt-token/core'

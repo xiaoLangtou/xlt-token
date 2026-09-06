@@ -23,6 +23,13 @@ describe("matchPolicy", () => {
     expect(matchPolicy(mockRequest("/apiannya"), { match: "/api" })).toBe(false);
   });
 
+  it("以解码后的 pathname 匹配策略", () => {
+    expect(
+      matchPolicy(mockRequest("/%61dmin/panel"), { match: "/admin", requireLogin: true }),
+    ).toBe(true);
+    expect(matchPolicy(mockRequest("/health?next=/admin"), { match: /^\/admin$/ })).toBe(false);
+  });
+
   it("根路径 / 匹配所有路由", () => {
     expect(matchPolicy(mockRequest("/anything"), { match: "/" })).toBe(true);
   });
@@ -130,9 +137,16 @@ describe("shouldCheckLogin", () => {
     expect(shouldCheckLogin({ ignore: true }, true)).toBe(false);
   });
 
-  it("白名单模式（defaultCheck = false）：默认放行，requireLogin 校验", () => {
+  it("白名单模式（defaultCheck = false）：鉴权元数据会开启校验", () => {
     expect(shouldCheckLogin({}, false)).toBe(false);
     expect(shouldCheckLogin({ requireLogin: true }, false)).toBe(true);
+    expect(
+      shouldCheckLogin({ permissions: { list: ["user:read"], mode: "and" as never } }, false),
+    ).toBe(true);
+    expect(shouldCheckLogin({ roles: { list: ["admin"], mode: "and" as never } }, false)).toBe(
+      true,
+    );
+    expect(shouldCheckLogin({ safeBusiness: "pay" }, false)).toBe(true);
     expect(shouldCheckLogin({ ignore: true }, false)).toBe(false);
   });
 });

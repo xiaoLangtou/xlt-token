@@ -1,172 +1,189 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
-import releaseCodeHtml from 'virtual:xlt-release-code-html';
-import v210 from '../../../../.github/releases/v2.1.0.md?raw';
-import v121 from '../../../../.github/releases/v1.2.1.md?raw';
-import v120 from '../../../../.github/releases/v1.2.0.md?raw';
-import v110 from '../../../../.github/releases/v1.1.0.md?raw';
-import v100 from '../../../../.github/releases/v1.0.0.md?raw';
-import v102 from '../../../../.github/releases/v1.0.2.md?raw';
-import rc1 from '../../../../.github/releases/v1.0.0-rc.1.md?raw';
-import rc2 from '../../../../.github/releases/v1.0.0-rc.2.md?raw';
-import rc3 from '../../../../.github/releases/v1.0.0-rc.3.md?raw';
+import { computed, onMounted, ref } from "vue";
+import releaseCodeHtml from "virtual:xlt-release-code-html";
+import v230 from "../../../../.github/releases/v2.3.0.md?raw";
+import v220 from "../../../../.github/releases/v2.2.0.md?raw";
+import v210 from "../../../../.github/releases/v2.1.0.md?raw";
+import v121 from "../../../../.github/releases/v1.2.1.md?raw";
+import v120 from "../../../../.github/releases/v1.2.0.md?raw";
+import v110 from "../../../../.github/releases/v1.1.0.md?raw";
+import v100 from "../../../../.github/releases/v1.0.0.md?raw";
+import v102 from "../../../../.github/releases/v1.0.2.md?raw";
+import rc1 from "../../../../.github/releases/v1.0.0-rc.1.md?raw";
+import rc2 from "../../../../.github/releases/v1.0.0-rc.2.md?raw";
+import rc3 from "../../../../.github/releases/v1.0.0-rc.3.md?raw";
 
 type Block =
-  | { type: 'subheading'; text: string }
-  | { type: 'paragraph'; html: string }
-  | { type: 'list'; items: string[] }
-  | { type: 'code'; lang: string; code: string; closed?: boolean }
-  | { type: 'table'; headers: string[]; rows: string[][] }
+  | { type: "subheading"; text: string }
+  | { type: "paragraph"; html: string }
+  | { type: "list"; items: string[] }
+  | { type: "code"; lang: string; code: string; closed?: boolean }
+  | { type: "table"; headers: string[]; rows: string[][] };
 
 interface Section {
-  title: string
-  blocks: Block[]
+  title: string;
+  blocks: Block[];
 }
 
 interface Release {
-  version: string
-  date: string
-  summary: string
-  sections: Section[]
-  source: string
-  compare?: string
+  version: string;
+  date: string;
+  summary: string;
+  sections: Section[];
+  source: string;
+  compare?: string;
 }
 
 interface ReleaseFile {
-  date: string
-  source: string
-  url: string
-  fallbackRaw: string
+  date: string;
+  source: string;
+  url: string;
+  fallbackRaw: string;
 }
 
 const RELEASE_FILES: ReleaseFile[] = [
   {
-    date: 'Aug 3, 2026',
-    source: 'v2.1.0.md',
-    url: 'https://raw.githubusercontent.com/xiaoLangtou/xlt-token/master/.github/releases/v2.1.0.md',
+    date: "Sep 5, 2026",
+    source: "v2.3.0.md",
+    url: "https://raw.githubusercontent.com/xiaoLangtou/xlt-token/master/.github/releases/v2.3.0.md",
+    fallbackRaw: v230,
+  },
+  {
+    date: "Aug 20, 2026",
+    source: "v2.2.0.md",
+    url: "https://raw.githubusercontent.com/xiaoLangtou/xlt-token/master/.github/releases/v2.2.0.md",
+    fallbackRaw: v220,
+  },
+  {
+    date: "Aug 3, 2026",
+    source: "v2.1.0.md",
+    url: "https://raw.githubusercontent.com/xiaoLangtou/xlt-token/master/.github/releases/v2.1.0.md",
     fallbackRaw: v210,
   },
   {
-    date: 'Jun 15, 2026',
-    source: 'v1.2.1.md',
-    url: 'https://raw.githubusercontent.com/xiaoLangtou/xlt-token/master/.github/releases/v1.2.1.md',
+    date: "Jun 15, 2026",
+    source: "v1.2.1.md",
+    url: "https://raw.githubusercontent.com/xiaoLangtou/xlt-token/master/.github/releases/v1.2.1.md",
     fallbackRaw: v121,
   },
   {
-    date: 'Jun 14, 2026',
-    source: 'v1.2.0.md',
-    url: 'https://raw.githubusercontent.com/xiaoLangtou/xlt-token/master/.github/releases/v1.2.0.md',
+    date: "Jun 14, 2026",
+    source: "v1.2.0.md",
+    url: "https://raw.githubusercontent.com/xiaoLangtou/xlt-token/master/.github/releases/v1.2.0.md",
     fallbackRaw: v120,
   },
   {
-    date: 'Jun 11, 2026',
-    source: 'v1.1.0.md',
-    url: 'https://raw.githubusercontent.com/xiaoLangtou/xlt-token/master/.github/releases/v1.1.0.md',
+    date: "Jun 11, 2026",
+    source: "v1.1.0.md",
+    url: "https://raw.githubusercontent.com/xiaoLangtou/xlt-token/master/.github/releases/v1.1.0.md",
     fallbackRaw: v110,
   },
   {
-    date: 'Jun 8, 2026',
-    source: 'v1.0.2.md',
-    url: 'https://raw.githubusercontent.com/xiaoLangtou/xlt-token/master/.github/releases/v1.0.2.md',
+    date: "Jun 8, 2026",
+    source: "v1.0.2.md",
+    url: "https://raw.githubusercontent.com/xiaoLangtou/xlt-token/master/.github/releases/v1.0.2.md",
     fallbackRaw: v102,
   },
   {
-    date: 'Jun 6, 2026',
-    source: 'v1.0.0.md',
-    url: 'https://raw.githubusercontent.com/xiaoLangtou/xlt-token/master/.github/releases/v1.0.0.md',
+    date: "Jun 6, 2026",
+    source: "v1.0.0.md",
+    url: "https://raw.githubusercontent.com/xiaoLangtou/xlt-token/master/.github/releases/v1.0.0.md",
     fallbackRaw: v100,
   },
   {
-    date: 'May 29, 2026',
-    source: 'v1.0.0-rc.3.md',
-    url: 'https://raw.githubusercontent.com/xiaoLangtou/xlt-token/master/.github/releases/v1.0.0-rc.3.md',
+    date: "May 29, 2026",
+    source: "v1.0.0-rc.3.md",
+    url: "https://raw.githubusercontent.com/xiaoLangtou/xlt-token/master/.github/releases/v1.0.0-rc.3.md",
     fallbackRaw: rc3,
   },
   {
-    date: 'May 26, 2026',
-    source: 'v1.0.0-rc.2.md',
-    url: 'https://raw.githubusercontent.com/xiaoLangtou/xlt-token/master/.github/releases/v1.0.0-rc.2.md',
+    date: "May 26, 2026",
+    source: "v1.0.0-rc.2.md",
+    url: "https://raw.githubusercontent.com/xiaoLangtou/xlt-token/master/.github/releases/v1.0.0-rc.2.md",
     fallbackRaw: rc2,
   },
   {
-    date: 'Apr 26, 2026',
-    source: 'v1.0.0-rc.1.md',
-    url: 'https://raw.githubusercontent.com/xiaoLangtou/xlt-token/master/.github/releases/v1.0.0-rc.1.md',
+    date: "Apr 26, 2026",
+    source: "v1.0.0-rc.1.md",
+    url: "https://raw.githubusercontent.com/xiaoLangtou/xlt-token/master/.github/releases/v1.0.0-rc.1.md",
     fallbackRaw: rc1,
   },
-]
+];
 
-const releases = ref(parseReleaseFiles(RELEASE_FILES.map(file => file.fallbackRaw)))
-const sourceState = ref<'static' | 'loading' | 'remote' | 'fallback'>('static')
+const releases = ref(parseReleaseFiles(RELEASE_FILES.map((file) => file.fallbackRaw)));
+const sourceState = ref<"static" | "loading" | "remote" | "fallback">("static");
 
 const sourceLabel = computed(() => {
-  if (sourceState.value === 'loading') return '正在同步 GitHub release'
-  if (sourceState.value === 'remote') return '已同步 GitHub release'
-  if (sourceState.value === 'fallback') return '使用本地 release 快照'
-  return '本地 release 快照'
-})
+  if (sourceState.value === "loading") return "正在同步 GitHub release";
+  if (sourceState.value === "remote") return "已同步 GitHub release";
+  if (sourceState.value === "fallback") return "使用本地 release 快照";
+  return "本地 release 快照";
+});
 
-const latestRelease = computed(() => releases.value[0])
+const latestRelease = computed(() => releases.value[0]);
 
 onMounted(() => {
-  void loadRemoteReleases()
-})
+  void loadRemoteReleases();
+});
 
 async function loadRemoteReleases() {
-  sourceState.value = 'loading'
+  sourceState.value = "loading";
 
   try {
     const remoteRaw = await Promise.all(
       RELEASE_FILES.map(async (file) => {
-        const response = await fetch(file.url)
+        const response = await fetch(file.url);
 
         if (!response.ok) {
-          throw new Error(`Failed to fetch ${file.source}: ${response.status}`)
+          throw new Error(`Failed to fetch ${file.source}: ${response.status}`);
         }
 
-        return response.text()
+        return response.text();
       }),
-    )
+    );
 
-    releases.value = parseReleaseFiles(remoteRaw)
-    sourceState.value = 'remote'
-  }
-  catch {
-    releases.value = parseReleaseFiles(RELEASE_FILES.map(file => file.fallbackRaw))
-    sourceState.value = 'fallback'
+    releases.value = parseReleaseFiles(remoteRaw);
+    sourceState.value = "remote";
+  } catch {
+    releases.value = parseReleaseFiles(RELEASE_FILES.map((file) => file.fallbackRaw));
+    sourceState.value = "fallback";
   }
 }
 
 function parseReleaseFiles(rawFiles: string[]) {
   return rawFiles.map((raw, index) => {
-    const file = RELEASE_FILES[index]
+    const file = RELEASE_FILES[index];
 
     return parseRelease(raw, {
       date: file.date,
       source: file.source,
-    })
-  })
+    });
+  });
 }
 
-function parseRelease(raw: string, meta: Pick<Release, 'date' | 'source'>): Release {
-  const lines = raw.split(/\r?\n/)
-  const title = lines.find(line => line.startsWith('# ')) ?? ''
-  const version = title.match(/`([^`]+)`/)?.[1] ?? title.replace(/^#\s+Release\s+/, '').trim()
-  const summary = lines.find(line => line.startsWith('> '))?.replace(/^>\s*/, '').trim() ?? ''
-  const compare = raw.match(/\*\*Full Changelog\*\*:\s*(https?:\/\/\S+)/)?.[1]
+function parseRelease(raw: string, meta: Pick<Release, "date" | "source">): Release {
+  const lines = raw.split(/\r?\n/);
+  const title = lines.find((line) => line.startsWith("# ")) ?? "";
+  const version = title.match(/`([^`]+)`/)?.[1] ?? title.replace(/^#\s+Release\s+/, "").trim();
+  const summary =
+    lines
+      .find((line) => line.startsWith("> "))
+      ?.replace(/^>\s*/, "")
+      .trim() ?? "";
+  const compare = raw.match(/\*\*Full Changelog\*\*:\s*(https?:\/\/\S+)/)?.[1];
 
-  const sections: Section[] = []
-  let current: Section | undefined
+  const sections: Section[] = [];
+  let current: Section | undefined;
 
   for (const line of lines) {
-    if (line.startsWith('## ')) {
-      current = { title: line.replace(/^##\s+/, '').trim(), blocks: [] }
-      sections.push(current)
-      continue
+    if (line.startsWith("## ")) {
+      current = { title: line.replace(/^##\s+/, "").trim(), blocks: [] };
+      sections.push(current);
+      continue;
     }
 
     if (current) {
-      appendLine(current, line)
+      appendLine(current, line);
     }
   }
 
@@ -177,110 +194,120 @@ function parseRelease(raw: string, meta: Pick<Release, 'date' | 'source'>): Rele
     sections,
     source: meta.source,
     compare,
-  }
+  };
 }
 
 function appendLine(section: Section, line: string) {
-  const trimmed = line.trim()
+  const trimmed = line.trim();
 
-  if (!trimmed || trimmed === '---' || trimmed.startsWith('**Full Changelog**')) {
-    return
+  if (!trimmed || trimmed === "---" || trimmed.startsWith("**Full Changelog**")) {
+    return;
   }
 
-  const last = section.blocks.at(-1)
+  const last = section.blocks.at(-1);
 
-  if (trimmed.startsWith('```')) {
-    const lang = trimmed.replace(/^```/, '').trim()
-    if (last?.type === 'code' && !last.closed) {
-      last.closed = true
-      return
+  if (trimmed.startsWith("```")) {
+    const lang = trimmed.replace(/^```/, "").trim();
+    if (last?.type === "code" && !last.closed) {
+      last.closed = true;
+      return;
     }
-    section.blocks.push({ type: 'code', lang, code: '' })
-    return
+    section.blocks.push({ type: "code", lang, code: "" });
+    return;
   }
 
-  if (last?.type === 'code' && !last.closed) {
-    last.code += `${line}\n`
-    return
+  if (last?.type === "code" && !last.closed) {
+    last.code += `${line}\n`;
+    return;
   }
 
-  if (trimmed.startsWith('### ')) {
-    section.blocks.push({ type: 'subheading', text: trimmed.replace(/^###\s+/, '') })
-    return
+  if (trimmed.startsWith("### ")) {
+    section.blocks.push({ type: "subheading", text: trimmed.replace(/^###\s+/, "") });
+    return;
   }
 
-  if (trimmed.startsWith('|')) {
-    const tableLines = section.blocks.at(-1)
-    const cells = splitTableRow(trimmed)
-    if (trimmed.includes('---')) {
-      return
+  if (trimmed.startsWith("|")) {
+    const tableLines = section.blocks.at(-1);
+    const cells = splitTableRow(trimmed);
+    if (trimmed.includes("---")) {
+      return;
     }
-    if (tableLines?.type === 'table') {
-      tableLines.rows.push(cells)
+    if (tableLines?.type === "table") {
+      tableLines.rows.push(cells);
+    } else {
+      section.blocks.push({ type: "table", headers: cells, rows: [] });
     }
-    else {
-      section.blocks.push({ type: 'table', headers: cells, rows: [] })
-    }
-    return
+    return;
   }
 
-  if (trimmed.startsWith('- ')) {
-    const item = inlineMarkdown(trimmed.replace(/^-\s+/, ''))
-    if (last?.type === 'list') {
-      last.items.push(item)
+  if (trimmed.startsWith("- ")) {
+    const item = inlineMarkdown(trimmed.replace(/^-\s+/, ""));
+    if (last?.type === "list") {
+      last.items.push(item);
+    } else {
+      section.blocks.push({ type: "list", items: [item] });
     }
-    else {
-      section.blocks.push({ type: 'list', items: [item] })
-    }
-    return
+    return;
   }
 
-  section.blocks.push({ type: 'paragraph', html: inlineMarkdown(trimmed) })
+  section.blocks.push({ type: "paragraph", html: inlineMarkdown(trimmed) });
 }
 
 function splitTableRow(row: string) {
   return row
-    .replace(/^\|/, '')
-    .replace(/\|$/, '')
-    .split('|')
-    .map(cell => inlineMarkdown(cell.trim()))
+    .replace(/^\|/, "")
+    .replace(/\|$/, "")
+    .split("|")
+    .map((cell) => inlineMarkdown(cell.trim()));
 }
 
 function inlineMarkdown(value: string) {
   return escapeHtml(value)
-    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-    .replace(/`([^`]+)`/g, '<code>$1</code>')
-    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noreferrer">$1</a>')
+    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+    .replace(/`([^`]+)`/g, "<code>$1</code>")
+    .replace(
+      /\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g,
+      '<a href="$2" target="_blank" rel="noreferrer">$1</a>',
+    );
 }
 
 function escapeHtml(value: string) {
   return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 function codeBlockKey(version: string, sectionIndex: number, blockIndex: number) {
-  return `${version}:${sectionIndex}:${blockIndex}`
+  return `${version}:${sectionIndex}:${blockIndex}`;
 }
 
-function codeBlockHtml(block: Extract<Block, { type: 'code' }>, version: string, sectionIndex: number, blockIndex: number) {
-  return releaseCodeHtml[codeBlockKey(version, sectionIndex, blockIndex)] ?? fallbackCodeHtml(block)
+function codeBlockHtml(
+  block: Extract<Block, { type: "code" }>,
+  version: string,
+  sectionIndex: number,
+  blockIndex: number,
+) {
+  return (
+    releaseCodeHtml[codeBlockKey(version, sectionIndex, blockIndex)] ?? fallbackCodeHtml(block)
+  );
 }
 
-function fallbackCodeHtml(block: Extract<Block, { type: 'code' }>) {
-  const langClass = block.lang ? ` class="language-${escapeHtml(block.lang)}"` : ''
+function fallbackCodeHtml(block: Extract<Block, { type: "code" }>) {
+  const langClass = block.lang ? ` class="language-${escapeHtml(block.lang)}"` : "";
 
-  return `<pre><code${langClass}>${escapeHtml(block.code.trim())}</code></pre>`
+  return `<pre><code${langClass}>${escapeHtml(block.code.trim())}</code></pre>`;
 }
 
 function sectionClass(title: string) {
-  if (title.includes('Highlights')) return 'is-highlight'
-  if (title.includes('Breaking')) return 'is-breaking'
-  if (title.includes('Bug')) return 'is-fix'
-  if (title.includes('Features')) return 'is-feature'
-  if (title.includes('Quality')) return 'is-quality'
-  return ''
+  if (title.includes("Highlights")) return "is-highlight";
+  if (title.includes("Breaking")) return "is-breaking";
+  if (title.includes("Bug")) return "is-fix";
+  if (title.includes("Features")) return "is-feature";
+  if (title.includes("Quality")) return "is-quality";
+  return "";
 }
 </script>
 
@@ -304,21 +331,19 @@ function sectionClass(title: string) {
         {{ sourceLabel }}
       </span>
       <div class="xlt-changelog__actions">
-        <a href="https://github.com/xiaoLangtou/xlt-token/releases" target="_blank" rel="noreferrer">
+        <a
+          href="https://github.com/xiaoLangtou/xlt-token/releases"
+          target="_blank"
+          rel="noreferrer"
+        >
           GitHub Releases
         </a>
-        <a href="https://www.npmjs.com/package/xlt-token" target="_blank" rel="noreferrer">
-          npm
-        </a>
+        <a href="https://www.npmjs.com/package/xlt-token" target="_blank" rel="noreferrer"> npm </a>
       </div>
     </div>
 
     <div class="xlt-changelog__list">
-      <article
-        v-for="release in releases"
-        :key="release.version"
-        class="xlt-release"
-      >
+      <article v-for="release in releases" :key="release.version" class="xlt-release">
         <section class="xlt-release__card">
           <header class="xlt-release__header">
             <div>
@@ -459,7 +484,7 @@ function sectionClass(title: string) {
 
 .xlt-changelog__latest strong::before,
 .xlt-changelog__latest time::before {
-  content: '';
+  content: "";
   display: inline-block;
   width: 4px;
   height: 4px;
@@ -561,7 +586,7 @@ function sectionClass(title: string) {
 }
 
 .xlt-release__meta span::before {
-  content: '';
+  content: "";
   width: 4px;
   height: 4px;
   border-radius: 999px;
@@ -611,7 +636,7 @@ function sectionClass(title: string) {
 }
 
 .xlt-release-section h3::before {
-  content: '';
+  content: "";
   width: 7px;
   height: 7px;
   border-radius: 999px;
@@ -667,7 +692,7 @@ function sectionClass(title: string) {
 }
 
 .xlt-release-section li::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0.82em;
   left: 0;

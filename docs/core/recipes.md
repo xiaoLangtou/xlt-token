@@ -87,9 +87,9 @@ XltTokenModule.forRoot({
 
 ---
 
-## 5. 滑动续期（refresh-token 风格）
+## 5. Token 生命周期与刷新
 
-在你的 refresh 接口里调 `renewTimeout`：
+仅需延长当前 token 的 Store TTL 时，在 refresh 接口里调用 `renewTimeout`。这不会签发新 token，JWT 的内嵌 `exp` 也不会改变：
 
 ```ts twoslash
 @XltIgnore()
@@ -102,8 +102,28 @@ async refresh(@Query('refreshToken') token: string) {
 ```
 
 **注意**：
-- xlt-token 不区分 access / refresh token，这里用同一个 token 做续期
-- 若项目需要"短期 access + 长期 refresh"分离模型，建议搭配策略层自己实现一套映射
+需要短期 access token、刷新轮转和重放检测时，启用 `config.lifecycle`，然后调用
+`refreshToken`。刷新成功后必须原子地替换客户端保存的 token；旧 token 再次刷新会按
+`replayDetection` 策略返回 `TOKEN_REPLAYED`，family 模式会吊销整条 token family。
+
+```ts
+const xlt = createXltToken({
+  config: {
+    lifecycle: {
+      expiration: { mode: 'sliding', ttl: '15m', renewWhenRemainingBelow: '3m' },
+      refresh: { enabled: true, ttl: '30d', rotate: true, replayDetection: 'family' },
+    },
+  },
+});
+
+const result = await xlt.stpLogic.refreshToken(token);
+if (result.ok) {
+  return { accessToken: result.accessToken, refreshToken: result.refreshToken };
+}
+```
+
+`refreshToken` 依赖 Store 的原子 `compareAndSet`。多实例部署必须使用 Redis 或其他满足
+Store 原子契约的共享实现；不要把 access 与 refresh token 拆到未经协调的业务存储中。
 
 ---
 

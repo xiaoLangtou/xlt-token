@@ -19,9 +19,9 @@ export function createExpressContext(
   req._xltState ??= {};
 
   return {
-    headers: { get: (n) => (req.headers[n.toLowerCase()] as string) ?? null },
+    headers: { get: (n) => { const value = req.headers[n.toLowerCase()]; return Array.isArray(value) ? (value[0] ?? null) : (value ?? null); } },
     cookies: { get: (n) => req.cookies?.[n] ?? null },
-    query: { get: (n) => (req.query?.[n] as string) ?? null },
+    query: { get: (n) => { const value = req.query?.[n]; return typeof value === "string" ? value : null; } },
     state: req._xltState,
     setHeader: (n, v) => {
       res.setHeader(n, v);

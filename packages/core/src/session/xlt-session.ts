@@ -1,5 +1,5 @@
 import type { XltTokenStore } from "../store/xlt-token-store.interface.js";
-import { getStoreValue, setStoreValue } from "../store/store-helpers.js";
+import { getStoreValue, ttlFromSeconds } from "../store/store-helpers.js";
 
 export class XltSession {
   private data: Record<string, unknown> | null = null;
@@ -26,10 +26,9 @@ export class XltSession {
    * @param value The value of the session data.
    */
   async set(key: string, value: unknown): Promise<void> {
-    const data = await this.load();
-    if (data) data[key] = value;
-    this.data = data;
-    await this.save();
+    await this.mutate((data) => {
+      data[key] = value;
+    });
   }
 
   /**
@@ -47,10 +46,9 @@ export class XltSession {
    * @param key The key of the session data.
    */
   async remove(key: string): Promise<void> {
-    const data = await this.load();
-    if (data) delete data[key];
-    this.data = data;
-    await this.save();
+    await this.mutate((data) => {
+      delete data[key];
+    });
   }
 
   /**
@@ -78,10 +76,23 @@ export class XltSession {
     return this.data;
   }
 
-  /**
-   * 保存会话数据
-   */
-  private async save(): Promise<void> {
-    await setStoreValue(this.store, this.storeKey, JSON.stringify(this.data), this.timeout);
+  private async mutate(change: (data: Record<string, unknown>) => void): Promise<void> {
+    for (;;) {
+      const raw = await getStoreValue(this.store, this.storeKey);
+      const data: Record<string, unknown> = raw ? JSON.parse(raw) : {};
+      change(data);
+      const serialized = JSON.stringify(data);
+      if (raw === null) {
+        if (await this.store.setIfAbsent(this.storeKey, serialized, ttlFromSeconds(this.timeout))) {
+          this.data = data;
+          return;
+        }
+      } else if (
+        await this.store.compareAndSet(this.storeKey, raw, serialized, ttlFromSeconds(this.timeout))
+      ) {
+        this.data = data;
+        return;
+      }
+    }
   }
 }

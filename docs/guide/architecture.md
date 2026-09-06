@@ -7,7 +7,7 @@ description: 了解 xlt-token 的框架无关 Core、Redis Store 和框架适配
 
 xlt-token 采用 **「框架无关核心 + 可选实现 + 框架适配器」** 的 monorepo 结构。鉴权语义集中在 `@xlt-token/core`；Redis 实现在 `@xlt-token/store-redis`；NestJS 和 Express 只负责框架接入。
 
-> Express 适配器（`@xlt-token/express`）v1.0.0 已正式发布，提供中间件与路由策略覆盖。Hono / Fastify 等更多框架适配正在规划中。
+> Express（`@xlt-token/express`）与 Fastify（`@xlt-token/fastify`）均为官方适配器：前者提供中间件与路由策略，后者以显式 `XltInstance` 和 `preHandler` Hook 接入。其他框架可基于 `HttpContext` 对接 Core。
 
 ## 包结构
 

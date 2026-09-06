@@ -25,8 +25,8 @@ describe("matchIgnore", () => {
     expect(matchIgnore(mockReq("/skip"), [(req) => req.originalUrl === "/skip"])).toBe(true);
   });
 
-  it("大小写敏感：不应对路径做小写化", () => {
+  it("遵循 Express 默认大小写不敏感路由语义", () => {
     expect(matchIgnore(mockReq("/API/Public"), ["/API/Public"])).toBe(true);
-    expect(matchIgnore(mockReq("/API/Public"), ["/api/public"])).toBe(false);
+    expect(matchIgnore(mockReq("/API/Public"), ["/api/public"])).toBe(true);
   });
 });

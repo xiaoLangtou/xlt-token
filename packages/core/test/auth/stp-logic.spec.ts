@@ -520,6 +520,19 @@ describe("StpLogic", () => {
     });
   });
 
+  describe("账号级 Session 数据", () => {
+    it("单设备登出不会删除仍在线设备的共享 Session 数据", async () => {
+      const pcToken = await logic.login("u1", { device: "pc" });
+      await logic.login("u1", { device: "app" });
+      const session = logic.getSession("u1");
+      await session.set("profile", { name: "Ada" });
+
+      await logic.logout(pcToken);
+
+      await expect(session.get("profile")).resolves.toEqual({ name: "Ada" });
+    });
+  });
+
   describe("renewTimeout", () => {
     it("续签成功延长过期时间", async () => {
       await buildModule(makeConfig({ timeout: 100 }));

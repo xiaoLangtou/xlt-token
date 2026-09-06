@@ -1,6 +1,6 @@
 # Core Usage
 
-Use `@xlt-token/core` when the user needs framework-agnostic auth logic, a custom adapter, or direct access to `StpLogic`.
+Use `@xlt-token/core` when the user needs framework-agnostic auth logic, a custom adapter, direct access to `StpLogic`, or an isolated `XltInstance`.
 
 ## Setup
 
@@ -19,6 +19,17 @@ const xlt = createXltToken({
 ```
 
 `createXltToken()` returns `config`, `store`, `strategy`, `stpLogic`, `stpPermLogic`, and `stpUtil`. It also initializes the static `StpUtil` facade.
+
+For multiple auth domains in one process, use `createXltInstance()` instead. It does not update the
+global `StpUtil` target, so each adapter can retain its own `instance.stpLogic` and
+`instance.stpPermLogic` safely.
+
+```ts
+import { createXltInstance } from '@xlt-token/core'
+
+const instance = createXltInstance({ config: { tokenName: 'admin-token' } })
+const token = await instance.stpLogic.login('admin-1')
+```
 
 ## Request Context
 

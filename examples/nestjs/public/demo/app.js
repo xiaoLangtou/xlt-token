@@ -88,7 +88,7 @@ function addLog(method, path, status, body, err) {
       <span class="method ${method.toLowerCase()}">${method}</span>
       <span class="status ${statusClass}">${status || "ERR"}</span>
     </div>
-    <div class="log-path">${path}</div>
+    <div class="log-path">${escapeHtml(path)}</div>
     <pre class="log-body">${escapeHtml(bodyText)}</pre>
   `;
 
@@ -209,8 +209,7 @@ const actions = {
   },
   async deviceLoginPc() {
     const { ok, data } = await api("POST", "/device/login", {
-      body: { loginId: "1001", device: "pc" },
-      auth: false,
+      body: { device: "pc" },
     });
     if (ok && data?.token) {
       state.pcToken = data.token;
@@ -220,8 +219,7 @@ const actions = {
   },
   async deviceLoginApp() {
     const { ok, data } = await api("POST", "/device/login", {
-      body: { loginId: "1001", device: "app" },
-      auth: false,
+      body: { device: "app" },
     });
     if (ok && data?.token) {
       state.appToken = data.token;
@@ -253,7 +251,7 @@ const actions = {
     await api("POST", "/session/kickout", { body: { loginId: "1002" } });
   },
   async loginReplace() {
-    await api("POST", "/session/login-replace", { body: { loginId: "1001" }, auth: false });
+    await api("POST", "/session/login-replace");
   },
   async profileMe() {
     await api("GET", "/profile/me");
@@ -266,8 +264,7 @@ const actions = {
   },
   async tempCreate() {
     const { ok, data } = await api("POST", "/temp-token/create", {
-      body: { userId: "1001" },
-      auth: false,
+      body: {},
     });
     if (ok && data?.tempToken) {
       state.tempToken = data.tempToken;

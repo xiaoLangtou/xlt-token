@@ -17,5 +17,7 @@ export function shouldCheckLogin(req: Request, config: XltTokenConfig): boolean 
     return !meta?.ignore;
   }
 
-  return meta?.requireLogin ?? false;
+  return Boolean(
+    meta?.requireLogin || meta?.permissions || meta?.roles || meta?.safeBusiness !== undefined,
+  );
 }

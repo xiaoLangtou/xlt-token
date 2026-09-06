@@ -71,13 +71,9 @@ export function createIgnoredRoutes() {
     "/demo",
     "/demo/",
     "/auth/login",
-    "/device/login",
-    "/session/login-replace",
-    "/session/login-share",
     "/public/health",
     "/public/product",
     "/whitelist/public",
-    "/temp-token/create",
     "/temp-token/consume",
   ];
 }

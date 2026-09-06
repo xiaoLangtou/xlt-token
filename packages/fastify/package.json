@@ -1,6 +1,6 @@
 {
   "name": "@xlt-token/fastify",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "description": "Fastify plugin adapter for xlt-token with explicit XltInstance binding",
   "keywords": [
     "auth",
@@ -57,15 +57,15 @@
     "test:e2e:cov": "vitest run --config vitest.e2e.config.ts --coverage"
   },
   "dependencies": {
-    "@xlt-token/core": "^2.2.0",
+    "@xlt-token/core": "^2.3.0",
     "fastify-plugin": "^5.0.0"
   },
   "devDependencies": {
     "@fastify/cookie": "^11.0.0",
     "@types/node": "^20.0.0",
     "@vitest/coverage-v8": "^2.1.9",
-    "@xlt-token/jwt": "^2.2.0",
-    "@xlt-token/store-redis": "^2.2.0",
+    "@xlt-token/jwt": "^2.3.0",
+    "@xlt-token/store-redis": "^2.3.0",
     "fastify": "^5.0.0",
     "jsonwebtoken": "^9.0.3",
     "tsdown": "^0.20.0",

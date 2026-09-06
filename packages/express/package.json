@@ -1,6 +1,6 @@
 {
   "name": "@xlt-token/express",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "description": "Express middleware adapter for xlt-token",
   "keywords": [
     "auth",
@@ -57,7 +57,7 @@
     "test:e2e:cov": "vitest run --config vitest.e2e.config.ts --coverage"
   },
   "dependencies": {
-    "@xlt-token/core": "^2.2.0"
+    "@xlt-token/core": "^2.3.0"
   },
   "devDependencies": {
     "@types/express": "^4.17.21",

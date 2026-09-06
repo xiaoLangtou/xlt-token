@@ -1,10 +1,7 @@
 import type { Request } from "express";
 import type { AuthMatcher } from "../types.js";
 
-function matchPathPrefix(path: string, prefix: string): boolean {
-  const pathname = path.split("?")[0] ?? path;
-  return prefix === "/" || pathname === prefix || pathname.startsWith(`${prefix}/`);
-}
+import { matchPathPrefix } from "./resolve-route-auth-meta.js";
 
 /**
  * 路径白名单快捷判断，`resolveRouteAuthMeta` 的简化分支。
@@ -18,6 +15,6 @@ export function matchIgnore(req: Request, rules?: AuthMatcher[]): boolean {
     if (typeof rule === "string") {
       return matchPathPrefix(req.originalUrl, rule);
     }
-    return rule.test(req.originalUrl);
+    return new RegExp(rule.source, rule.flags).test(req.originalUrl.split("?")[0]!);
   });
 }
