@@ -5,7 +5,7 @@
 .xlt-site-header {
   position: fixed;
   inset: 0 0 auto;
-  z-index: 40;
+  z-index: 61;
   height: 104px;
   border-bottom: 1px solid var(--x-border-soft);
   background: color-mix(in srgb, var(--x-bg) 84%, transparent);

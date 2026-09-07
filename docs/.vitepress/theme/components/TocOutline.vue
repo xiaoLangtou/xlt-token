@@ -172,7 +172,7 @@ onBeforeUnmount(() => {
 
 <template>
   <nav v-if="items.length" class="xlt-toc" aria-labelledby="xlt-toc-title">
-    <h2 id="xlt-toc-title" class="xlt-toc__title">
+    <div id="xlt-toc-title" class="xlt-toc__title" role="heading" aria-level="2">
       <svg
         viewBox="0 0 24 24"
         width="15"
@@ -189,7 +189,7 @@ onBeforeUnmount(() => {
         <path d="M17 19H3" />
       </svg>
       {{ title }}
-    </h2>
+    </div>
 
     <div ref="listEl" class="xlt-toc__list">
       <div class="xlt-toc__thumb" :style="thumbStyle" aria-hidden="true" />

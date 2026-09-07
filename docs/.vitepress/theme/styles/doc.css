@@ -8,12 +8,33 @@
 .VPDoc .container,
 .VPDoc .content,
 .VPDoc .main,
-.VPSidebar,
-.VPLocalNav,
 .VPDoc .aside,
 .VPDoc .aside-container,
 .VPDoc .aside-content {
   background: transparent !important;
+}
+
+/* 桌面端侧栏透明融入画布；<960px 时它是固定抽屉，必须保持不透明背景 */
+@media (min-width: 960px) {
+  .VPSidebar {
+    background: transparent !important;
+  }
+}
+
+@media (max-width: 959px) {
+  .VPSidebar {
+    top: 0 !important;
+    width: calc(100vw - 48px) !important;
+    max-width: 420px !important;
+    padding-top: 120px !important;
+    background: var(--x-bg) !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .VPSidebar {
+    padding-top: 112px !important;
+  }
 }
 
 .VPDoc .aside-curtain {
@@ -45,6 +66,7 @@
 
 .VPLocalNav {
   top: 104px !important;
+  background: color-mix(in srgb, var(--x-bg) 82%, transparent) !important;
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--x-border-soft);
 }
@@ -348,7 +370,7 @@
   font-weight: 600;
   letter-spacing: -0.02em;
   color: var(--x-text);
-  scroll-margin-top: 80px;
+  scroll-margin-top: 112px;
 }
 
 .vp-doc h2:first-of-type {
@@ -361,7 +383,7 @@
   font-size: 1rem;
   font-weight: 600;
   color: var(--x-text);
-  scroll-margin-top: 80px;
+  scroll-margin-top: 112px;
 }
 
 .vp-doc p {
@@ -541,18 +563,16 @@
   border-bottom: none;
 }
 
-/* ── Outline（本页目录：单条导轨贯穿 + 全宽胶囊行 + 层级缩进） ── */
-.VPDocAsideOutline .content {
-  padding-left: 0 !important;
-  border-left: none !important;
+/* ── Outline（本页目录：树形导轨，默认组件由 TocOutline 替代） ── */
+.VPDocAsideOutline {
+  display: none !important;
 }
 
-/* 标题行高必须保持 32px：useActiveAnchor 的 marker 偏移常量 +39 依赖它 */
-.VPDocAsideOutline .outline-title {
+.xlt-toc__title {
   display: flex;
   align-items: center;
   gap: 7px;
-  line-height: 32px;
+  margin: 0 0 8px;
   font-family: var(--vp-font-family-mono);
   font-size: 0.6875rem;
   font-weight: 600;
@@ -561,70 +581,61 @@
   color: var(--x-text-3);
 }
 
-.VPDocAsideOutline .outline-title::before {
-  content: '';
-  width: 13px;
-  height: 13px;
-  background: currentColor;
-  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round'%3E%3Cpath d='M2.5 4h11M2.5 8h7M2.5 12h9'/%3E%3C/svg%3E") center / contain no-repeat;
+.xlt-toc__list {
+  position: relative;
 }
 
-/* 唯一一条导轨，贯穿整个列表（不穿过标题行） */
-.VPDocAsideOutline .VPDocOutlineItem.root {
-  padding-left: 0 !important;
-}
-
-.VPDocAsideOutline .VPDocOutlineItem.root::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  width: 1px;
-  background: var(--x-border);
-}
-
-/* 层级只用文字缩进表达，不再画次级导轨 */
-.VPDocAsideOutline .VPDocOutlineItem.nested {
-  margin-left: 0;
-  padding-right: 0 !important;
-  padding-left: 0 !important;
-  border-left: none;
-}
-
-/* 全宽胶囊行：背景铺到导轨下，文字让出导轨位置 */
-.VPDocAsideOutline .outline-link {
-  padding: 0 10px 0 24px;
+/* 每条 <a> 自带的 SVG 导轨段（段间上下重叠 6px 拼接成连续树形导轨） */
+.xlt-toc__item {
+  position: relative;
+  display: block;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  padding-inline-end: 10px;
   border-radius: 6px;
   font-size: 0.8125rem;
+  line-height: 22px;
   color: var(--x-text-2);
+  text-decoration: none !important;
   transition: color var(--x-dur), background-color var(--x-dur);
 }
 
-.VPDocAsideOutline .VPDocOutlineItem.nested .outline-link {
-  padding-left: 44px;
+.xlt-toc__rail {
+  position: absolute;
+  top: -6px;
+  inset-inline-start: 0;
+  bottom: 0;
+  z-index: -1;
+  color: var(--x-border);
 }
 
-.VPDocAsideOutline .VPDocOutlineItem.nested .VPDocOutlineItem .outline-link {
-  padding-left: 64px;
+.xlt-toc__rail line,
+.xlt-toc__rail path {
+  stroke: currentColor;
 }
 
-.VPDocAsideOutline .outline-link:hover {
+.xlt-toc__item:hover {
   color: var(--x-text);
   background: var(--x-brand-muted);
 }
 
-.VPDocAsideOutline .outline-link.active {
+.xlt-toc__item.is-active {
   color: var(--x-brand);
   background: var(--x-brand-soft);
   font-weight: 600;
 }
 
-/* 滑块压在胶囊与导轨之上 */
-.VPDocAsideOutline .outline-marker {
-  z-index: 2;
+/* 激活指示滑块：压在导轨之上，随滚动滑动 */
+.xlt-toc__thumb {
+  position: absolute;
+  top: 0;
+  z-index: 1;
   width: 2px;
-  background: var(--x-brand-bright) !important;
+  height: 16px;
+  border-radius: 2px;
+  background: var(--x-brand-bright);
+  transition: top 0.25s var(--x-ease), left 0.25s var(--x-ease), opacity 0.2s;
+  pointer-events: none;
 }
 
 /* ── Footer ── */

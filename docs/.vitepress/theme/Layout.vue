@@ -6,6 +6,7 @@ import HomePage from './Home.vue';
 import SupportProjectModal from './components/SupportProjectModal.vue';
 import SiteHeader from './components/SiteHeader.vue';
 import CopyPage from './components/CopyPage.vue';
+import TocOutline from './components/TocOutline.vue';
 
 const { Layout: DefaultLayout } = DefaultTheme
 const { frontmatter, page } = useData()
@@ -25,6 +26,9 @@ const hasHeader = computed(() => frontmatter.value.layout !== false)
     </template>
     <template #doc-before>
       <CopyPage />
+    </template>
+    <template #aside-outline-before>
+      <TocOutline />
     </template>
   </DefaultLayout>
   <SupportProjectModal v-if="isHome" />
