@@ -1,6 +1,6 @@
 {
   "name": "@xlt-token/example-nestjs",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "private": true,
   "description": "Full-feature NestJS example for @xlt-token/nestjs",
   "scripts": {

@@ -1,6 +1,6 @@
 {
   "name": "@xlt-token/example-express",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "private": true,
   "description": "Full-feature Express example for @xlt-token/express",
   "scripts": {

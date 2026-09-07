@@ -26,9 +26,6 @@ const hasHeader = computed(() => frontmatter.value.layout !== false)
     <template #doc-before>
       <CopyPage />
     </template>
-<!--    <template v-if="isDoc" #doc-top>-->
-<!--      <DocHeader />-->
-<!--    </template>-->
   </DefaultLayout>
   <SupportProjectModal v-if="isHome" />
 </template>

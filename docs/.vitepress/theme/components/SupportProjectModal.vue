@@ -58,12 +58,16 @@ onMounted(() => {
           aria-modal="true"
           aria-labelledby="xlt-support-title"
         >
-          <!-- 顶部彩虹光条 -->
+          <!-- 顶部黄铜发丝条 -->
           <div class="xlt-support-modal__bar" aria-hidden="true" />
 
           <header class="xlt-support-modal__header">
             <h2 id="xlt-support-title" class="xlt-support-modal__title">
-              <span class="xlt-support-modal__title-icon" aria-hidden="true">⭐</span>
+              <span class="xlt-support-modal__title-icon" aria-hidden="true">
+                <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor">
+                  <path d="M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.751.751 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.873 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25Z" />
+                </svg>
+              </span>
               支持项目
             </h2>
             <button
@@ -85,7 +89,6 @@ onMounted(() => {
             <!-- GitHub 仓库卡片预览 -->
             <div class="xlt-support-modal__preview" aria-hidden="true">
               <div class="xlt-ghcard">
-                <div class="xlt-ghcard__scan" />
                 <div class="xlt-ghcard__head">
                   <div class="xlt-ghcard__repo">
                     <img
@@ -107,7 +110,7 @@ onMounted(() => {
                       xlt-token
                     </div>
                     <div class="xlt-ghcard__desc">
-                      Design token system · MIT License
+                      框架无关的 Token 鉴权库 · MIT License
                     </div>
                   </div>
                   <div class="xlt-ghcard__star">
@@ -142,11 +145,13 @@ onMounted(() => {
             </div>
 
             <p class="xlt-support-modal__highlight">
-              <span class="xlt-support-modal__highlight-icon" aria-hidden="true">✦</span>
+              <svg class="xlt-support-modal__highlight-icon" viewBox="0 0 16 16" width="13" height="13" fill="currentColor" aria-hidden="true">
+                <path d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0Zm3.78 5.47a.75.75 0 0 0-1.06 0L7 9.19 5.28 7.47a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.06 0l4.25-4.25a.75.75 0 0 0 0-1.06Z" />
+              </svg>
               xlt-token 采用 MIT 开源协议，框架本身与在线文档永久免费开放。
             </p>
             <p class="xlt-support-modal__text">
-              如果 xlt-token 帮助到了你，希望你可以为项目点个 Star ⭐，这对我们非常重要，感谢你的支持！
+              如果 xlt-token 帮助到了你，希望你可以为项目点个 Star，这对我们非常重要，感谢你的支持！
             </p>
 
             <!-- 链接列表 -->

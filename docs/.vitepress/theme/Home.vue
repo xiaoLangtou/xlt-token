@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { withBase } from "vitepress";
 
+const version = __XLT_VERSION__;
 const copied = ref(false);
 
 async function copyInstall() {
@@ -15,6 +16,40 @@ async function copyInstall() {
     /* ignore */
   }
 }
+
+/* ── Terminal TTL countdown ── */
+const TOKEN_TTL = 604800;
+const SESSION_TTL = 1800;
+
+const tokenTtl = ref(TOKEN_TTL);
+const sessionTtl = ref(SESSION_TTL);
+
+let timer: ReturnType<typeof setInterval> | undefined;
+
+onMounted(() => {
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  timer = setInterval(() => {
+    tokenTtl.value = tokenTtl.value > 0 ? tokenTtl.value - 1 : TOKEN_TTL;
+    sessionTtl.value = sessionTtl.value > 0 ? sessionTtl.value - 1 : SESSION_TTL;
+  }, 1000);
+});
+
+onBeforeUnmount(() => {
+  if (timer) clearInterval(timer);
+});
+
+const keys = computed(() => [
+  {
+    name: "xlt:login:token:9f3a…c21e",
+    remaining: tokenTtl.value,
+    pct: (tokenTtl.value / TOKEN_TTL) * 100,
+  },
+  {
+    name: "xlt:login:session:1001",
+    remaining: sessionTtl.value,
+    pct: (sessionTtl.value / SESSION_TTL) * 100,
+  },
+]);
 
 const guides = [
   {
@@ -35,7 +70,7 @@ const core = [
   { title: "异常处理", link: "/core/exceptions" },
 ];
 
-const v110 = [
+const advanced = [
   { title: "多端登录", link: "/core/multi-device" },
   { title: "二级认证", link: "/core/secondary-auth" },
   { title: "JWT 策略", link: "/core/jwt-strategy" },
@@ -45,22 +80,30 @@ const v110 = [
 ];
 
 const features = [
-  { n: "01", title: "开箱即用", desc: "Core 零框架依赖，默认配置即可跑通登录、鉴权、踢人与登出。" },
   {
-    n: "02",
-    title: "可插拔架构",
-    desc: "Core、Redis Store 与框架适配器独立安装，Store 和 Token 策略均可替换。",
+    tag: "@xlt-token/core",
+    title: "开箱即用",
+    desc: "Core 零框架依赖，默认配置即可跑通登录、鉴权、踢人与登出。",
   },
-  { n: "03", title: "Sa-Token 语义", desc: "顶号、踢人、活跃过期、多端并发等能力原生支持。" },
   {
-    n: "04",
+    tag: "@xlt-token/store-redis",
+    title: "分布式存储",
+    desc: "Redis Store 独立安装，键结构自带 TTL，node-redis 与 ioredis 双客户端。",
+  },
+  {
+    tag: "sa-token 语义",
+    title: "会话控制",
+    desc: "顶号、踢人、活跃过期、多端并发等能力原生支持。",
+  },
+  {
+    tag: "nestjs / express / fastify",
     title: "多框架接入",
     desc: "NestJS 提供 Guard 与装饰器；Express 与 Fastify 提供路由策略适配。",
   },
   {
-    n: "05",
-    title: "1.1.0 新能力",
-    desc: "多端 device、二级认证、JWT 黑名单、Hooks 与在线观测。",
+    tag: `v${version}`,
+    title: "2.x 生命周期能力",
+    desc: "多端 device、二级认证、JWT 密钥轮换、刷新重放检测、审计事件与在线观测。",
     wide: true,
   },
 ];
@@ -68,7 +111,7 @@ const features = [
 const navGroups = [
   { badge: "Start", title: "快速开始", items: guides },
   { badge: "Core", title: "核心能力", items: core },
-  { badge: "More", title: "进阶与参考", items: v110 },
+  { badge: "More", title: "进阶与参考", items: advanced },
 ];
 
 const stats = [
@@ -81,25 +124,14 @@ const stats = [
 <template>
   <div class="xlt-home">
     <section class="xlt-hero">
-      <div class="xlt-hero__bg" aria-hidden="true">
-        <div class="xlt-hero__mesh" />
-        <div class="xlt-orb xlt-orb--1" />
-        <div class="xlt-orb xlt-orb--2" />
-        <div class="xlt-orb xlt-orb--3" />
-        <div class="xlt-hero__grid" />
-        <div class="xlt-hero__scan" />
-      </div>
-
       <div class="xlt-hero__inner">
         <div class="xlt-hero__copy">
-          <div class="xlt-hero__badge xlt-anim xlt-anim--1">
-            <span class="xlt-hero__pulse" />
-            v1.2.1 · Core + Redis + Adapters
-          </div>
+          <p class="xlt-hero__badge xlt-anim xlt-anim--1">
+            <span class="xlt-hero__dot" aria-hidden="true" />
+            v{{ version }} · core + redis + adapters
+          </p>
 
-          <h1 class="xlt-hero__title xlt-anim xlt-anim--2">
-            <span class="xlt-hero__title-gradient">xlt-token</span>
-          </h1>
+          <h1 class="xlt-hero__title xlt-anim xlt-anim--2">xlt-token</h1>
 
           <p class="xlt-hero__lede xlt-anim xlt-anim--3">
             框架无关的 Token 鉴权核心，配套独立 Redis Store、NestJS 与 Express 适配器。
@@ -109,18 +141,18 @@ const stats = [
             <button type="button" class="xlt-install" @click="copyInstall">
               <span class="xlt-install__prompt">$</span>
               <code>pnpm add @xlt-token/core</code>
-              <span class="xlt-install__copy">{{ copied ? "已复制 ✓" : "复制" }}</span>
+              <span class="xlt-install__copy">{{ copied ? "已复制" : "复制" }}</span>
             </button>
           </div>
 
           <div class="xlt-hero__actions xlt-anim xlt-anim--5">
-            <a class="xlt-btn xlt-btn--glow" :href="withBase('/guide/getting-started')">
+            <a class="xlt-btn xlt-btn--primary" :href="withBase('/guide/getting-started')">
               快速开始
-              <span class="xlt-btn__arrow">→</span>
+              <span class="xlt-btn__arrow" aria-hidden="true">→</span>
             </a>
-            <a class="xlt-btn xlt-btn--glass" :href="withBase('/store-redis/')">Redis Store</a>
+            <a class="xlt-btn xlt-btn--ghost" :href="withBase('/store-redis/')">Redis Store</a>
             <a
-              class="xlt-btn xlt-btn--glass"
+              class="xlt-btn xlt-btn--ghost"
               href="https://github.com/xiaoLangtou/xlt-token"
               target="_blank"
               rel="noreferrer"
@@ -136,31 +168,48 @@ const stats = [
           </dl>
         </div>
 
-        <div class="xlt-preview xlt-anim--4 xlt-preview--float">
-          <div class="xlt-preview__glow" aria-hidden="true" />
-          <div class="xlt-preview__bar">
+        <div class="xlt-term xlt-anim xlt-anim--4" role="img" aria-label="redis-cli 演示：签发带 TTL 的登录 token 并查询剩余时间">
+          <div class="xlt-term__bar">
             <span /><span /><span />
-            <span class="xlt-preview__name">auth.ts</span>
-            <span class="xlt-preview__tag">Live</span>
+            <span class="xlt-term__title">redis-cli — keyspace</span>
+            <span class="xlt-term__tag">TTL</span>
           </div>
-          <pre
-            class="xlt-preview__code"
-          ><code><span class="c-k">import</span> { createXltToken } <span class="c-k">from</span> <span class="c-s">'@xlt-token/core'</span>
-
-<span class="c-k">export const</span> xlt = createXltToken({
-  config: {
-    tokenName: <span class="c-s">'authorization'</span>,
-    timeout: <span class="c-s">'7d'</span>,
-    activeTimeout: <span class="c-s">'30m'</span>,
-  },
-})
-
-<span class="c-k">const</span> token = <span class="c-k">await</span> xlt.stpLogic.login(<span class="c-s">'1001'</span>)</code></pre>
+          <div class="xlt-term__body">
+            <p class="xlt-term__line">
+              <span class="xlt-term__prompt">127.0.0.1:6379&gt;</span> SET
+              <span class="xlt-term__key">xlt:login:token:9f3a…c21e</span>
+              <span class="xlt-term__str">"1001"</span> EX 604800
+            </p>
+            <p class="xlt-term__line xlt-term__ok">OK</p>
+            <p class="xlt-term__line">
+              <span class="xlt-term__prompt">127.0.0.1:6379&gt;</span> TTL
+              <span class="xlt-term__key">xlt:login:token:9f3a…c21e</span>
+            </p>
+            <p class="xlt-term__line">
+              (integer) <span class="xlt-term__num">{{ tokenTtl.toLocaleString() }}</span>
+            </p>
+            <p class="xlt-term__line">
+              <span class="xlt-term__prompt">127.0.0.1:6379&gt;</span>
+              <span class="xlt-term__caret" aria-hidden="true" />
+            </p>
+          </div>
+          <div class="xlt-term__keys">
+            <p class="xlt-term__keys-title">Keyspace</p>
+            <div v-for="k in keys" :key="k.name" class="xlt-key">
+              <div class="xlt-key__meta">
+                <span class="xlt-key__name">{{ k.name }}</span>
+                <span class="xlt-key__ttl">{{ k.remaining.toLocaleString() }}s</span>
+              </div>
+              <div class="xlt-key__bar">
+                <span :style="{ width: `${k.pct}%` }" />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
 
-    <section class="xlt-block xlt-block--caps">
+    <section class="xlt-block">
       <header class="xlt-block__head xlt-reveal">
         <p class="xlt-kicker">Capabilities</p>
         <h2>核心能力</h2>
@@ -174,17 +223,12 @@ const stats = [
           :class="{ 'xlt-card--wide': f.wide }"
           :style="{ '--delay': `${i * 0.07}s` }"
         >
-          <span class="xlt-card__accent" aria-hidden="true" />
-          <span class="xlt-card__watermark" aria-hidden="true">{{ f.n }}</span>
-          <div class="xlt-card__body">
-            <div class="xlt-card__top">
-              <span class="xlt-card__n">{{ f.n }}</span>
-              <span class="xlt-card__line" aria-hidden="true" />
-            </div>
-            <h3>{{ f.title }}</h3>
-            <p>{{ f.desc }}</p>
+          <div class="xlt-card__top">
+            <span class="xlt-card__tag">{{ f.tag }}</span>
+            <span class="xlt-card__line" aria-hidden="true" />
           </div>
-          <span class="xlt-card__shine" aria-hidden="true" />
+          <h3>{{ f.title }}</h3>
+          <p>{{ f.desc }}</p>
         </article>
       </div>
     </section>
@@ -202,7 +246,6 @@ const stats = [
           class="xlt-doc-card xlt-reveal"
           :style="{ '--delay': `${i * 0.08}s` }"
         >
-          <span class="xlt-doc-card__glow" aria-hidden="true" />
           <header class="xlt-doc-card__head">
             <span class="xlt-doc-card__badge">{{ group.badge }}</span>
             <h3>{{ group.title }}</h3>
@@ -225,7 +268,6 @@ const stats = [
 
     <section class="xlt-block">
       <div class="xlt-cta xlt-reveal">
-        <div class="xlt-cta__glow" aria-hidden="true" />
         <div>
           <p class="xlt-kicker">Community</p>
           <h2>加入社区</h2>

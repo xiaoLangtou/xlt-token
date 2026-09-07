@@ -1,6 +1,6 @@
 {
   "name": "@xlt-token/nestjs",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "description": "NestJS integration for xlt-token",
   "keywords": [
     "auth",

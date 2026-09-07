@@ -12,6 +12,7 @@ import { FILE_IMPORTS } from './twoslash.ts';
 const dir = dirname(fileURLToPath(import.meta.url))
 const root = resolve(dir, '../..')
 const docsRoot = resolve(root, 'docs')
+const { version: pkgVersion } = JSON.parse(readFileSync(resolve(root, 'package.json'), 'utf8')) as { version: string }
 const siteUrl = 'https://xlt-token.doc.weipc0110.cn'
 
 function toCanonicalUrl(page: string) {
@@ -228,6 +229,9 @@ export default defineConfig({
 
   vite: {
     plugins: [releaseCodeHtmlPlugin()],
+    define: {
+      __XLT_VERSION__: JSON.stringify(pkgVersion),
+    },
     server: {
       fs: {
         allow: [root],
@@ -239,7 +243,7 @@ export default defineConfig({
 
   head: [
     ['link', { rel: 'icon', type: 'image/png', href: '/logo.png' }],
-    ['meta', { name: 'theme-color', content: '#4f46e5' }],
+    ['meta', { name: 'theme-color', content: '#0d1014' }],
     // Geist 字体（fonts.loli.net 国内镜像）
     ['link', { rel: 'preconnect', href: 'https://fonts.loli.net' }],
     ['link', { rel: 'preconnect', href: 'https://gstatic.loli.net', crossorigin: '' }],
@@ -260,7 +264,7 @@ export default defineConfig({
 
     outline: {
       level: [2, 3],
-      label: '本页导航',
+      label: '本页目录',
     },
 
     nav: [
@@ -277,7 +281,7 @@ export default defineConfig({
       },
       { text: 'AI 指南', link: '/reference/llms' },
       {
-        text: 'v2.3.0',
+        text: `v${pkgVersion}`,
         items: [
           { text: '更新日志', link: '/reference/changelog' },
           { text: 'GitHub Releases', link: 'https://github.com/xiaoLangtou/xlt-token/releases' },
@@ -384,7 +388,7 @@ export default defineConfig({
     ],
 
     editLink: {
-      pattern: 'https://github.com/xiaoLangtou/xlt-token/edit/main/docs/:path',
+      pattern: 'https://github.com/xiaoLangtou/xlt-token/edit/master/docs/:path',
       text: '在 GitHub 上编辑此页',
     },
 

@@ -1,6 +1,6 @@
 {
   "name": "@xlt-token/jwt",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "description": "JWT token strategy with key rotation for xlt-token",
   "keywords": [
     "auth",

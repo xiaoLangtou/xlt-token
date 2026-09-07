@@ -1,6 +1,6 @@
 {
   "name": "xlt-token",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "description": "Framework-agnostic token auth library with NestJS and Express integrations, inspired by Sa-Token",
   "keywords": [
     "auth",
@@ -71,7 +71,7 @@
     "test:workspace": "node scripts/run-workspace-task.mjs test,test:cov,test:e2e packages",
     "test:junit": "vitest run --reporter=junit --outputFile=reports/junit.xml",
     "test:e2e:junit": "pnpm --filter @xlt-token/nestjs test:e2e:junit",
-    "prepublishOnly": "pnpm run build:workspace",
+    "prepublishOnly": "tsdown",
     "release:check": "oxfmt --check \"**/*.{ts,tsx,js,mjs,cjs,json,jsonc,yml,yaml}\" && oxlint src packages examples docs/.vitepress scripts && node scripts/run-workspace-task.mjs typecheck packages examples && node scripts/check-package-boundaries.mjs && node scripts/check-security-invariants.mjs && node scripts/run-workspace-task.mjs test:cov,test:e2e packages && node scripts/run-workspace-task.mjs build packages && tsdown && node scripts/check-release-gates.mjs && node scripts/run-smoke-benchmarks.mjs && vitepress build docs",
     "publish:packages": "pnpm publish -r --access public --no-git-checks",
     "publish:dry-run": "pnpm publish -r --access public --no-git-checks --dry-run",

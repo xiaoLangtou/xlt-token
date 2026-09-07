@@ -1,6 +1,6 @@
 {
   "name": "@xlt-token/fastify",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "description": "Fastify plugin adapter for xlt-token with explicit XltInstance binding",
   "keywords": [
     "auth",
