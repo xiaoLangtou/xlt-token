@@ -1,0 +1,123 @@
+/**
+ * Base — 画布、滚动条、选区、隐藏默认导航
+ */
+
+html {
+  scroll-behavior: smooth;
+  scrollbar-color: color-mix(in srgb, var(--x-text-3) 55%, transparent) transparent;
+  scrollbar-width: thin;
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  background: var(--x-bg);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  border: 3px solid transparent;
+  border-radius: 999px;
+  background:
+    linear-gradient(color-mix(in srgb, var(--x-text-3) 50%, transparent), color-mix(in srgb, var(--x-text-3) 50%, transparent))
+    padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background:
+    linear-gradient(color-mix(in srgb, var(--x-brand-bright) 60%, var(--x-text-3)), color-mix(in srgb, var(--x-brand-bright) 60%, var(--x-text-3)))
+    padding-box;
+}
+
+::selection {
+  background: var(--x-brand-soft);
+}
+
+.VPContent,
+.VPHome {
+  background: transparent !important;
+}
+
+/*
+ * 隐藏 VitePress 默认导航，但保持其 Vue 组件挂载：
+ * 自定义 SiteHeader 通过程序化 click 复用其中的搜索触发与主题开关逻辑，
+ * 因此不能用 v-if 移除，也不能 display:none（内部状态需要保持活跃）。
+ * visibility:hidden 额外把它移出无障碍树，避免读屏器遇到重复导航。
+ */
+.VPNav {
+  position: fixed !important;
+  width: 1px !important;
+  height: 1px !important;
+  overflow: hidden !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+.VPFooter {
+  border-top: 1px solid var(--x-border);
+  background: transparent !important;
+  font-size: 0.8125rem;
+}
+
+/* ── Hide default home when custom home mounted ── */
+.VPHome:has(.xlt-home) .VPHero,
+.VPHome:has(.xlt-home) .VPFeatures,
+.VPHome:has(.xlt-home) .VPHomeContent {
+  display: none !important;
+}
+
+/* ── Shared entrance ── */
+.xlt-anim {
+  opacity: 0;
+  animation: xlt-fade-up 0.7s var(--x-ease) forwards;
+}
+
+.xlt-anim--1 { animation-delay: 0.05s; }
+.xlt-anim--2 { animation-delay: 0.12s; }
+.xlt-anim--3 { animation-delay: 0.2s; }
+.xlt-anim--4 { animation-delay: 0.28s; }
+.xlt-anim--5 { animation-delay: 0.36s; }
+.xlt-anim--6 { animation-delay: 0.44s; }
+
+.xlt-reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: xlt-fade-up 0.65s var(--x-ease) forwards;
+  animation-delay: var(--delay, 0s);
+}
+
+.xlt-kicker {
+  margin: 0 0 6px;
+  font-family: var(--vp-font-family-mono);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--x-brand);
+}
+
+@keyframes xlt-fade-up {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .xlt-anim,
+  .xlt-reveal {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
