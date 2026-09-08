@@ -18,7 +18,7 @@ interface RailSpec {
 
 const RAIL_X = [8.5, 16.5, 24.5, 32.5];
 const TEXT_PAD = [20, 32, 44, 56];
-const OVERLAP = 6;
+const OVERLAP = 3;
 
 const { theme, frontmatter } = useData();
 
