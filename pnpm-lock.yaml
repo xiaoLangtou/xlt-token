@@ -113,6 +113,43 @@ importers:
         specifier: ^5.1.0
         version: 5.9.3
 
+  examples/fastify:
+    dependencies:
+      '@fastify/cookie':
+        specifier: ^11.0.0
+        version: 11.1.2
+      '@xlt-token/core':
+        specifier: ^2.3.0
+        version: link:../../packages/core
+      '@xlt-token/fastify':
+        specifier: ^2.3.0
+        version: link:../../packages/fastify
+      '@xlt-token/inspector':
+        specifier: ^2.3.0
+        version: link:../../packages/inspector
+      '@xlt-token/jwt':
+        specifier: ^2.3.0
+        version: link:../../packages/jwt
+      '@xlt-token/observability':
+        specifier: ^2.3.0
+        version: link:../../packages/observability
+      '@xlt-token/store-redis':
+        specifier: ^2.3.0
+        version: link:../../packages/store-redis
+      fastify:
+        specifier: ^5.0.0
+        version: 5.12.1
+      redis:
+        specifier: ^5.0.0
+        version: 5.12.1(@opentelemetry/api@1.9.1)
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.39
+      typescript:
+        specifier: ^5.1.0
+        version: 5.9.3
+
   examples/nestjs:
     dependencies:
       '@nestjs/common':
@@ -127,15 +164,21 @@ importers:
       '@xlt-token/core':
         specifier: ^2.3.0
         version: link:../../packages/core
+      '@xlt-token/inspector':
+        specifier: ^2.3.0
+        version: link:../../packages/inspector
       '@xlt-token/nestjs':
         specifier: ^2.3.0
         version: link:../../packages/nestjs
+      '@xlt-token/observability':
+        specifier: ^2.3.0
+        version: link:../../packages/observability
       jsonwebtoken:
         specifier: ^9.0.3
         version: 9.0.3
       redis:
         specifier: ^5.0.0
-        version: 5.12.1
+        version: 5.12.1(@opentelemetry/api@1.9.1)
       reflect-metadata:
         specifier: ^0.1.13
         version: 0.1.14
@@ -264,6 +307,28 @@ importers:
         specifier: ^2.0.0
         version: 2.1.9(@types/node@20.19.39)(@vitest/ui@2.1.9)(terser@5.48.0)
 
+  packages/inspector:
+    dependencies:
+      '@xlt-token/core':
+        specifier: ^2.3.0
+        version: link:../core
+    devDependencies:
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.39
+      '@vitest/coverage-v8':
+        specifier: ^2.1.9
+        version: 2.1.9(vitest@2.1.9)
+      tsdown:
+        specifier: ^0.20.0
+        version: 0.20.3(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(synckit@0.11.13)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.1.0
+        version: 5.9.3
+      vitest:
+        specifier: ^2.0.0
+        version: 2.1.9(@types/node@20.19.39)(@vitest/ui@2.1.9)(terser@5.48.0)
+
   packages/jwt:
     dependencies:
       '@xlt-token/core':
@@ -368,6 +433,31 @@ importers:
         specifier: ^2.0.0
         version: 2.1.9(@types/node@20.19.39)(@vitest/ui@2.1.9)(terser@5.48.0)
 
+  packages/observability:
+    dependencies:
+      '@xlt-token/core':
+        specifier: ^2.3.0
+        version: link:../core
+    devDependencies:
+      '@opentelemetry/api':
+        specifier: ^1.9.0
+        version: 1.9.1
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.39
+      '@vitest/coverage-v8':
+        specifier: ^2.1.9
+        version: 2.1.9(vitest@2.1.9)
+      tsdown:
+        specifier: ^0.20.0
+        version: 0.20.3(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(synckit@0.11.13)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.1.0
+        version: 5.9.3
+      vitest:
+        specifier: ^2.0.0
+        version: 2.1.9(@types/node@20.19.39)(@vitest/ui@2.1.9)(terser@5.48.0)
+
   packages/store-contract:
     dependencies:
       '@xlt-token/core':
@@ -397,7 +487,7 @@ importers:
         version: 5.11.1
       redis:
         specifier: ^4.0.0 || ^5.0.0
-        version: 5.12.1
+        version: 5.12.1(@opentelemetry/api@1.9.1)
     devDependencies:
       '@vitest/coverage-v8':
         specifier: ^2.1.9
@@ -1037,6 +1127,10 @@ packages:
     resolution: {integrity: sha512-um0xL3fO7Mf4fDxcqx9KryrB7zgRM5JSlvGN5AGkP6JLM5XEKyjeAiPbNxdXVXQ16isuAhYpvP88NgL2BGd6aA==}
     engines: {node: '>=8.0.0', npm: '>=5.0.0'}
     hasBin: true
+
+  '@opentelemetry/api@1.9.1':
+    resolution: {integrity: sha512-gLyJlPHPZYdAk1JENA9LeHejZe1Ti77/pTeFm/nMXmQH/HFZlcS/O2XJB+L8fkbrNSqhdtlvjBVjxwUYanNH5Q==}
+    engines: {node: '>=8.0.0'}
 
   '@oxc-project/types@0.112.0':
     resolution: {integrity: sha512-m6RebKHIRsax2iCwVpYW2ErQwa4ywHJrE4sCK3/8JK8ZZAWOKXaRJFl/uP51gaVyyXlaS4+chU1nSCdzYf6QqQ==}
@@ -4311,6 +4405,8 @@ snapshots:
     transitivePeerDependencies:
       - encoding
 
+  '@opentelemetry/api@1.9.1': {}
+
   '@oxc-project/types@0.112.0': {}
 
   '@oxc-project/types@0.126.0': {}
@@ -4447,25 +4543,27 @@ snapshots:
     dependencies:
       quansync: 1.0.0
 
-  '@redis/bloom@5.12.1(@redis/client@5.12.1)':
+  '@redis/bloom@5.12.1(@redis/client@5.12.1(@opentelemetry/api@1.9.1))':
     dependencies:
-      '@redis/client': 5.12.1
+      '@redis/client': 5.12.1(@opentelemetry/api@1.9.1)
 
-  '@redis/client@5.12.1':
+  '@redis/client@5.12.1(@opentelemetry/api@1.9.1)':
     dependencies:
       cluster-key-slot: 1.1.2
+    optionalDependencies:
+      '@opentelemetry/api': 1.9.1
 
-  '@redis/json@5.12.1(@redis/client@5.12.1)':
+  '@redis/json@5.12.1(@redis/client@5.12.1(@opentelemetry/api@1.9.1))':
     dependencies:
-      '@redis/client': 5.12.1
+      '@redis/client': 5.12.1(@opentelemetry/api@1.9.1)
 
-  '@redis/search@5.12.1(@redis/client@5.12.1)':
+  '@redis/search@5.12.1(@redis/client@5.12.1(@opentelemetry/api@1.9.1))':
     dependencies:
-      '@redis/client': 5.12.1
+      '@redis/client': 5.12.1(@opentelemetry/api@1.9.1)
 
-  '@redis/time-series@5.12.1(@redis/client@5.12.1)':
+  '@redis/time-series@5.12.1(@redis/client@5.12.1(@opentelemetry/api@1.9.1))':
     dependencies:
-      '@redis/client': 5.12.1
+      '@redis/client': 5.12.1(@opentelemetry/api@1.9.1)
 
   '@rolldown/binding-android-arm64@1.0.0-rc.16':
     optional: true
@@ -6430,13 +6528,13 @@ snapshots:
     dependencies:
       redis-errors: 1.2.0
 
-  redis@5.12.1:
+  redis@5.12.1(@opentelemetry/api@1.9.1):
     dependencies:
-      '@redis/bloom': 5.12.1(@redis/client@5.12.1)
-      '@redis/client': 5.12.1
-      '@redis/json': 5.12.1(@redis/client@5.12.1)
-      '@redis/search': 5.12.1(@redis/client@5.12.1)
-      '@redis/time-series': 5.12.1(@redis/client@5.12.1)
+      '@redis/bloom': 5.12.1(@redis/client@5.12.1(@opentelemetry/api@1.9.1))
+      '@redis/client': 5.12.1(@opentelemetry/api@1.9.1)
+      '@redis/json': 5.12.1(@redis/client@5.12.1(@opentelemetry/api@1.9.1))
+      '@redis/search': 5.12.1(@redis/client@5.12.1(@opentelemetry/api@1.9.1))
+      '@redis/time-series': 5.12.1(@redis/client@5.12.1(@opentelemetry/api@1.9.1))
     transitivePeerDependencies:
       - '@node-rs/xxhash'
       - '@opentelemetry/api'

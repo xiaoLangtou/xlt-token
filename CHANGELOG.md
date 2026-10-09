@@ -2,6 +2,34 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Added
+
+- 新增 `@xlt-token/inspector` 官方监控台包：单文件零构建 Web 页面 + 框架无关数据桥。
+  - `createEventBufferSink()`：把 push-only 的审计事件流变成可增量查询的内存时间线（环形缓冲 + 游标）。
+  - `createInspectorBridge()`：强制 `auth` 回调（缺失时创建期报错），默认只读，`allowMutations: true` 才开放踢人 / 强制下线；设备 token 一律以指纹输出。
+  - `mountInspectorOnFastify()` / `mountInspectorOnExpress()`：结构化类型挂载胶水（无需编译期框架依赖）；`buildInspectorRequest()` + `BRIDGE_ROUTE_TABLE` 支持任意框架接线（NestJS 参考实现在 `examples/nestjs`）。
+  - 页面能力：实时审计事件流、在线会话分页 + 设备明细、登录 / 刷新 / 登出 / 异常指标卡、token 鉴权输入。
+- Core 新增 `StpLogic` / `StpUtil.getLoginIdByToken(token)`：查询 token 对应的登录 ID（UUID 策略过滤 KICK_OUT / BE_REPLACED 标记；JWT 策略验签读取 sub 并检查黑名单），供监控台等运维工具做鉴权桥接。
+- `examples/nestjs` 与 `examples/fastify` 接入官方监控台（`/inspector`，admin 角色鉴权，演示开放踢人动作）；NestJS 演示页事件缓冲统一迁移到 inspector 的 `createEventBufferSink`。
+
+- 新增 `@xlt-token/observability` 官方可观测性导出器包（补齐 v2.3 顺延范围）：
+  - `createLoggerEventSink()`：结构化 JSON 日志导出，schema `xlt-token.audit.v1`、字段名稳定（snake_case），支持 pino / winston 等 `StructuredLogger` 接口与按事件类型的 severity 覆盖；默认 `token.kicked_out` / `token.replaced` / `token.family_revoked` 归为 warn。
+  - `composeEventSinks()`：多导出器组合，单导出器同步异常 / Promise 拒绝均被隔离，可经 `onError` 观测。
+  - `createOpenTelemetryEventSink()`：`@opentelemetry/api` 为可选 peer dependency；Counter `xlt.audit.events`（`xlt.event` 属性）可派生登录速率、Token 刷新次数与认证异常计数；活跃 Span 写入 `xlt.<type>` 事件。未安装 API 时创建期给出明确安装提示。
+  - 全部导出器只读取 schema 允许字段并丢弃未知字段（脱敏边界），导出器异常不影响认证主流程。
+- 新增 `examples/fastify` 完整示例（补齐 v2.3 顺延范围）：显式 `XltInstance`、Plugin + 路由策略（权限 / 角色 / 二级认证 / `config.xlt`）、UUID 与 JWT 双策略、MemoryStore 与 RedisStore 切换、Cookie Token 来源（`@fastify/cookie` 前置校验）、接入 `@xlt-token/observability` 输出审计日志。
+- `examples/nestjs` 交互演示页新增"可观测性面板"：审计事件实时流（`GET /observability/events` 增量轮询）与在线会话统计（`GET /observability/overview`），均需 admin 角色；示例经 `composeEventSinks` 组合环形缓冲与 `createLoggerEventSink` 结构化日志。
+
+### Documentation
+
+- `docs/core/hooks-and-observability.md` 新增"官方导出器包"章节。
+
+### Fixed
+
+- `@xlt-token/jwt`：修复新版 `@types/node` 下 `assertStrongHmacSecret` 的类型错误（`KeyObject.symmetricKeySize` 可为 `undefined`），无行为变化。
+
 ## [2.3.0] - 2026-09-04
 
 ### Added
@@ -250,10 +278,10 @@ E2E:    72 tests passed (+4)
 
 ```ts
 // 旧（仍可用）
-import { XltTokenModule, StpUtil } from 'xlt-token';
+import { XltTokenModule, StpUtil } from "xlt-token";
 
 // 新（推荐）
-import { XltTokenModule, StpUtil } from '@xlt-token/nestjs';
+import { XltTokenModule, StpUtil } from "@xlt-token/nestjs";
 ```
 
 详见 [迁移指南](https://xiaolangtou.github.io/xlt-token/guide/migration-2-0)。

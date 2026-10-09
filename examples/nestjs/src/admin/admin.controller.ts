@@ -1,13 +1,14 @@
 import { Controller, Get } from "@nestjs/common";
 import { XltCheckRole } from "@xlt-token/nestjs";
-import { getRecentHookEvents } from "../config/audit.hooks";
+import { demoEventBuffer } from "../config/event-buffer";
 
 @Controller("admin")
 export class AdminController {
   @XltCheckRole("admin")
   @Get("hooks")
   hooks() {
-    return { events: getRecentHookEvents() };
+    const { events, latest } = demoEventBuffer.snapshot(0, 50);
+    return { events, latest };
   }
 
   @XltCheckRole("admin")

@@ -112,7 +112,9 @@ function assertStrongHmacSecret(kid: string, secret: Secret): void {
       ? Buffer.byteLength(secret)
       : Buffer.isBuffer(secret)
         ? secret.byteLength
-        : secret instanceof KeyObject && secret.type === "secret" ? secret.symmetricKeySize : 0;
+        : secret instanceof KeyObject && secret.type === "secret"
+          ? (secret.symmetricKeySize ?? 0)
+          : 0;
 
   if (length < 32) {
     throw new Error(`JWT key "${kid}" uses a weak HMAC secret; use at least 32 bytes`);

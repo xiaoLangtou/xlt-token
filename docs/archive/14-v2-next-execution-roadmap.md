@@ -2,7 +2,7 @@
 
 > **规划日期：** 2026-09-01  
 > **基线版本：** v2.1.1  
-> **状态：** v2.2 已交付（2026-09-01）；v2.3 待立项
+> **状态：** v2.2 已交付（2026-09-01）；v2.3 已交付（适配器 v2.3.0 / 2026-09-04；可观测性导出器与 Fastify 示例 2026-10-08 补齐）
 
 xlt-token 下一阶段先解决会影响所有适配器的架构决策，再交付框架适配器。多实例隔离与 Cookie 契约不直接增加用户功能，但会决定 Fastify、Hono 和后续运行时的实现方式，因此必须在 v2.2 冻结，避免后续返工。
 
@@ -22,10 +22,10 @@ xlt-token 下一阶段先解决会影响所有适配器的架构决策，再交�
 | 存储 | 已完成 | MemoryStore、node-redis、ioredis、原子 Store 契约（含 v2.2 `getAndDelete` 原子读取删除） | v2.5 Store 生态扩展 |
 | NestJS | 已完成 | Module、Guard、Decorator，兼容 Nest Fastify 平台 | 维护兼容层 |
 | Express | 已完成 | 中间件、路由策略、错误处理器 | 维护与 Core 的行为一致性 |
-| 多实例与适配器契约 | v2.2 已完成（设计冻结） | 调用点盘点、`XltInstance` 类型草案、适配器输入契约、默认实例兼容策略与迁移方向（[多实例与适配器契约](../guide/multi-instance-contract.md)） | v2.3 前提交 `core-instance-contract` OpenSpec 变更并实施 |
+| 多实例与适配器契约 | v2.3 已完成（落实为 Core API） | v2.2 设计冻结（调用点盘点、`XltInstance` 类型草案、适配器输入契约、默认实例兼容策略与迁移方向）；v2.3 落实 `createXltInstance()` / `setDefaultXltInstance()` / `getDefaultXltInstance()`（[多实例与适配器契约](../guide/multi-instance-contract.md)） | 维持回归与文档 |
 | Cookie 契约 | v2.2 已决策 | **v2.x 保持同步 `HttpCookies.get`**，异步迁移推迟 v3.0；支持矩阵与 Hono/Elysia 初始化期拒绝规则（[Cookie 契约决策](../guide/cookie-contract.md)） | v2.4 Hono 按决策实现 |
-| 原生 Fastify | 未开始 | 无独立包 | v2.3 交付 `@xlt-token/fastify` |
-| 可观测性导出 | 基础已完成 | `XltEventSink` 提供脱敏审计事件 | v2.3 提供 OTel、日志与指标示例 |
+| 原生 Fastify | v2.3 已交付 | `@xlt-token/fastify`：`xltFastifyPlugin`、preHandler Hook、路由 `config.xlt` 策略、显式 `XltInstance`、单测与 E2E；`examples/fastify` 示例（UUID/JWT、Memory/Redis、Cookie 前置条件） | 维持回归与文档 |
+| 可观测性导出 | v2.3 已交付 | `@xlt-token/observability`：结构化日志导出器、多导出器组合、OTel 桥接（可选 peer dependency） | 维持回归与文档 |
 | Hono | 未开始 | 无独立包 | v2.4 按 Cookie 决策交付 |
 | 发布治理 | v2.2 已完成 | 三项 OpenSpec 变更归档、发布检查清单、CHANGELOG 手动维护流程（[发布检查清单](../guide/release-checklist.md)） | 每次发布按清单执行 |
 
@@ -37,8 +37,8 @@ xlt-token 下一阶段先解决会影响所有适配器的架构决策，再交�
 | P0 | 多实例隔离与适配器契约设计 | 定义可注入实例接口，消除新适配器对 `StpUtil` 全局静态状态的依赖。 |
 | P0 | Cookie 契约决策 | 明确 `HttpCookies` 是否异步；同步方案下，Hono/Elysia 仅支持 Header/Query。 |
 | P1 | 临时 Token 原子消费与 Store 接口标准化 | 定义读取即销毁的统一 Store 操作。 |
-| P1 | 原生 Fastify 适配器 | 基于已定实例化契约提供独立 `@xlt-token/fastify`。 |
-| P1 | 可观测性导出器 | 复用 `XltEventSink`，提供 OTel、结构化日志和指标示例。 |
+| P1 | 原生 Fastify 适配器 | ✅ v2.3 已交付 `@xlt-token/fastify` 与 `examples/fastify` 示例。 |
+| P1 | 可观测性导出器 | ✅ v2.3 已交付 `@xlt-token/observability`（2026-10-08 补齐）。 |
 | P2 | Hono 适配器 | 基于 v2.2 契约与 Cookie 决策实现，并明确能力边界。 |
 | P2 | 会话管理增强 | 支持按设备、时间、IP 查询与批量下线。 |
 | P2 | JWT 密钥管理增强 | 支持 JWKS、密钥轮换监控、按 `kid` 失效与审计。 |
@@ -53,7 +53,7 @@ xlt-token 下一阶段先解决会影响所有适配器的架构决策，再交�
 v2.2  发布治理 + 架构决策（多实例契约 / Cookie 决策）
       + 临时 Token 原子消费（含 Store 接口标准化）
 
-v2.3  原生 Fastify + 可观测性导出器
+v2.3  原生 Fastify + 可观测性导出器 ✅（2026-09-04 发布；可观测性与示例 2026-10-08 补齐）
 
 v2.4  Hono（按 v2.2 决策交付）+ 会话管理增强
 
@@ -139,25 +139,27 @@ v2.2 先解决架构约束，再交付低耦合的临时 Token 原子消费。�
 
 ## v2.3 任务清单
 
-### 原生 Fastify 适配器
+v2.3.0 已于 2026-09-04 发布：多实例契约落实为 Core 公开 API（`createXltInstance()` / `setDefaultXltInstance()` / `getDefaultXltInstance()`），`@xlt-token/fastify` 正式交付。可观测性导出器与 Fastify 示例项目于 2026-10-08 补齐交付（`@xlt-token/observability` 包 + `examples/fastify`），v2.3 范围全部完成。
 
-- [ ] 基于 v2.2 实例契约创建 `@xlt-token/fastify` 包骨架。
-- [ ] 使用 Fastify Hook 接入认证流程，并确定 `onRequest` 与 `preHandler` 的职责边界。
-- [ ] 提供路由级权限配置 API，并与 Express/NestJS 的权限、角色和 Safe 语义一致。
-- [ ] 补齐 `package.json`、构建、CI 与独立发布流程。
-- [ ] 提供示例项目、README、类型扩展与 E2E。
+### 原生 Fastify 适配器 ✅ 已交付（适配器 2026-09-04，v2.3.0；示例项目 2026-10-08 补齐）
 
-**验收条件：** 纯 Fastify 项目不依赖 NestJS 即可接入；适配器只使用显式 `XltInstance`；支持矩阵遵循 v2.2 的 Cookie 决策。
+- [x] 基于 v2.2 实例契约创建 `@xlt-token/fastify` 包骨架。
+- [x] 使用 Fastify Hook 接入认证流程，并确定 `onRequest` 与 `preHandler` 的职责边界。
+- [x] 提供路由级权限配置 API，并与 Express/NestJS 的权限、角色和 Safe 语义一致。
+- [x] 补齐 `package.json`、构建、CI 与独立发布流程。
+- [x] 提供示例项目、README、类型扩展与 E2E。→ `examples/fastify` 覆盖 UUID/JWT 双策略、MemoryStore/RedisStore 切换、Cookie 前置条件（`@fastify/cookie` 注册期校验）与审计日志接入。
 
-### 可观测性导出器
+**验收条件：** 纯 Fastify 项目不依赖 NestJS 即可接入；适配器只使用显式 `XltInstance`；支持矩阵遵循 v2.2 的 Cookie 决策。→ **已达成**：`xltFastifyPlugin` 强制显式 `instance`（缺失时注册期报错）；登录、权限、角色与二级认证经 `preHandler` 与路由 `config.xlt` 接入，语义与 Express/NestJS 一致；Cookie 模式依赖 `@fastify/cookie`，未注册时启动期明确报错；单测与 E2E 覆盖 Header/Query/Cookie、JWT 与 Redis 场景。
 
-- [ ] 基于 `XltEventSink` 定义 OpenTelemetry Span/Trace 事件映射。
-- [ ] 定义结构化日志 JSON schema 与稳定字段名。
-- [ ] 提供指标示例：登录成功率、Token 刷新次数、认证异常事件计数。
-- [ ] 提供 Prometheus 或 OpenTelemetry Collector 对接示例。
-- [ ] 为脱敏、事件覆盖与导出器异常隔离编写回归测试。
+### 可观测性导出器 ✅ 已交付（2026-10-08，`@xlt-token/observability`）
 
-**验收条件：** 导出器不向 Core 引入遥测依赖；不输出原始 Token；每种审计事件均有稳定映射和示例。
+- [x] 基于 `XltEventSink` 定义 OpenTelemetry Span/Trace 事件映射。→ 活跃 Span 写入 `xlt.<type>` 事件，属性 `xlt.*` 稳定映射。
+- [x] 定义结构化日志 JSON schema 与稳定字段名。→ schema `xlt-token.audit.v1`，snake_case 字段表见包 README。
+- [x] 提供指标示例：登录成功率、Token 刷新次数、认证异常事件计数。→ Counter `xlt.audit.events`（`xlt.event` 属性），README 给出三项指标的派生查询。
+- [x] 提供 Prometheus 或 OpenTelemetry Collector 对接示例。→ 包 README 提供 OTLP Collector 与 Prometheus exporter 两种接线示例。
+- [x] 为脱敏、事件覆盖与导出器异常隔离编写回归测试。→ 32 个单测覆盖全部事件类型映射、未知字段丢弃、logger / 指标 / Span 三类异常隔离与 API 缺失提示。
+
+**验收条件：** 导出器不向 Core 引入遥测依赖；不输出原始 Token；每种审计事件均有稳定映射和示例。→ **已达成**：Core 零遥测依赖，OTel 经可选 peer dependency 接入；导出器只读取 schema 允许字段并丢弃未知字段；六种审计事件均有稳定事件名、属性 / 日志字段映射与 README 示例（另见 [审计事件与观测性](../core/hooks-and-observability.md)）。
 
 ## v2.4 任务清单
 
@@ -180,6 +182,8 @@ v2.2 先解决架构约束，再交付低耦合的临时 Token 原子消费。�
 **验收条件：** 查询 API 不暴露原始 Token；分页语义在所有 Store 一致；批量下线有审计事件与回归测试。
 
 ## v2.5 任务清单
+
+完整需求与验收标准见 [v2.5 PRD](./17-v2.5-prd.md)（待立项）。
 
 ### JWT 密钥管理增强（JWKS）
 

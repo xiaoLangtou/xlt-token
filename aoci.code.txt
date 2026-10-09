@@ -1,0 +1,501 @@
+#AOCI-CODE-VOLUME: 1
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/===
+.gitattributes[XG4T]: F:强制文本文件以LF检出，保证AOCI基线跨平台逐字节一致 | R:- | A:- | S:修改换行规则会使全仓文件被判stale并触发基线漂移
+.gitignore[XG3T]: F:忽略构建产物、node_modules、日志、覆盖率与IDE文件 | R:- | A:- | S:-
+.oxfmtrc.json[XG2T]: F:oxfmt格式化器忽略规则：dist/coverage/reports与docs构建缓存 | R:- | A:- | S:-
+.oxlintrc.json[XG4T]: F:oxlint规则：correctness=error、suspicious=warn，启用typescript/unicorn/oxc插件 | R:- | A:- | S:关闭no-async-endpoint-handlers因适配器依赖async中间件语义
+AGENTS.md[XC7S]: F:宿主Agent运行合同：AOCI认知建立、复用、维护与安全边界规则 | R:- | A:定义aoci_rules/aoci_overview/aoci_maintain/aoci_update_entry最小使用入口 | S:模型生成模型读取闭环;Entry语义必须来自绑定证据
+CHANGELOG.md[SV4M]: F:全版本变更日志，按Keep-a-Changelog记录各版本Added/Fixed/Compatibility | R:- | A:- | S:-
+CNAME[OV2T]: F:GitHub Pages自定义域名：xlt-token.doc.weipc0110.cn | R:- | A:- | S:-
+LICENSE[SV2T]: F:MIT许可证文本 | R:- | A:- | S:-
+README.md[SV7L]: F:项目主文档：特性全景、分包安装路径、核心概念与适配器选型导览 | R:code:package.json | A:定义各分包推荐安装方式与接入指引 | S:鉴权语义集中在@xlt-token/core，适配器包只做框架集成
+SECURITY.md[SV5T]: F:安全策略：支持版本范围、漏洞私密报告渠道与响应预期 | R:- | A:漏洞必须走GitHub Security Advisories私密报告，禁止公开issue | S:-
+code-review-report-2026-09-05.md[SV3M]: F:2026-09-05全库代码审查报告：4 Critical/42 Warning/72 Info定位与修复建议 | R:- | A:- | S:C1记录Fastify原始URL未解码绕过鉴权问题及复现方式
+llms.txt[SV7S]: F:AI代理项目入口：包清单、必读文档路径与验证命令 | R:code:README.md | A:定义AI代理应读的文档顺序 | S:按monorepo分包描述，根包xlt-token只是nestjs的兼容re-export
+package.json[FC8M]: F:monorepo根包定义：xlt-token兼容包、全量质量门禁脚本与发布依赖 | R:code:tsdown.config.ts | A:check:quality/release:check是CI与发布门禁入口 | S:根包仅re-export@xlt-token/nestjs；peer支持NestJS 10-12；jsonwebtoken可选peer
+pnpm-lock.yaml[FC1L]: F:pnpm依赖锁定文件 | R:- | A:- | S:-
+pnpm-workspace.yaml[FC7T]: F:pnpm工作区定义：根包+packages/*+examples/* | R:code:package.json | A:workspace包拓扑 | S:-
+qodana.yaml[OV3T]: F:JetBrains Qodana静态分析配置 | R:- | A:- | S:-
+tsconfig.json[FC6T]: F:根TS配置：strict与装饰器基线供各包继承 | R:- | A:- | S:-
+tsdown.config.ts[FV7S]: F:根包构建配置：把src/index.ts打成dist双格式 | R:code:package.json | A:构建产物=根包exports指向的dist | S:prebuild先构建core与nestjs分包再打根包
+turbo.json[OV4T]: F:Turborepo任务管道：build依赖^build、输出dist | R:code:pnpm-workspace.yaml | A:- | S:-
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/.github/===
+RELEASE_TEMPLATE.md[SV3T]: F:发布说明标准模板，固定Highlights/Features/Breaking/Gates/Rollback章节结构 | R:- | A:- | S:-
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/.github/releases/===
+v1.0.0-rc.1.md[SV2T]: F:v1.0.0-rc.1发布说明：修复XltAbstractLoginGuard.onAuthFail死代码，建立E2E测试基建 | R:- | A:- | S:-
+v1.0.0-rc.2.md[SV2T]: F:v1.0.0-rc.2发布说明：补齐多端登录、二级认证、JWT策略、Hooks与在线观测 | R:- | A:- | S:-
+v1.0.0-rc.3.md[SV2T]: F:v1.0.0-rc.3发布说明：monorepo正式分包@xlt-token/core与@xlt-token/nestjs | R:- | A:- | S:-
+v1.0.0.md[SV2T]: F:v1.0.0发布说明：Express官方适配器与路由策略进入稳定版本 | R:- | A:- | S:-
+v1.0.2.md[SV2T]: F:v1.0.2发布说明：CJS/ESM双入口兼容与NestJS v12 peer支持 | R:- | A:- | S:-
+v1.1.0.md[SV2T]: F:v1.1.0发布说明：DurationInput相对时间、JWT单次登录超时与AI Agent支持 | R:- | A:- | S:-
+v1.2.0.md[SV2T]: F:v1.2.0发布说明：JWT生命周期补齐、多设备登出语义统一、RedisStore cursor修复 | R:- | A:- | S:-
+v1.2.1.md[SV2T]: F:v1.2.1发布说明：Redis Store独立为@xlt-token/store-redis，支持双客户端与Cluster | R:- | A:- | S:-
+v2.1.0.md[SV2T]: F:v2.1.0发布说明：修复JWT refresh在状态型JWT下的刷新路径，同步2.x错误码 | R:- | A:- | S:-
+v2.2.0.md[SV2T]: F:v2.2.0发布说明：临时Token原子消费与多实例、Cookie两项架构契约冻结 | R:- | A:- | S:-
+v2.3.0.md[SV2T]: F:v2.3.0发布说明：Fastify适配器接入与升级注意事项 | R:- | A:- | S:-
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/.github/workflows/===
+ci.yml[OV5T]: F:CI质量门禁：PR与master推送在Node 20/22矩阵执行check:quality并构建文档 | R:code:package.json | A:- | S:同ref并发自动取消旧运行;仅contents:read权限
+deploy-docs.yml[OV5T]: F:docs变更触发的VitePress构建与GitHub Pages部署流水线 | R:code:package.json | A:- | S:pages并发组不取消进行中的部署
+publish.yml[OV6T]: F:release发布触发npm发布：先跑release:check门禁再pnpm publish -r | R:code:package.json | A:- | S:需NPM_TOKEN secret与id-token写权限
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/docs/.vitepress/===
+config.mts[OV7L]: F:VitePress站点配置：Twoslash类型检查、主题、release虚拟模块、sitemap与头部注入 | R:code:docs/.vitepress/theme/index.ts | A:定义文档导航侧边栏与@xlt-token/*到packages/*/src的twoslash路径映射 | S:twoslash paths使文档代码示例直接绑定真实包源码做类型校验
+twoslash.ts[XG5T]: F:Twoslash虚拟import片段：经@include:注入代码块并用---cut---隐藏 | R:code:docs/.vitepress/config.mts | A:- | S:-
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/docs/.vitepress/theme/===
+Home.vue[CU5M]: F:首页Hero组件：终端动画演示token/session TTL倒计时与安装命令复制 | R:code:docs/.vitepress/theme/Layout.vue | A:- | S:__XLT_VERSION__为构建期注入全局常量，非运行时导入
+Layout.vue[EV6T]: F:自定义主题布局：装配SiteHeader/Home/CopyPage/TocOutline与支持弹窗 | R:code:docs/.vitepress/theme/Home.vue; code:docs/.vitepress/theme/components/SiteHeader.vue | A:- | S:-
+env.d.ts[XG2T]: F:声明构建期全局常量__XLT_VERSION__的类型 | R:- | A:- | S:-
+index.ts[EV7T]: F:VitePress主题入口：扩展默认主题、替换Layout并注册Twoslash浮层插件 | R:code:docs/.vitepress/config.mts | A:- | S:-
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/docs/.vitepress/theme/components/===
+ChangelogTimeline.vue[CU4L]: F:首页发布时间线：解析release md渲染时间线，支持远程拉取与静态回退 | R:code:docs/.vitepress/config.mts | A:- | S:远程GitHub releases失败时回退到构建期打包的release原文
+CopyPage.vue[CU3S]: F:文档页复制辅助按钮：复制本页Markdown或页面链接 | R:code:docs/.vitepress/theme/Layout.vue | A:- | S:-
+SiteHeader.vue[CU5S]: F:固定站点头部：品牌、分区导航tabs、版本徽标、主题切换与GitHub链接 | R:code:docs/.vitepress/theme/Layout.vue | A:- | S:-
+SupportProjectModal.vue[CU4S]: F:首页支持项目弹窗：GitHub/Gitee/GitCode仓库入口，7天关闭记忆 | R:code:docs/.vitepress/theme/Layout.vue | A:- | S:-
+TocOutline.vue[CU4S]: F:自定义右侧大纲导航：轨道式缩进层级与滚动高亮联动 | R:code:docs/.vitepress/theme/Layout.vue | A:- | S:-
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/docs/.vitepress/theme/styles/===
+base.css[CU3S]: F:基础样式：画布底色、滚动条、选区与默认导航隐藏 | R:- | A:- | S:-
+doc.css[CU3L]: F:文档页样式：统一画布、侧边栏、正文、代码块与outline布局 | R:- | A:- | S:-
+header.css[CU3M]: F:固定头部样式：毛玻璃背景、品牌区、分区tabs与主题切换按钮 | R:code:docs/.vitepress/theme/components/SiteHeader.vue | A:- | S:-
+home.css[CU3L]: F:首页样式：终端演示区、keyspace版式与动效预算约束 | R:code:docs/.vitepress/theme/Home.vue | A:- | S:设计预算：终端是全页唯一持续运动元素，其余保持静默
+index.css[CU2T]: F:主题样式聚合入口：按序导入tokens/base/header/home/doc/support | R:code:docs/.vitepress/theme/index.ts | A:- | S:-
+support.css[CU3L]: F:支持项目弹窗样式：遮罩、卡片与多平台入口布局 | R:code:docs/.vitepress/theme/components/SupportProjectModal.vue | A:- | S:-
+tokens.css[CU6S]: F:全站设计令牌：黄铜强调色、冷墨中性色与mono标签变量 | R:- | A:定义--x-*CSS变量契约 | S:变量名--x-*被scoped样式直接引用，改名会破坏局部样式
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/docs/.vitepress/twoslash/===
+tsconfig.json[XG4T]: F:Twoslash专用tsconfig：开启decorator并把xlt-token映射到nestjs源码 | R:code:packages/nestjs/src/index.ts | A:- | S:仅用于文档示例类型检查，非运行时编译配置
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/docs/===
+README.md[SV4S]: F:文档仓库导览：分区导航表与本地开发说明 | R:- | A:- | S:-
+index.md[SV5T]: F:站点首页frontmatter：home布局与站点标题描述 | R:- | A:- | S:-
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/docs/adapters/===
+express.md[SV6L]: F:Express适配器文档：中间件、路由策略、req.xltToken与错误处理 | R:code:packages/express/src/index.ts | A:- | S:-
+fastify.md[SV6M]: F:Fastify适配器文档：显式XltInstance、插件注册与路由config.xlt策略 | R:code:packages/fastify/src/plugin.ts | A:- | S:插件只接受显式实例，不读取StpUtil默认实例
+index.md[SV4S]: F:适配器总览：NestJS/Express/Fastify选型指引与接入方式对比 | R:- | A:- | S:-
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/docs/adapters/nestjs/===
+getting-started.md[SV6M]: F:NestJS快速开始：注册模块→登录签发→守卫校验→登出最小闭环 | R:code:packages/nestjs/src/index.ts | A:- | S:-
+guards-and-decorators.md[SV6M]: F:NestJS守卫与装饰器参考：XltTokenGuard/XltAbstractLoginGuard与七个装饰器 | R:code:packages/nestjs/src/index.ts | A:- | S:-
+module-config.md[SV6S]: F:NestJS模块配置：forRoot/forRootAsync与isGlobal语义 | R:code:packages/nestjs/src/index.ts | A:- | S:-
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/docs/archive/===
+10-roadmap-1.1.0.md[SV2M]: F:归档：1.1.0路线图（DurationInput与JWT超时等规划） | R:- | A:- | S:-
+12-multi-framework-architecture.md[SV2L]: F:归档：多框架适配架构方案与适配器分层设计 | R:- | A:- | S:-
+13-1.1.0-implementation-design.md[SV2T]: F:归档：1.1.0实现设计摘要 | R:- | A:- | S:-
+14-v2-next-execution-roadmap.md[SV2M]: F:归档：v2下一阶段执行路线图 | R:- | A:- | S:-
+15-v2.2-prd.md[SV2S]: F:归档：v2.2产品需求文档 | R:- | A:- | S:-
+16-v2.3-prd.md[SV2S]: F:归档：v2.3产品需求文档 | R:- | A:- | S:-
+README.md[SV3T]: F:归档文档索引：说明各归档设计文档用途与状态 | R:- | A:- | S:-
+core-extraction-implementation.md[SV2M]: F:归档：从根包抽离@xlt-token/core的实现文档 | R:- | A:- | S:-
+nestjs-adapter-implementation.md[SV2M]: F:归档：@xlt-token/nestjs适配实现文档 | R:- | A:- | S:-
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/docs/archive/express-adapter/===
+01-overview.md[SV2S]: F:归档：Express适配方案·目标与范围 | R:- | A:- | S:-
+02-current-status.md[SV2S]: F:归档：Express适配方案·现状对照 | R:- | A:- | S:-
+03-design-thinking.md[SV2S]: F:归档：Express适配方案·设计思路 | R:- | A:- | S:-
+04-package-structure.md[SV2S]: F:归档：Express适配方案·包结构与依赖 | R:- | A:- | S:-
+05-l2-adapter-layer.md[SV2S]: F:归档：Express适配方案·L2适配层HttpContext桥接 | R:- | A:- | S:-
+06-l3-integration-api.md[SV2M]: F:归档：Express适配方案·L3集成层API设计 | R:- | A:- | S:-
+07-nestjs-parity.md[SV2T]: F:归档：Express适配方案·与NestJS语义对齐 | R:- | A:- | S:-
+08-implementation-steps.md[SV2S]: F:归档：Express适配方案·分步实施计划 | R:- | A:- | S:-
+09-testing.md[SV2S]: F:归档：Express适配方案·测试与验收 | R:- | A:- | S:-
+10-usage-examples.md[SV2M]: F:归档：Express适配方案·使用示例 | R:- | A:- | S:-
+11-risks-and-migration.md[SV2T]: F:归档：Express适配方案·风险、迁移与待定项 | R:- | A:- | S:-
+README.md[SV2T]: F:归档：Express框架适配方案索引 | R:- | A:- | S:-
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/docs/core/===
+configuration.md[SV7S]: F:Core配置参考：XltTokenConfig全字段与createXltToken选项 | R:code:packages/core/src/index.ts | A:XltTokenConfig配置契约文档 | S:-
+core-api.md[SV8M]: F:Core API参考：StpLogic/StpUtil登录、登出、会话、权限与在线用户全方法 | R:code:packages/core/src/index.ts | A:StpLogic与StpUtil公开API文档 | S:-
+exceptions.md[SV7S]: F:异常处理参考：未登录、权限不足、角色不足与二级认证异常语义 | R:code:packages/core/src/index.ts | A:NotLoginException等异常契约与NestJS映射 | S:-
+getting-started.md[SV7L]: F:Core快速开始：在自定义框架/脚本/Serverless/WebSocket中创建鉴权运行时 | R:code:packages/core/src/index.ts | A:createXltToken接入方式文档 | S:-
+hooks-and-observability.md[SV6T]: F:事件与可观测性：XltEventSink记录登录/登出/会话事件 | R:code:packages/core/src/index.ts | A:XltEventSink契约文档 | S:事件投递已脱敏，不携带原始Token
+jwt-strategy.md[SV7S]: F:JWT策略文档：状态型JWT、密钥轮换、kid、算法白名单与Store黑名单 | R:code:packages/jwt/src/index.ts | A:TokenStrategy JWT契约文档 | S:JWT撤销依赖Store黑名单，无Store持久化时刷新态会丢失
+multi-device.md[SV6S]: F:多端登录文档：device参数、并发登录与共享Token配置 | R:code:packages/core/src/index.ts | A:- | S:-
+permissions-and-session.md[SV7L]: F:权限与会话文档：StpInterface/StpPermLogic权限角色校验与XltSession会话管理 | R:code:packages/core/src/index.ts | A:- | S:-
+recipes.md[SV6M]: F:场景手册：顶号、多端登录、活跃超时、滑动续期、踢人与匿名接口示例 | R:code:packages/core/src/index.ts | A:- | S:-
+secondary-auth.md[SV6S]: F:二级认证与临时Token文档：Safe安全窗口与consumeTempToken原子消费 | R:code:packages/core/src/index.ts | A:- | S:-
+storage.md[SV6T]: F:Store契约文档：XltTokenStore接口、MemoryStore与自定义存储指引 | R:code:packages/store-contract/src/index.ts | A:XltTokenStore契约文档 | S:-
+token-strategy.md[SV6S]: F:Token策略文档：UuidStrategy与JWT策略生成校验及自定义 | R:code:packages/core/src/index.ts | A:TokenStrategy契约文档 | S:-
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/docs/guide/===
+architecture.md[SV7S]: F:架构设计文档：Core/Store/适配器分层与Token、会话、存储键设计 | R:code:packages/core/src/index.ts | A:- | S:-
+cookie-contract.md[SV6S]: F:Cookie契约决策：v2.x保持同步HttpCookies与Hono/Elysia初始化期拒绝规则 | R:- | A:冻结契约：异步Cookie迁移需显式评估 | S:变更此契约属架构决策，影响未来适配器支持范围
+engineering.md[SV6S]: F:工程化门禁文档：支持矩阵、包边界、CI、发布与回退要求 | R:code:package.json | A:- | S:-
+getting-started.md[SV5T]: F:快速开始：按框架选择Core/NestJS/Express/Fastify/Redis接入方式 | R:- | A:- | S:-
+llms.md[SV4T]: F:LLMs.txt指南：AI代理的项目入口、阅读路径与验证命令 | R:code:llms.txt | A:- | S:-
+mcp-server.md[SV4T]: F:MCP Server实现契约：为xlt-token设计MCP应暴露的包、API与安全边界 | R:- | A:- | S:-
+migration-2-0.md[SV7S]: F:2.0迁移指南：1.x到2.x的Core/Store/JWT/Hooks/NestJS/Express API迁移 | R:- | A:- | S:-
+multi-instance-contract.md[SV7S]: F:多实例契约：XltInstance公开API、适配器输入契约与默认实例兼容策略 | R:code:packages/core/src/index.ts | A:XltInstance契约冻结文档 | S:适配器只接受显式实例是v2.2冻结决策，StpUtil保留为默认实例语法糖
+release-checklist.md[SV5S]: F:发布检查清单：从合入到npm发布的门禁与CHANGELOG维护流程 | R:code:.github/workflows/publish.yml | A:- | S:-
+skills.md[SV4S]: F:AI Agent Skill指南：为编码代理安装xlt-token上下文技能 | R:code:skills/index.json | A:- | S:-
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/docs/juejin/===
+xlt-token-2.0.md[SV2M]: F:掘金文章草稿：xlt-token 2.0架构升级介绍 | R:- | A:- | S:-
+xlt-token-v1.0.0.md[SV2M]: F:掘金文章草稿：v1.0.0发布介绍 | R:- | A:- | S:-
+xlt-token-v2.3.md[SV2S]: F:掘金文章草稿：临时Token原子消费主题文章 | R:- | A:- | S:-
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/docs/public/===
+CNAME[OV2T]: F:文档构建产物中的自定义域名副本 | R:- | A:- | S:-
+llms.txt[SV5S]: F:站点发布版llms.txt：AI代理项目地图与推荐阅读路径 | R:code:llms.txt | A:- | S:-
+robots.txt[OV1T]: F:爬虫规则：允许全站抓取 | R:- | A:- | S:-
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/docs/reference/===
+changelog.md[SV3T]: F:参考分区·更新日志页：嵌入各版本发布说明 | R:code:docs/.vitepress/theme/components/ChangelogTimeline.vue | A:- | S:-
+llms.md[SV4S]: F:AI编码代理指南页：项目地图、包职责、关键API与验证方式 | R:code:llms.txt | A:- | S:-
+src-reference.md[SV5T]: F:源码API参考页：按公共导出定位各包源码入口 | R:code:packages/core/src/index.ts | A:- | S:-
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/docs/store-redis/===
+index.md[SV7L]: F:Redis Store使用指南：node-redis与ioredis双客户端接入、Cluster与NestJS兼容 | R:code:packages/store-redis/src/index.ts | A:- | S:-
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/examples/===
+README.md[SV3T]: F:示例总览：NestJS/Express示例入口与能力演示说明 | R:- | A:- | S:-
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/examples/express/===
+README.md[SV4S]: F:Express示例说明：可运行应用、接口路径与NestJS对照说明 | R:code:examples/express/src/app.ts | A:- | S:-
+package.json[FC3T]: F:Express示例包定义：@xlt-token/example-express脚本与依赖 | R:code:package.json | A:- | S:-
+tsconfig.json[FC2T]: F:Express示例TypeScript编译配置 | R:- | A:- | S:-
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/examples/express/public/demo/===
+app.js[CU3M]: F:浏览器端交互Demo脚本：登录/权限/会话演示与API调用 | R:code:examples/express/public/demo/index.html | A:- | S:内置演示账号明文密码，仅限本地Demo不可用于生产
+index.html[CU2M]: F:Demo页面结构：登录表单、接口按钮与响应展示区 | R:code:examples/express/public/demo/app.js | A:- | S:-
+styles.css[CU2L]: F:Demo页面样式：暗色主题布局 | R:- | A:- | S:-
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/examples/express/src/===
+app.ts[EA6S]: F:Express示例应用装配：中间件、路由策略、审计事件与错误处理注册 | R:code:packages/express/src/index.ts | A:createApp()导出app与config | S:-
+main.ts[EE3T]: F:Express示例进程入口：启动HTTP监听 | R:code:examples/express/src/app.ts | A:- | S:-
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/examples/express/src/config/===
+app-config.ts[CB7S]: F:示例配置中枢：创建XltToken实例、忽略路由与策略路由表 | R:code:examples/express/src/app.ts | A:createExampleXlt/createIgnoredRoutes/createRoutePolicies | S:-
+audit-hooks.ts[OB4T]: F:示例审计事件收集：内存数组记录XltAuditEvent | R:code:examples/express/src/config/app-config.ts | A:- | S:-
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/examples/express/src/middleware/===
+async-handler.ts[MR3T]: F:async路由处理器包装：捕获Promise异常转交Express错误链 | R:- | A:- | S:-
+demo-error-handler.ts[MR3T]: F:Demo统一错误响应：HttpError到JSON响应映射 | R:- | A:HttpError(statusCode,message) | S:-
+profile-user.ts[MB3T]: F:登录后缓存演示用户资料到内存Map的中间件 | R:code:examples/express/src/stp/demo-stp-interface.ts | A:- | S:-
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/examples/express/src/routes/===
+admin.ts[EB3T]: F:管理路由：最近审计事件查询接口 | R:code:examples/express/src/config/audit-hooks.ts | A:- | S:-
+auth.ts[EB4T]: F:认证路由：login/logout/me接口演示登录登出 | R:code:packages/express/src/index.ts | A:- | S:-
+device.ts[EB4T]: F:多端登录路由：device参数登录、设备列表与顶号演示 | R:code:packages/express/src/index.ts | A:- | S:-
+permission.ts[EB3T]: F:权限路由：read/delete/order-create按策略校验权限 | R:code:examples/express/src/config/app-config.ts | A:- | S:-
+profile.ts[EB3T]: F:个人资料路由：loadProfileUser后返回登录用户信息 | R:code:examples/express/src/middleware/profile-user.ts | A:- | S:-
+public.ts[EB3T]: F:公开路由：health健康检查与无需登录的演示接口 | R:- | A:- | S:-
+role.ts[EB3T]: F:角色路由：admin-only与admin-or-super角色校验演示 | R:code:examples/express/src/config/app-config.ts | A:- | S:-
+safe.ts[EB4T]: F:二级认证路由：开启Safe窗口、校验与transfer敏感操作演示 | R:code:packages/express/src/index.ts | A:- | S:-
+session.ts[EB4T]: F:会话路由：session读写与多端会话管理演示 | R:code:packages/express/src/index.ts | A:- | S:-
+temp-token.ts[EB4T]: F:临时Token路由：创建与consumeTempToken原子消费演示 | R:code:packages/express/src/index.ts | A:- | S:-
+whitelist.ts[EB3T]: F:黑白名单路由：public与private接口对比守卫行为 | R:- | A:- | S:-
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/examples/express/src/stp/===
+demo-stp-interface.ts[DB5T]: F:演示权限数据源：内存DEMO_USERS提供getPermissionList/getRoleList | R:code:packages/core/src/index.ts | A:实现StpInterface | S:-
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/examples/nestjs/===
+README.md[SV4M]: F:NestJS示例说明：全部能力演示、交互页与接口对照表 | R:code:examples/nestjs/src/app.module.ts | A:- | S:-
+package.json[FC3T]: F:NestJS示例包定义：@xlt-token/example-nestjs脚本与依赖 | R:code:package.json | A:- | S:-
+tsconfig.json[FC2T]: F:NestJS示例TypeScript编译配置 | R:- | A:- | S:-
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/examples/nestjs/public/demo/===
+app.js[CU3M]: F:浏览器端交互Demo脚本：NestJS接口演示与调用 | R:code:examples/nestjs/public/demo/index.html | A:- | S:内置演示账号明文密码，仅限本地Demo
+index.html[CU2M]: F:NestJS Demo页面结构：登录表单与接口演示区 | R:code:examples/nestjs/public/demo/app.js | A:- | S:-
+styles.css[CU2L]: F:NestJS Demo页面样式 | R:- | A:- | S:-
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/examples/nestjs/src/admin/===
+admin.controller.ts[EB3T]: F:管理控制器：admin角色校验的审计事件查询接口 | R:code:packages/nestjs/src/index.ts | A:- | S:-
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/examples/nestjs/src/===
+app.module.ts[EA6S]: F:示例根模块：注册XltTokenModule(async)、全局Guard与异常过滤器 | R:code:packages/nestjs/src/index.ts | A:- | S:-
+main.ts[EE3T]: F:NestJS示例进程入口：bootstrap并启动HTTP监听 | R:code:examples/nestjs/src/app.module.ts | A:- | S:-
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/examples/nestjs/src/auth/===
+auth.controller.ts[EB4T]: F:认证控制器：登录/登出/me，演示LoginId与TokenValue装饰器 | R:code:packages/nestjs/src/index.ts | A:- | S:-
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/examples/nestjs/src/config/===
+app-config.service.ts[CB7S]: F:示例配置服务：构建MemoryStore与JWT策略配置并暴露AppConfigService | R:code:examples/nestjs/src/app.module.ts | A:- | S:-
+audit.hooks.ts[OB4T]: F:示例审计事件收集：内存环形缓冲最近50条脱敏事件 | R:code:packages/core/src/index.ts | A:- | S:-
+example-config.module.ts[EA3T]: F:全局配置模块：导出AppConfigService供全示例注入 | R:code:examples/nestjs/src/config/app-config.service.ts | A:- | S:-
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/examples/nestjs/src/device/===
+device.controller.ts[EB4T]: F:多端登录控制器：device登录、设备列表与XltMode演示 | R:code:packages/nestjs/src/index.ts | A:- | S:-
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/examples/nestjs/src/filters/===
+xlt-token-exception.filter.ts[MR5T]: F:异常过滤器：NotLoginException等映射为统一JSON响应 | R:code:packages/nestjs/src/index.ts | A:- | S:-
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/examples/nestjs/src/guards/===
+business-login.guard.ts[MB6S]: F:业务登录守卫示例：继承XltAbstractLoginGuard并实现onAuthSuccess/onAuthFail | R:code:packages/nestjs/src/index.ts | A:BusinessLoginGuard可被业务继承扩展 | S:onAuthFail先于异常上抛，继承时勿在钩子内吞异常
+profile-login.guard.ts[MB3T]: F:Profile专用守卫：继承BusinessLoginGuard的定制实现 | R:code:examples/nestjs/src/guards/business-login.guard.ts | A:- | S:-
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/examples/nestjs/src/permission/===
+permission.controller.ts[EB3T]: F:权限控制器：XltCheckPermission与XltMode演示 | R:code:packages/nestjs/src/index.ts | A:- | S:-
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/examples/nestjs/src/profile/===
+profile.controller.ts[EB3T]: F:个人资料控制器：ProfileLoginGuard与XltIgnore对比演示 | R:code:examples/nestjs/src/guards/profile-login.guard.ts | A:- | S:-
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/examples/nestjs/src/public/===
+public.controller.ts[EB3T]: F:公开控制器：health与XltIgnore免登录接口演示 | R:code:packages/nestjs/src/index.ts | A:- | S:-
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/examples/nestjs/src/role/===
+role.controller.ts[EB3T]: F:角色控制器：XltCheckRole校验演示 | R:code:packages/nestjs/src/index.ts | A:- | S:-
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/examples/nestjs/src/safe/===
+safe.controller.ts[EB4T]: F:二级认证控制器：开启Safe窗口与XltCheckSafe敏感操作演示 | R:code:packages/nestjs/src/index.ts | A:- | S:-
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/examples/nestjs/src/session/===
+session.controller.ts[EB4T]: F:会话控制器：XltSession读写与多端会话演示 | R:code:packages/nestjs/src/index.ts | A:- | S:-
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/examples/nestjs/src/stp/===
+demo-stp-interface.ts[DB5T]: F:演示权限数据源：注入式StpInterface提供DEMO_USERS权限角色 | R:code:packages/store-contract/src/index.ts | A:实现StpInterface | S:-
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/examples/nestjs/src/temp-token/===
+temp-token.controller.ts[EB4T]: F:临时Token控制器：创建与consumeTempToken原子消费演示 | R:code:packages/nestjs/src/index.ts | A:- | S:-
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/examples/nestjs/src/whitelist/===
+whitelist.controller.ts[EB3T]: F:黑白名单控制器：XltIgnore与XltCheckLogin对比演示 | R:code:packages/nestjs/src/index.ts | A:- | S:-
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/packages/core/===
+LICENSE[SL2T]: F:@xlt-token/core的MIT许可证文本 | R:- | A:- | S:-
+README.md[SV3T]: F:core包说明：安装方式与定位 | R:- | A:- | S:-
+package.json[FC7S]: F:@xlt-token/core包定义：双入口exports与peer依赖声明 | R:code:package.json | A:包导出契约：dist双格式与types | S:sideEffects:false；无运行时依赖仅es-toolkit
+tsconfig.json[FC3T]: F:core包TS编译配置 | R:- | A:- | S:-
+tsdown.config.ts[FV5T]: F:core包构建配置：tsdown双格式产物 | R:code:packages/core/package.json | A:- | S:-
+vitest.config.ts[TQ5T]: F:core包单测配置：vitest与覆盖率 | R:- | A:- | S:-
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/packages/core/src/auth/===
+stp-logic.ts[DB9L]: F:核心鉴权引擎：登录/登出/踢人/续签/多设备/二级认证/临时Token/在线查询与JWT分支 | R:code:packages/core/src/store/store-helpers.ts; code:packages/core/src/config/xlt-token-keys.ts; code:packages/core/src/lifecycle/token-lifecycle.ts | A:StpLogic全部公开方法为框架无关鉴权门面 | S:JWT模式走_resolveLoginIdJwt；consumeTempToken为原子读销毁；重放检测会撤销整个token family
+stp-perm-logic.ts[DI7T]: F:权限角色校验引擎：AND/OR模式校验、通配符匹配与权限缓存 | R:code:packages/core/src/perm/perm-pattern-match.ts | A:checkPermission/checkRole公开契约 | S:permCacheTimeout=0不缓存，-1永久缓存，权限变更需注意缓存TTL
+stp-util.ts[EI8S]: F:静态门面StpUtil：委托默认实例，无需注入即可调用鉴权能力 | R:code:packages/core/src/auth/stp-logic.ts | A:StpUtil静态方法为业务侧主API | S:未初始化时getStpLogic抛错；多实例场景应改用显式XltInstance
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/packages/core/src/config/===
+xlt-token-config.ts[FC8T]: F:核心配置契约：XltTokenConfig全字段、DurationInput相对时间与默认值 | R:- | A:XltTokenConfig/Input类型与DEFAULT_XLT_TOKEN_CONFIG冻结默认值 | S:timeout/activeTimeout支持DurationInput相对时间，规范化后为秒
+xlt-token-keys.ts[DD8T]: F:存储键派生器：token/session/session-list/jwt黑名单/离线记录等全部键格式 | R:- | A:XltTokenKeys键格式为存储层对外契约 | S:键格式含tokenName前缀，变更会破坏既有Store中的存量数据兼容
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/packages/core/src/const/===
+index.ts[CG7T]: F:共享常量：NotLoginType六种未登录原因、XltMode与装饰器元数据键 | R:- | A:NotLoginType与XltMode类型契约 | S:TOKEN_TIMEOUT保留但实际走INVALID_TOKEN，Store过期即消失
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/packages/core/src/events/===
+xlt-audit-event.ts[CO6T]: F:审计事件类型契约：XltAuditEvent字段与事件类型枚举 | R:- | A:XltAuditEvent类型契约 | S:-
+xlt-event-sink.ts[IO6T]: F:事件接收器接口：业务实现onEvent接收脱敏审计事件 | R:code:packages/core/src/events/xlt-audit-event.ts | A:XltEventSink接口契约 | S:-
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/packages/core/src/exceptions/===
+not-login.exception.ts[CI7T]: F:未登录异常：携带401状态与NotLoginType原因 | R:code:packages/core/src/exceptions/xlt-error.ts | A:NotLoginException异常契约 | S:-
+not-permission.exception.ts[CI6T]: F:权限不足异常：携带403状态、缺失权限与AND/OR模式 | R:code:packages/core/src/exceptions/xlt-error.ts | A:NotPermissionException异常契约 | S:-
+not-role.exception.ts[CI6T]: F:角色不足异常：携带403状态与缺失角色 | R:code:packages/core/src/exceptions/xlt-error.ts | A:NotRoleException异常契约 | S:-
+not-safe.exception.ts[CI6T]: F:二级认证异常：SAFE_REQUIRED携带业务标识 | R:code:packages/core/src/exceptions/xlt-error.ts | A:NotSafeException异常契约 | S:-
+xlt-error.ts[CR8T]: F:异常基类XltError：统一code/status/details结构 | R:- | A:XltErrorCode与XltError基类契约 | S:所有鉴权异常继承此类，适配器按status映射HTTP响应
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/packages/core/src/===
+factory.ts[EG9T]: F:便捷工厂createXltToken：创建实例并注册为默认实例返回XltTokenContext | R:code:packages/core/src/instance/xlt-instance.ts | A:createXltToken(options)为主接入API | S:多次调用后创建者覆盖先创建者；多实例进程应改用createXltInstance持句柄
+index.ts[EG9S]: F:core公共导出入口：聚合配置、实例、引擎、存储、策略、事件与异常契约 | R:code:packages/core/src/instance/xlt-instance.ts | A:core包全部公共API导出清单 | S:导出XLT_TOKEN_CONFIG等注入令牌；公共面变更即breaking
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/packages/core/src/http/===
+context.ts[CN9T]: F:框架无关HTTP抽象：HttpContext统一headers/cookies/query读写与state共享 | R:- | A:HttpContext/CookieOptions为适配器层核心契约 | S:HttpCookies保持同步get是v2.x冻结契约；state与单次请求绑定同引用
+express.ts[IN6T]: F:Express风格req/res到HttpContext的桥接转换 | R:code:packages/core/src/http/context.ts | A:createExpressContext与ExpressLike类型 | S:-
+testing.ts[TQ4T]: F:测试辅助：MockHttpContext构造器供单测使用 | R:code:packages/core/src/http/context.ts | A:- | S:-
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/packages/core/src/instance/===
+xlt-instance.ts[EA9S]: F:实例化核心：createXltInstance创建完全隔离的XltInstance并管理默认实例 | R:code:packages/core/src/auth/stp-logic.ts; code:packages/core/src/auth/stp-util.ts | A:XltInstance契约与create/setDefault/getDefault实例API | S:实例间不共享可变全局状态；适配器禁止依赖StpUtil默认实例
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/packages/core/src/lifecycle/===
+token-lifecycle.ts[DB8S]: F:Token生命周期配置：fixed/sliding过期模式与refresh轮转、重放检测配置规范化 | R:code:packages/core/src/time/duration.ts | A:TokenLifecycleConfig契约与normalizeTokenLifecycleConfig | S:replayDetection支持off/token/family三档，family撤销连带整链
+token-state.ts[CD8T]: F:生命周期状态类型：TokenFamilyState、RefreshResult与RevokeResult契约 | R:- | A:RefreshResult/RevokeResult/RevokeScope类型契约 | S:-
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/packages/core/src/perm/===
+perm-pattern-match.ts[DB6T]: F:权限通配符匹配：冒号分段*通配，user:*式模式 | R:- | A:matchPermission(pattern,target) | S:分段前缀命中即放行，pattern段数少于target段数也可匹配
+stp-interface.ts[CI8T]: F:权限数据源契约：业务实现getPermissionList/getRoleList供校验引擎调用 | R:- | A:StpInterface为核心扩展点契约 | S:同步返回也被接受；XLT_STP_INTERFACE为NestJS注入令牌
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/packages/core/src/session/===
+xlt-session.ts[DB7T]: F:会话对象：登录期扩展数据的读写，与token同生命周期 | R:code:packages/core/src/store/store-helpers.ts | A:XltSession get/set/delete契约 | S:-
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/packages/core/src/store/===
+memory-store.ts[PD7S]: F:内置内存存储实现：Map+定时器过期、scan游标遍历 | R:code:packages/core/src/store/xlt-token-store.interface.ts | A:实现XltTokenStore完整契约 | S:定时器延迟上限2^31-1ms；进程重启数据即失，生产用Redis
+store-helpers.ts[PD8T]: F:存储辅助层：值读写、TTL转换与keepTtl保持等通用封装 | R:code:packages/core/src/store/xlt-token-store.interface.ts | A:getStoreValue/setStoreValue等供引擎复用 | S:-1秒数映射persistentTtl持久化
+xlt-token-store.interface.ts[CD9T]: F:存储契约：XltTokenStore接口、StoreTtl/StoreScan游标语义 | R:- | A:XltTokenStore为存储实现方必须实现的契约 | S:scan为游标遍历，Redis实现需保证全master遍历；TTL为代数和类型区分持久
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/packages/core/src/time/===
+duration.ts[DC8S]: F:时长规范化：DurationInput到秒、配置归一化normalizeXltTokenConfig | R:code:packages/core/src/config/xlt-token-config.ts | A:normalizeDuration/normalizeXltTokenConfig契约 | S:非法时长抛TypeError并携带字段名；复用ms库解析
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/packages/core/src/token/===
+token-strategy.interface.ts[CD9T]: F:Token策略契约：generate/verify/createToken与kind区分opaque/jwt | R:- | A:TokenStrategy为自定义Token生成的扩展点 | S:kind字段驱动引擎走JWT分支，缺省视为opaque
+uuid-strategy.ts[DG7T]: F:默认Token策略：uuid/simple-uuid/random-32三种opaque风格 | R:code:packages/core/src/token/token-strategy.interface.ts | A:实现TokenStrategy(kind=opaque) | S:-
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/packages/core/test/helpers/===
+setup-stp-logic.ts[TQ5T]: F:测试工厂：组合config/MemoryStore/UuidStrategy快速构建StpLogic | R:code:packages/core/src/auth/stp-logic.ts | A:createStpLogic测试辅助 | S:-
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/packages/express/===
+LICENSE[SL2T]: F:@xlt-token/express的MIT许可证文本 | R:- | A:- | S:-
+README.md[SV3T]: F:express适配器包说明：安装与能力概览 | R:- | A:- | S:-
+package.json[FC6S]: F:@xlt-token/express包定义：peer依赖express与core版本约束 | R:code:package.json | A:包导出契约 | S:适配器re-export core常用API以减少业务安装心智
+tsconfig.json[FC2T]: F:express适配器TS编译配置 | R:- | A:- | S:-
+tsdown.config.ts[FV4T]: F:express适配器构建配置：tsdown双格式产物 | R:- | A:- | S:-
+vitest.config.ts[TQ4T]: F:express适配器测试配置 | R:- | A:- | S:-
+vitest.e2e.config.ts[TQ3T]: F:express适配器E2E测试配置 | R:- | A:- | S:-
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/packages/express/src/auth/===
+match-ignore.ts[MA5T]: F:路径白名单快捷判断：字符串前缀/正则/自定义函数匹配 | R:code:packages/express/src/auth/resolve-route-auth-meta.ts | A:matchIgnore供单测与高级用户直接调用 | S:-
+resolve-route-auth-meta.ts[MA6S]: F:路由策略解析：按originalUrl匹配ignore/policies并合并多策略字段 | R:code:packages/express/src/types.ts | A:resolveRouteAuthMeta与matchPathPrefix | S:用originalUrl匹配避免Router嵌套丢失挂载前缀；后声明策略覆盖前者并合并权限角色列表
+run-auth.ts[MA6S]: F:鉴权编排：登录+权限+角色+二级认证依序校验 | R:code:packages/express/src/auth/resolve-route-auth-meta.ts | A:runAuth与NestJS Guard逻辑等价 | S:校验失败分别抛NotLogin/NotPermission/NotRole/NotSafe异常
+should-check-login.ts[MA5T]: F:黑白名单模式判定：defaultCheck决定全量校验还是标记校验 | R:code:packages/express/src/auth/resolve-route-auth-meta.ts | A:shouldCheckLogin与NestJS行为一致 | S:-
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/packages/express/src/===
+context.ts[IA6S]: F:Express req/res到HttpContext适配：state复用req._xltState保证同引用 | R:code:packages/core/src/http/context.ts | A:createExpressContext | S:state挂req._xltState，同一请求多次调用共享同一对象
+index.ts[EE8S]: F:express适配器导出入口：中间件helpers、错误处理并re-export core API | R:code:packages/express/src/middleware/xlt-middleware.ts | A:适配器公共API清单 | S:re-export core能力，业务只需安装@xlt-token/express
+sync-state.ts[MA5T]: F:鉴权结果同步到req.xltToken：token/loginId/session/context读取视图 | R:code:packages/express/src/middleware/xlt-middleware.ts | A:req.xltToken请求状态契约 | S:-
+types.ts[CC7T]: F:适配器类型契约：RouteAuthMeta/RouteAuthPolicy/AuthMatcher/XltMiddlewareOptions | R:- | A:策略声明与路由元数据类型 | S:-
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/packages/express/src/error/===
+map-xlt-error.ts[MR6T]: F:core鉴权异常到HTTP状态码与JSON body映射 | R:code:packages/core/src/exceptions/xlt-error.ts | A:mapXltError | S:非xlt-token异常返回null由调用方透传
+xlt-error-handler.ts[MR6T]: F:Express四参数错误中间件：鉴权异常转401/403响应 | R:code:packages/express/src/error/map-xlt-error.ts | A:xltErrorHandler() | S:headersSent后直接next不重复响应
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/packages/express/src/middleware/===
+check-permission.ts[MA5T]: F:路由级权限声明helper：写入req._xltRouteMeta.permissions | R:code:packages/express/src/middleware/xlt-middleware.ts | A:checkPermission(permission,mode) | S:必须位于xltMiddleware之前的route chain中才生效
+check-role.ts[MA5T]: F:路由级角色声明helper：写入req._xltRouteMeta.roles | R:code:packages/express/src/middleware/xlt-middleware.ts | A:checkRole(role,mode) | S:必须位于xltMiddleware之前才生效
+check-safe.ts[MA5T]: F:路由级二级认证声明helper：写入safeBusiness | R:code:packages/express/src/middleware/xlt-middleware.ts | A:checkSafe(business) | S:必须位于xltMiddleware之前才生效
+ignore-auth.ts[MA4T]: F:路由级忽略鉴权helper：黑名单模式下放行 | R:code:packages/express/src/middleware/xlt-middleware.ts | A:ignoreAuth() | S:推荐主路径仍是xltMiddleware的ignore/policies选项
+require-login.ts[MA4T]: F:路由级登录声明helper：白名单模式下开启校验 | R:code:packages/express/src/middleware/xlt-middleware.ts | A:requireLogin() | S:必须位于xltMiddleware之前才生效
+xlt-middleware.ts[ME9S]: F:Express主中间件：解析策略、按黑白名单执行鉴权并同步req.xltToken状态 | R:code:packages/express/src/auth/run-auth.ts; code:packages/express/src/sync-state.ts | A:xltMiddleware(options)为适配器主入口 | S:依赖route helpers先写入_xltRouteMeta；鉴权结果挂req.xltToken
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/packages/express/test/===
+express.e2e-spec.ts[TQ5M]: F:Express适配器E2E：中间件、路由策略与错误映射全链路验证 | R:code:packages/express/src/middleware/xlt-middleware.ts | A:- | S:-
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/packages/fastify/===
+LICENSE[SL2T]: F:@xlt-token/fastify的MIT许可证文本 | R:- | A:- | S:-
+README.md[SV3T]: F:fastify适配器包说明：显式实例接入与能力概览 | R:- | A:- | S:-
+package.json[FC6T]: F:@xlt-token/fastify包定义：peer依赖fastify 4/5 | R:code:package.json | A:包导出契约 | S:-
+tsconfig.json[FC2T]: F:fastify适配器TS编译配置 | R:- | A:- | S:-
+tsdown.config.ts[FV4T]: F:fastify适配器构建配置 | R:- | A:- | S:-
+vitest.config.ts[TQ4T]: F:fastify适配器单测配置 | R:- | A:- | S:-
+vitest.e2e.config.ts[TQ3T]: F:fastify适配器E2E测试配置 | R:- | A:- | S:-
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/packages/fastify/src/===
+context.ts[IA6S]: F:Fastify request/reply到HttpContext桥接：Cookie依赖@fastify/cookie同步读取 | R:code:packages/core/src/http/context.ts | A:createFastifyContext | S:未注册@fastify/cookie时cookie读取恒为null；state挂request._xltState
+index.ts[EE7S]: F:fastify适配器导出入口：插件、错误映射与re-export core实例API | R:code:packages/fastify/src/plugin.ts | A:适配器公共API清单 | S:只导出createXltInstance等实例API，刻意不导出StpUtil
+map-xlt-error.ts[MR6T]: F:core鉴权异常到Fastify响应映射，结构与Express/NestJS一致 | R:code:packages/core/src/exceptions/xlt-error.ts | A:mapXltError | S:-
+plugin.ts[EE9S]: F:Fastify官方插件：preHandler鉴权、登录态同步与错误处理 | R:code:packages/fastify/src/resolve-auth-meta.ts; code:packages/fastify/src/run-auth.ts | A:xltFastifyPlugin(options)与xltFastifyErrorHandler | S:必须显式传入XltInstance否则注册即报错；开isReadCookie需先注册@fastify/cookie
+resolve-auth-meta.ts[MA7S]: F:路由策略解析：config.xlt与插件policies双通道合并 | R:code:packages/fastify/src/types.ts | A:resolveRouteAuthMeta/resolveRouteConfigMeta/matchPolicy | S:匹配前decodeURI是C1审查问题的修复关键，防止URL编码绕过策略
+run-auth.ts[MA6T]: F:鉴权编排：登录+权限+角色+二级认证，与Express/NestJS等价 | R:code:packages/fastify/src/resolve-auth-meta.ts | A:runAuth(instance,ctx,meta) | S:-
+types.ts[CC7S]: F:适配器类型契约：XltRouteAuthMeta/XltRoutePolicy/XltFastifyOptions | R:- | A:策略声明类型契约 | S:config.xlt简单字段覆盖policies，permissions/roles列表合并且mode取config.xlt
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/packages/fastify/test/===
+fastify.e2e-spec.ts[TQ5L]: F:Fastify适配器E2E：插件注册、实例隔离、策略与错误全链路验证 | R:code:packages/fastify/src/plugin.ts | A:- | S:-
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/packages/jwt/===
+package.json[FC5T]: F:@xlt-token/jwt包定义：peer依赖jsonwebtoken | R:code:package.json | A:包导出契约 | S:-
+tsconfig.json[FC2T]: F:jwt包TS编译配置 | R:- | A:- | S:-
+tsdown.config.ts[FV4T]: F:jwt包构建配置 | R:- | A:- | S:-
+vitest.config.ts[TQ4T]: F:jwt包测试配置 | R:- | A:- | S:-
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/packages/jwt/src/===
+index.ts[EE7T]: F:jwt包导出入口：JwtStrategy与配置工厂 | R:code:packages/jwt/src/jwt-strategy.ts | A:@xlt-token/jwt公共API | S:-
+jwt-config.ts[DB8S]: F:JWT配置：多kid密钥表、算法白名单与activeKid规范化 | R:code:packages/jwt/src/jwt-strategy.ts | A:JwtStrategyConfig契约与createJwtStrategyConfig | S:算法白名单限定HS/RS/ES族；验签按kid查密钥表实现轮换
+jwt-strategy.ts[DB9S]: F:JWT策略实现：jti签发、kid验签与黑名单撤销接入Store | R:code:packages/core/src/token/token-strategy.interface.ts | A:JwtStrategy实现TokenStrategy(kind=jwt) | S:jti进Store黑名单才可撤销；无Store持久化时刷新/撤销语义受限
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/packages/nestjs/===
+LICENSE[SL2T]: F:@xlt-token/nestjs的MIT许可证文本 | R:- | A:- | S:-
+README.md[SV3T]: F:nestjs适配器包说明：安装与能力概览 | R:- | A:- | S:-
+package.json[FC7S]: F:@xlt-token/nestjs包定义：peer依赖NestJS 10-12与可选jsonwebtoken | R:code:package.json | A:包导出契约 | S:适配器re-export core API；jsonwebtoken为可选peer
+tsconfig.json[FC2T]: F:nestjs适配器TS编译配置 | R:- | A:- | S:-
+tsdown.config.ts[FV4T]: F:nestjs适配器构建配置 | R:- | A:- | S:-
+vitest.config.ts[TQ4T]: F:nestjs适配器单测配置 | R:- | A:- | S:-
+vitest.e2e.config.ts[TQ3T]: F:nestjs适配器E2E测试配置 | R:- | A:- | S:-
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/packages/nestjs/reports/===
+junit-e2e.xml[TQ2T]: F:E2E测试JUnit报告产物（生成物） | R:- | A:- | S:-
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/packages/nestjs/src/decorators/===
+login-id.decorator.ts[MI7T]: F:参数装饰器LoginId：注入当前登录用户ID | R:code:packages/nestjs/src/guards/xlt-token.guard.ts | A:LoginId装饰器 | S:-
+token-value.decorator.ts[MI7T]: F:参数装饰器TokenValue：注入当前请求Token | R:code:packages/nestjs/src/guards/xlt-token.guard.ts | A:TokenValue装饰器 | S:-
+xlt-check-login.decorator.ts[MI6T]: F:方法装饰器XltCheckLogin：白名单模式下标记路由需登录 | R:code:packages/nestjs/src/guards/xlt-token.guard.ts | A:XltCheckLogin装饰器 | S:-
+xlt-check-permission.decorator.ts[MI6T]: F:方法装饰器XltCheckPermission：声明所需权限与AND/OR模式 | R:code:packages/nestjs/src/guards/xlt-token.guard.ts | A:XltCheckPermission装饰器 | S:-
+xlt-check-role.decorator.ts[MI6T]: F:方法装饰器XltCheckRole：声明所需角色与模式 | R:code:packages/nestjs/src/guards/xlt-token.guard.ts | A:XltCheckRole装饰器 | S:-
+xlt-check-safe.decorator.ts[MI6T]: F:方法装饰器XltCheckSafe：声明二级认证业务标识 | R:code:packages/nestjs/src/guards/xlt-token.guard.ts | A:XltCheckSafe装饰器 | S:-
+xlt-ignore.decorator.ts[MI6T]: F:方法装饰器XltIgnore：黑名单模式下忽略鉴权 | R:code:packages/nestjs/src/guards/xlt-token.guard.ts | A:XltIgnore装饰器 | S:-
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/packages/nestjs/src/exceptions/===
+not-login.exception.ts[MI7T]: F:NestJS版未登录异常：继承UnauthorizedException携带NotLoginType | R:code:packages/core/src/exceptions/xlt-error.ts | A:NotLoginException(NestJS) | S:-
+not-permission.exception.ts[MI6T]: F:NestJS版权限不足异常：继承ForbiddenException | R:code:packages/core/src/exceptions/xlt-error.ts | A:NotPermissionException(NestJS) | S:-
+not-role.exception.ts[MI6T]: F:NestJS版角色不足异常：继承ForbiddenException | R:code:packages/core/src/exceptions/xlt-error.ts | A:NotRoleException(NestJS) | S:-
+not-safe.exception.ts[MI6T]: F:NestJS版二级认证异常：SAFE_REQUIRED | R:code:packages/core/src/exceptions/xlt-error.ts | A:NotSafeException(NestJS) | S:-
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/packages/nestjs/src/guards/===
+xlt-abstract-login.guard.ts[MI8S]: F:业务登录守卫抽象基类：模板方法校验登录并提供onAuthSuccess/onAuthFail钩子 | R:code:packages/nestjs/src/guards/xlt-token.guard.ts | A:XltAbstractLoginGuard为业务守卫扩展点 | S:onAuthFail先触发再上抛异常，钩子内异常不应吞掉原始NotLoginException
+xlt-token.guard.ts[MI9S]: F:NestJS全局守卫：元数据解析、黑白名单判定与登录/权限/角色/二级认证编排 | R:code:packages/core/src/auth/stp-logic.ts; code:packages/nestjs/src/http/nest-bridge.ts | A:XltTokenGuard为适配器鉴权核心 | S:经APP_GUARD注册全局生效；装饰器元数据决定校验范围与模式
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/packages/nestjs/src/http/===
+nest-bridge.ts[IA7S]: F:HTTP平台桥接：归一化Express/Fastify响应写回差异，core异常映射为NestJS异常 | R:code:packages/nestjs/src/exceptions/not-login.exception.ts | A:createNestBridge或等价桥接函数 | S:Fastify写header/cookie与Express API不同，读取侧直接复用core的createExpressContext
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/packages/nestjs/src/===
+index.ts[EE9S]: F:nestjs适配器导出入口：Module/Guard/装饰器/Store并re-export core API | R:code:packages/nestjs/src/xlt-token.module.ts | A:@xlt-token/nestjs公共API清单 | S:根包xlt-token只re-export本入口；废弃Store类仍导出以保持向后兼容
+xlt-token.module.ts[EA9S]: F:NestJS模块装配：forRoot/forRootAsync注册config/store/strategy/permLogic并写默认实例 | R:code:packages/nestjs/src/guards/xlt-token.guard.ts; code:packages/core/src/instance/xlt-instance.ts | A:XltTokenModule.forRoot/forRootAsync为NestJS主接入点 | S:模块内部setStpLogic写默认实例；isGlobal:true使Guard全局生效
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/packages/nestjs/src/store/===
+ioredis-store.ts[PI4T]: F:废弃的IORedisStore NestJS包装：注入XLT_IOREDIS_CLIENT | R:code:packages/store-redis/src/index.ts | A:deprecated导出 | S:新应用应从@xlt-token/store-redis导入并经store.useValue提供
+memory-store.ts[PI3T]: F:core MemoryStore的re-export兼容层 | R:code:packages/core/src/store/memory-store.ts | A:- | S:-
+redis-store.ts[PI4T]: F:废弃的RedisStore NestJS包装：注入XLT_REDIS_CLIENT | R:code:packages/store-redis/src/index.ts | A:deprecated导出 | S:旧注入令牌保留向后兼容，新代码用store-redis包
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/packages/nestjs/src/token/===
+uuid-strategy.ts[PI3T]: F:core UuidStrategy的re-export兼容层 | R:code:packages/core/src/token/uuid-strategy.ts | A:- | S:-
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/packages/nestjs/test/===
+app-guard.e2e-spec.ts[TQ5S]: F:E2E：XltTokenGuard黑白名单模式与@XltIgnore行为 | R:code:packages/nestjs/src/guards/xlt-token.guard.ts | A:- | S:-
+custom-guard.e2e-spec.ts[TQ5S]: F:E2E：自定义业务守卫继承XltAbstractLoginGuard的钩子行为 | R:code:packages/nestjs/src/guards/xlt-abstract-login.guard.ts | A:- | S:-
+duration.e2e-spec.ts[TQ4S]: F:E2E：DurationInput相对时间配置语义 | R:code:packages/core/src/time/duration.ts | A:- | S:-
+fastify.e2e-spec.ts[TQ5M]: F:E2E：NestJS on Fastify平台的Guard与装饰器行为 | R:code:packages/nestjs/src/http/nest-bridge.ts | A:- | S:-
+forroot-async.e2e-spec.ts[TQ5S]: F:E2E：forRootAsync异步配置注入路径 | R:code:packages/nestjs/src/xlt-token.module.ts | A:- | S:-
+jwt.e2e-spec.ts[TQ5S]: F:E2E：JWT策略下登录校验与黑名单撤销 | R:code:packages/jwt/src/jwt-strategy.ts | A:- | S:-
+lifecycle.e2e-spec.ts[TQ5M]: F:E2E：refresh轮转、token family与重放检测语义 | R:code:packages/core/src/lifecycle/token-lifecycle.ts | A:- | S:-
+module-options.e2e-spec.ts[TQ4S]: F:E2E：模块配置分支与默认值 | R:code:packages/nestjs/src/xlt-token.module.ts | A:- | S:-
+multi-device.e2e-spec.ts[TQ5S]: F:E2E：多端登录device会话与顶号语义 | R:code:packages/core/src/auth/stp-logic.ts | A:- | S:-
+permission.e2e-spec.ts[TQ5S]: F:E2E：权限角色校验与AND/OR模式 | R:code:packages/core/src/auth/stp-perm-logic.ts | A:- | S:-
+secondary-auth.e2e-spec.ts[TQ5S]: F:E2E：Safe二级认证窗口与临时Token消费 | R:code:packages/core/src/auth/stp-logic.ts | A:- | S:-
+session.e2e-spec.ts[TQ4S]: F:E2E：XltSession会话数据生命周期 | R:code:packages/core/src/session/xlt-session.ts | A:- | S:-
+static-facade.e2e-spec.ts[TQ4S]: F:E2E：StpUtil静态门面与默认实例委托 | R:code:packages/core/src/auth/stp-util.ts | A:- | S:-
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/packages/store-contract/===
+package.json[FC4T]: F:@xlt-token/store-contract包定义：共享Store契约测试套件 | R:code:package.json | A:包导出契约 | S:-
+tsconfig.json[FC2T]: F:store-contract包TS编译配置 | R:- | A:- | S:-
+tsdown.config.ts[FV3T]: F:store-contract包构建配置 | R:- | A:- | S:-
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/packages/store-contract/src/===
+index.ts[EE4T]: F:store-contract导出入口 | R:code:packages/store-contract/src/store-contract.ts | A:- | S:-
+store-contract.ts[TQ9S]: F:Store原子契约测试套件：setIfAbsent唯一胜者与getAndDelete原子性等不变量 | R:code:packages/core/src/store/xlt-token-store.interface.ts | A:defineStoreContract(name,createStore)为Store实现方验收套件 | S:任何Store实现必须通过此契约，2.x E2E依赖这些原子语义
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/packages/store-redis/===
+README.md[SV4T]: F:store-redis包说明：双客户端接入与能力概览 | R:- | A:- | S:-
+package.json[FC6T]: F:@xlt-token/store-redis包定义：peer依赖node-redis与ioredis | R:code:package.json | A:包导出契约 | S:-
+tsconfig.json[FC2T]: F:store-redis包TS编译配置 | R:- | A:- | S:-
+tsdown.config.ts[FV4T]: F:store-redis包构建配置 | R:- | A:- | S:-
+vitest.config.ts[TQ4T]: F:store-redis包测试配置 | R:- | A:- | S:-
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/packages/store-redis/src/===
+index.ts[EE7T]: F:store-redis导出入口：RedisStore与IORedisStore及客户端类型 | R:code:packages/store-redis/src/redis-store.ts | A:@xlt-token/store-redis公共API | S:-
+ioredis-store.ts[PD8S]: F:ioredis客户端Store实现：原子脚本与Cluster多master扫描 | R:code:packages/core/src/store/xlt-token-store.interface.ts | A:实现XltTokenStore完整契约 | S:Cluster模式经nodes('master')在所有master上扫描，保证游标遍历完整
+redis-store.ts[PD8S]: F:node-redis客户端Store实现：原子脚本保证setIfAbsent/getAndDelete语义 | R:code:packages/core/src/store/xlt-token-store.interface.ts | A:实现XltTokenStore完整契约 | S:原子性依赖EVAL脚本，单key操作不经事务
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/scripts/===
+check-package-boundaries.mjs[OV6S]: F:包边界检查：校验各包依赖规则与内部依赖版本约束 | R:code:package.json | A:check:boundaries门禁脚本 | S:check:quality依赖此门禁，禁止适配器反向依赖适配器
+check-release-gates.mjs[OV6S]: F:发布门禁检查：全包版本一致性与内部依赖范围校验 | R:code:scripts/check-package-boundaries.mjs | A:check:release链路一环 | S:release:check最后一步，发布前强制通过
+check-security-invariants.mjs[OS8S]: F:安全不变量检查：审计事件脱敏与鉴权引擎关键约束的源码级断言 | R:code:packages/core/src/auth/stp-logic.ts | A:check:security门禁脚本 | S:直接读源码做正则断言，防止脱敏逻辑被无意破坏
+run-smoke-benchmarks.mjs[OP4T]: F:冒烟基准：核心路径性能基准运行 | R:code:package.json | A:benchmark:smoke脚本 | S:-
+run-workspace-task.mjs[OV5S]: F:工作区任务编排：按拓扑顺序对选中包批量执行任务 | R:code:pnpm-workspace.yaml | A:run-workspace-task <tasks> <selectors> | S:CI与release:check经由它聚合各包typecheck/test/build
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/skills/===
+index.json[SV4T]: F:AI Skill注册清单：声明xlt-token技能入口 | R:code:skills/xlt-token/SKILL.md | A:- | S:-
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/skills/xlt-token/===
+SKILL.md[SV6S]: F:AI代理技能主文档：xlt-token接入选型与能力导航 | R:code:skills/xlt-token/references/core.md | A:定义AI代理使用xlt-token的工作方式 | S:随npm包发布（files含skills），供编码代理运行时读取
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/skills/xlt-token/references/===
+core.md[SV5S]: F:Skill参考：@xlt-token/core核心用法 | R:code:packages/core/src/index.ts | A:- | S:-
+express.md[SV4S]: F:Skill参考：Express适配器用法 | R:code:packages/express/src/index.ts | A:- | S:-
+fastify.md[SV4S]: F:Skill参考：Fastify适配器用法 | R:code:packages/fastify/src/plugin.ts | A:- | S:-
+nestjs.md[SV5S]: F:Skill参考：NestJS适配器用法 | R:code:packages/nestjs/src/index.ts | A:- | S:-
+recipes.md[SV4S]: F:Skill参考：常见鉴权场景配方 | R:- | A:- | S:-
+
+===/Volumes/weipengcheng/个人项目/01-活跃项目/tva/xlt-token/src/===
+index.ts[EE7T]: F:根包xlt-token唯一源文件：re-export @xlt-token/nestjs全部公共API | R:code:packages/nestjs/src/index.ts | A:xlt-token包公共面=NestJS适配器面 | S:根包是向后兼容壳，新项目推荐直接安装分包

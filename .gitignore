@@ -63,3 +63,7 @@ examples/**/node_modules
 **/.vite
 .vscode/gitcharm-changelists.json
 .worktrees/
+
+# AOCI agent host integration (machine-bound; do not commit)
+opencode.json
+opencode.json.backup.*

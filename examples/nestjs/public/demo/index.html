@@ -42,6 +42,7 @@
         <a href="#sec-session" class="nav-item">会话管理</a>
         <a href="#sec-profile" class="nav-item">自定义 Guard</a>
         <a href="#sec-admin" class="nav-item">管理 & 审计</a>
+        <a href="#sec-observability" class="nav-item">可观测性面板</a>
         <a href="#sec-temp" class="nav-item">临时 Token</a>
       </nav>
 
@@ -266,6 +267,35 @@
               <div class="card-head"><span class="method get">GET</span><code>/admin/dashboard</code></div>
               <p>管理员面板</p>
               <button type="button" class="btn" data-action="adminDashboard">执行</button>
+            </article>
+          </div>
+        </section>
+
+        <!-- 可观测性面板 -->
+        <section class="section" id="sec-observability">
+          <h2>可观测性面板</h2>
+          <p class="section-desc">
+            需 admin 角色；事件来自
+            <code>@xlt-token/observability</code> 导出器（schema
+            <code>xlt-token.audit.v1</code>，仅含 token 指纹，无原始凭据）
+          </p>
+          <div class="card-grid">
+            <article class="card">
+              <div class="card-head"><span class="method get">GET</span><code>/observability/overview</code></div>
+              <p>在线会话数与事件类型统计（5s 自动刷新）</p>
+              <div class="stat-row" id="obsStats">登录 admin 后自动加载</div>
+              <button type="button" class="btn" data-action="obsRefresh">立即刷新</button>
+            </article>
+            <article class="card">
+              <div class="card-head"><span class="method get">GET</span><code>/observability/events?after=</code></div>
+              <p>实时事件流（2s 增量轮询；登录 admin 后自动开始）</p>
+              <div class="obs-toolbar">
+                <button type="button" class="btn sm" id="obsPause">暂停</button>
+                <button type="button" class="btn sm ghost" id="obsClear">清空显示</button>
+              </div>
+              <div class="event-stream" id="obsStream">
+                <div class="log-empty">等待审计事件…（触发登录 / 刷新 / 踢人即可看到）</div>
+              </div>
             </article>
           </div>
         </section>

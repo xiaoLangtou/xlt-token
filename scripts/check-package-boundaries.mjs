@@ -12,6 +12,11 @@ const packageRules = new Map([
   ["@xlt-token/express", new Set(["@xlt-token/core", "@xlt-token/express"])],
   ["@xlt-token/fastify", new Set(["@xlt-token/core", "@xlt-token/fastify"])],
   [
+    "@xlt-token/observability",
+    new Set(["@xlt-token/core", "@xlt-token/observability"]),
+  ],
+  ["@xlt-token/inspector", new Set(["@xlt-token/core", "@xlt-token/inspector"])],
+  [
     "@xlt-token/nestjs",
     new Set(["@xlt-token/core", "@xlt-token/jwt", "@xlt-token/store-redis", "@xlt-token/nestjs"]),
   ],

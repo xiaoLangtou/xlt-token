@@ -6,8 +6,10 @@ import {
   XLT_REDIS_CLIENT,
   type XltTokenModuleAsyncOptions,
 } from "@xlt-token/nestjs";
-import { createAuditEventSink } from "./audit.hooks";
+import { createLoggerEventSink } from "@xlt-token/observability";
+import { composeEventSinks } from "@xlt-token/observability";
 import { DemoStpInterface } from "../stp/demo-stp-interface";
+import { demoEventBuffer } from "./event-buffer";
 
 export type StoreKind = "memory" | "redis";
 export type StrategyKind = "uuid" | "jwt";
@@ -49,7 +51,8 @@ export function buildAsyncModuleOptions(): Pick<
   > = {
     isGlobal: true,
     stpInterface: DemoStpInterface,
-    eventSink: createAuditEventSink(),
+    // 官方导出器组合：inspector 事件缓冲（监控台）+ 结构化 JSON 日志
+    eventSink: composeEventSinks([demoEventBuffer.sink, createLoggerEventSink()]),
   };
 
   if (cfg.strategy === "jwt") {

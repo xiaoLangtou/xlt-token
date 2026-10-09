@@ -9,9 +9,12 @@ const manifestPaths = [
   "packages/fastify/package.json",
   "packages/jwt/package.json",
   "packages/nestjs/package.json",
+  "packages/observability/package.json",
+  "packages/inspector/package.json",
   "packages/store-contract/package.json",
   "packages/store-redis/package.json",
   "examples/express/package.json",
+  "examples/fastify/package.json",
   "examples/nestjs/package.json",
 ];
 

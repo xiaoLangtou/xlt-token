@@ -10,6 +10,8 @@
 - 按功能分组的场景卡片（权限、角色、二级认证、多端…）
 - 右侧 API 日志面板，彩色状态码 + JSON 响应
 - 二级认证流程步骤指示、多端 PC/App token 状态
+- **可观测性面板**：实时审计事件流（2s 增量轮询）+ 在线会话统计，数据来自 `@xlt-token/observability` 导出器（仅含 token 指纹）
+- **官方监控台**：http://localhost:3000/inspector — `@xlt-token/inspector` 单文件控制台（实时事件 / 在线会话分页 + 设备指纹 / 指标卡 / 踢人动作），admin 登录后把 token 粘贴进页面即可使用
 
 ## 启动
 
@@ -62,6 +64,8 @@ pnpm start:whitelist # 白名单模式（defaultCheck=false）
 | `GET /whitelist/*` | 白名单模式（需 `XLT_DEFAULT_CHECK=false`） |
 | `GET /profile/me` | `XltAbstractLoginGuard` + `request.user` |
 | `GET /admin/*` | 管理员 + 审计事件观测 |
+| `GET /observability/*` | 可观测性面板数据：审计事件增量拉取 + 在线统计（admin） |
+| `GET /inspector` | 官方监控台页面 + `/inspector/api/*` 数据接口（bridge 鉴权：admin） |
 | `POST /temp-token/*` | 临时 Token |
 
 ---

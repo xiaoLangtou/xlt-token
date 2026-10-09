@@ -345,3 +345,51 @@ input[type="text"], input[type="password"] {
   }
   .nav-item { white-space: nowrap; margin-bottom: 0; margin-right: 0.25rem; }
 }
+
+/* ===== 可观测性面板 ===== */
+.stat-row {
+  font-size: 13px;
+  color: var(--text-muted, #6b7280);
+  margin-bottom: 0.75rem;
+}
+.stat-row b { color: var(--text, #111827); }
+.stat-row code { font-size: 11px; }
+
+.obs-toolbar { display: flex; gap: 0.5rem; margin-bottom: 0.75rem; }
+
+.event-stream {
+  max-height: 360px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.event-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 10px;
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+.evt-badge {
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+.evt-badge.ok { background: #dcfce7; color: #166534; }
+.evt-badge.info { background: #dbeafe; color: #1e40af; }
+.evt-badge.warn { background: #fef3c7; color: #92400e; }
+
+.evt-seq,
+.evt-time {
+  color: var(--text-muted, #6b7280);
+  font-variant-numeric: tabular-nums;
+}
+.evt-field { color: var(--text, #111827); }
+.evt-field:last-child { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }

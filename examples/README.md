@@ -33,6 +33,8 @@ pnpm start
 - [x] 管理员踢人 / 在线统计
 - [x] 匿名可访问接口（软检测登录态）
 - [x] 脱敏审计事件
+- [x] 可观测性面板：审计事件实时流 + 在线统计（`@xlt-token/observability` 导出器 + `composeEventSinks`）
+- [x] 官方监控台 `/inspector`（`@xlt-token/inspector`）：实时事件 / 在线会话 / 指标 / 踢人动作（admin 鉴权）
 - [x] `forRootAsync` 异步配置
 - [x] JWT 策略（环境变量切换）
 - [x] Redis 存储（环境变量切换）

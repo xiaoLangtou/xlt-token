@@ -304,6 +304,97 @@ $("#clearLog").addEventListener("click", () => {
   $("#logList").innerHTML = '<div class="log-empty">点击左侧按钮发起请求，响应将显示在这里</div>';
 });
 
+// ===== 可观测性面板 =====
+const EVENT_META = {
+  "token.logged_in": { label: "登录", cls: "ok" },
+  "token.refreshed": { label: "刷新", cls: "info" },
+  "token.logged_out": { label: "登出", cls: "info" },
+  "token.kicked_out": { label: "踢出", cls: "warn" },
+  "token.replaced": { label: "顶号", cls: "warn" },
+  "token.family_revoked": { label: "撤销", cls: "warn" },
+};
+
+const obs = { lastSeq: 0, paused: false };
+
+/** 静默轮询（不写入右侧 API 日志面板，避免刷屏） */
+async function obsFetch(path) {
+  if (!state.token) return null;
+  try {
+    const res = await fetch(path, { headers: { Authorization: `Bearer ${state.token}` } });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
+function renderEvents(list) {
+  const stream = $("#obsStream");
+  stream.querySelector(".log-empty")?.remove();
+  const frag = document.createDocumentFragment();
+  for (const event of list) {
+    const meta = EVENT_META[event.type] ?? { label: event.type, cls: "info" };
+    const row = document.createElement("div");
+    row.className = "event-row";
+    const time = new Date(event.occurredAt).toLocaleTimeString("zh-CN", { hour12: false });
+    const fields = [`loginId: ${escapeHtml(String(event.loginId ?? "—"))}`];
+    if (event.device) fields.push(`device: ${escapeHtml(event.device)}`);
+    if (event.reason) fields.push(`reason: ${escapeHtml(event.reason)}`);
+    if (event.tokenFingerprint) fields.push(`fp: ${escapeHtml(event.tokenFingerprint)}`);
+    if (event.familyIdFingerprint) fields.push(`family: ${escapeHtml(event.familyIdFingerprint)}`);
+    row.innerHTML = `
+      <span class="evt-seq">#${event.seq}</span>
+      <span class="evt-badge ${meta.cls}">${escapeHtml(meta.label)}</span>
+      <span class="evt-time">${time}</span>
+      ${fields.map((f) => `<span class="evt-field">${f}</span>`).join("")}
+    `;
+    frag.appendChild(row);
+  }
+  stream.prepend(frag);
+  while (stream.children.length > 100) stream.lastElementChild.remove();
+}
+
+async function obsPoll() {
+  if (obs.paused || !state.token) return;
+  const data = await obsFetch(`/observability/events?after=${obs.lastSeq}&limit=50`);
+  if (!data) return;
+  if (Array.isArray(data.events) && data.events.length) {
+    obs.lastSeq = data.latest ?? obs.lastSeq;
+    renderEvents(data.events);
+  } else if (typeof data.latest === "number") {
+    obs.lastSeq = data.latest;
+  }
+}
+
+async function obsRefreshOverview() {
+  const data = await obsFetch("/observability/overview");
+  if (!data) return;
+  const topTypes = Object.entries(data.byType ?? {})
+    .toSorted((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([type, count]) => `${EVENT_META[type]?.label ?? type} ×${count}`);
+  $("#obsStats").innerHTML = `
+    <b>在线会话</b> ${data.onlineCount}
+    · <b>缓冲事件</b> ${data.eventsTracked}
+    · <b>schema</b> <code>${escapeHtml(data.logSchema ?? "")}</code>
+    ${topTypes.length ? ` · ${escapeHtml(topTypes.join(" / "))}` : ""}
+  `;
+}
+
+$("#obsPause").addEventListener("click", () => {
+  obs.paused = !obs.paused;
+  $("#obsPause").textContent = obs.paused ? "继续" : "暂停";
+});
+$("#obsClear").addEventListener("click", () => {
+  $("#obsStream").innerHTML = '<div class="log-empty">等待审计事件…</div>';
+});
+
+setInterval(obsPoll, 2000);
+setInterval(obsRefreshOverview, 5000);
+obsRefreshOverview();
+
+actions.obsRefresh = obsRefreshOverview;
+
 // Sidebar scroll spy
 const sections = document.querySelectorAll(".section");
 const navItems = document.querySelectorAll(".nav-item");

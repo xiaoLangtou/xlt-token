@@ -794,6 +794,36 @@ export class StpLogic {
   }
 
   /**
+   * 查询 token 对应的登录 ID（不校验活跃超时等附加状态）。
+   *
+   * JWT 策略下验签读取 payload.sub 并检查黑名单；UUID 策略下查询存储映射，
+   * 已被踢出 / 顶号的 token 返回 null。供运维工具（如 Inspector）做鉴权桥接。
+   */
+  async getLoginIdByToken(token: string): Promise<string | null> {
+    if (!token) return null;
+
+    if (this._isJwtMode()) {
+      try {
+        const payload = this.strategy.verifyToken(token);
+        const { sub: loginId, jti } = payload;
+        if (!loginId || !jti) return null;
+
+        const blacklisted = await getStoreValue(this.store, this.keys.jwtBlacklistKey(jti));
+        if (blacklisted) return null;
+        return loginId;
+      } catch {
+        return null;
+      }
+    }
+
+    const value = await getStoreValue(this.store, this.keys.tokenKey(token));
+    if (!value || value === NotLoginType.KICK_OUT || value === NotLoginType.BE_REPLACED) {
+      return null;
+    }
+    return value;
+  }
+
+  /**
    * 登出指定设备（自愿登出，非强制踢下线）
    */
   async logoutByDevice(loginId: string, device: string): Promise<boolean | null> {

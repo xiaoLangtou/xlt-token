@@ -1,0 +1,30 @@
+{
+  "name": "@xlt-token/example-fastify",
+  "version": "2.4.0",
+  "private": true,
+  "description": "Full-feature Fastify example for @xlt-token/fastify",
+  "scripts": {
+    "build": "tsc",
+    "start": "pnpm run build && node dist/main.js",
+    "start:dev": "pnpm run build && node --watch dist/main.js",
+    "start:jwt": "pnpm run build && XLT_STRATEGY=jwt node dist/main.js",
+    "start:redis": "pnpm run build && XLT_STORE=redis node dist/main.js",
+    "start:cookie": "pnpm run build && XLT_IS_READ_COOKIE=true node dist/main.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@fastify/cookie": "^11.0.0",
+    "@xlt-token/core": "^2.3.0",
+    "@xlt-token/fastify": "^2.3.0",
+    "@xlt-token/inspector": "^2.3.0",
+    "@xlt-token/jwt": "^2.3.0",
+    "@xlt-token/observability": "^2.3.0",
+    "@xlt-token/store-redis": "^2.3.0",
+    "fastify": "^5.0.0",
+    "redis": "^5.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.1.0"
+  }
+}

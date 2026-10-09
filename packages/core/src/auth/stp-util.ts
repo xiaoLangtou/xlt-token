@@ -152,6 +152,10 @@ export class StpUtil {
     return getStpLogic().getOnlineCount();
   }
 
+  static async getLoginIdByToken(token: string): Promise<string | null> {
+    return getStpLogic().getLoginIdByToken(token);
+  }
+
   static async hasPermission(loginId: string, permission: string): Promise<boolean> {
     return getStpPermLogic().hasPermission(loginId, permission);
   }

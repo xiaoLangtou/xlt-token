@@ -41,8 +41,8 @@ describe("StpLogic", () => {
   let logic: StpLogic;
   let config: XltTokenConfig;
 
-  const buildModule = async (cfg: XltTokenConfig, eventSink: XltEventSink = {}) => {
-    ({ logic, store, config } = createStpLogic({ config: cfg, eventSink }));
+  const buildModule = async (cfg: XltTokenConfig, eventSink: XltEventSink = {}, strategy?: any) => {
+    ({ logic, store, config } = createStpLogic({ config: cfg, eventSink, strategy }));
   };
 
   const storeValue = async (key: string): Promise<string | null> => {
@@ -288,6 +288,52 @@ describe("StpLogic", () => {
       await expect(logic.isLogin(makeReq(config, pcToken))).resolves.toBe(false);
       await expect(logic.isLogin(makeReq(config, appToken))).resolves.toBe(false);
       await expect(logic.getDeviceList("u1")).resolves.toEqual([]);
+    });
+
+    it("getLoginIdByToken 返回有效 token 的 loginId", async () => {
+      const token = await logic.login("u1");
+      await expect(logic.getLoginIdByToken(token)).resolves.toBe("u1");
+    });
+
+    it("getLoginIdByToken 对未知 token 返回 null", async () => {
+      await expect(logic.getLoginIdByToken("no-such-token")).resolves.toBeNull();
+      await expect(logic.getLoginIdByToken("")).resolves.toBeNull();
+    });
+
+    it("getLoginIdByToken 对被踢出 / 顶号的 token 返回 null", async () => {
+      const token = await logic.login("u1");
+      await logic.kickout("u1");
+      await expect(logic.getLoginIdByToken(token)).resolves.toBeNull();
+
+      await buildModule(makeConfig({ isConcurrent: false }));
+      const topToken = await logic.login("u2");
+      await logic.login("u2");
+      await expect(logic.getLoginIdByToken(topToken)).resolves.toBeNull();
+    });
+
+    it("getLoginIdByToken 在 JWT 策略下验签读取 sub 并检查黑名单", async () => {
+      const payloads = new Map<string, { sub: string; jti: string }>();
+      const jwtStrategy = {
+        kind: "jwt",
+        generateToken: (loginId: string) => `jwt-${loginId}`,
+        verifyToken: (token: string) => {
+          const payload = payloads.get(token);
+          if (!payload) throw new Error("unknown token");
+          return payload;
+        },
+      } as any;
+      await buildModule(makeConfig(), {}, jwtStrategy);
+
+      payloads.set("jwt-ok", { sub: "u9", jti: "jti-ok" });
+      payloads.set("jwt-gone", { sub: "u9", jti: "jti-gone" });
+      await store.set(`${config.tokenName}:jwt-blacklist:jti-gone`, "INVALID_TOKEN", {
+        kind: "finite",
+        seconds: 60,
+      });
+
+      await expect(logic.getLoginIdByToken("jwt-ok")).resolves.toBe("u9");
+      await expect(logic.getLoginIdByToken("jwt-gone")).resolves.toBeNull();
+      await expect(logic.getLoginIdByToken("jwt-unknown")).resolves.toBeNull();
     });
   });
 

@@ -17,6 +17,8 @@ import { WhitelistController } from "./whitelist/whitelist.controller";
 import { ProfileController } from "./profile/profile.controller";
 import { AdminController } from "./admin/admin.controller";
 import { TempTokenController } from "./temp-token/temp-token.controller";
+import { ObservabilityController } from "./observability/observability.controller";
+import { InspectorController } from "./inspector/inspector.controller";
 
 @Module({
   imports: [
@@ -40,6 +42,8 @@ import { TempTokenController } from "./temp-token/temp-token.controller";
     ProfileController,
     AdminController,
     TempTokenController,
+    ObservabilityController,
+    InspectorController,
   ],
   providers: [
     BusinessLoginGuard,
