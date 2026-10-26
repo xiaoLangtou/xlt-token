@@ -1,6 +1,6 @@
 {
   "name": "@xlt-token/example-fastify",
-  "version": "2.4.0",
+  "version": "2.5.0",
   "private": true,
   "description": "Full-feature Fastify example for @xlt-token/fastify",
   "scripts": {
@@ -14,12 +14,12 @@
   },
   "dependencies": {
     "@fastify/cookie": "^11.0.0",
-    "@xlt-token/core": "^2.3.0",
-    "@xlt-token/fastify": "^2.3.0",
-    "@xlt-token/inspector": "^2.3.0",
-    "@xlt-token/jwt": "^2.3.0",
-    "@xlt-token/observability": "^2.3.0",
-    "@xlt-token/store-redis": "^2.3.0",
+    "@xlt-token/core": "^2.5.0",
+    "@xlt-token/fastify": "^2.5.0",
+    "@xlt-token/inspector": "^2.5.0",
+    "@xlt-token/jwt": "^2.5.0",
+    "@xlt-token/observability": "^2.5.0",
+    "@xlt-token/store-redis": "^2.5.0",
     "fastify": "^5.0.0",
     "redis": "^5.0.0"
   },

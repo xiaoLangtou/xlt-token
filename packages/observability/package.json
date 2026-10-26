@@ -1,6 +1,6 @@
 {
   "name": "@xlt-token/observability",
-  "version": "2.4.0",
+  "version": "2.5.0",
   "description": "Observability exporters for xlt-token audit events: structured logger sink, sink composition, and OpenTelemetry bridge",
   "keywords": [
     "audit",
@@ -57,7 +57,7 @@
     "test:cov": "vitest run --coverage"
   },
   "dependencies": {
-    "@xlt-token/core": "^2.3.0"
+    "@xlt-token/core": "^2.5.0"
   },
   "devDependencies": {
     "@opentelemetry/api": "^1.9.0",

@@ -1,6 +1,6 @@
 {
   "name": "@xlt-token/inspector",
-  "version": "2.4.0",
+  "version": "2.5.0",
   "description": "Built-in monitoring console for xlt-token: live audit events, online sessions, and metrics — attach to any app with an explicit XltInstance",
   "keywords": [
     "auth",
@@ -56,7 +56,7 @@
     "test:cov": "vitest run --coverage"
   },
   "dependencies": {
-    "@xlt-token/core": "^2.3.0"
+    "@xlt-token/core": "^2.5.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
