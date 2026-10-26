@@ -26,6 +26,7 @@ interface DeviceInfo {
   device: string;      // 设备标识
   token: string;       // 该设备当前 token（JWT 模式下为完整 JWT 字符串）
   loginTime: number;   // 登录时间戳（毫秒）
+  ip?: string;         // 登录 IP（可选，登录时传入）
 }
 ```
 
@@ -84,6 +85,9 @@ const pcToken = await stp.login(userId, { device: 'pc' });
 
 // 移动端
 const appToken = await stp.login(userId, { device: 'app' });
+
+// 记录登录 IP（可选，供会话查询按 IP 过滤）
+const h5Token = await stp.login(userId, { device: 'h5', ip: '10.0.0.1' });
 ```
 
 两次登录生成**不同 token**（在 `isShare: false` 时），且互不影响。
@@ -143,6 +147,66 @@ kickout(loginId: string, device?: string): Promise<boolean | null>
 
 ```ts twoslash
 forceLogout(loginId: string): Promise<boolean>
+```
+
+### `getSessionList(loginId, options?)`
+
+分页查询某账号的在线会话。**脱敏返回**：不暴露原始 token，仅返回 `tokenFingerprint`（SHA-256 前 16 位）。
+
+```ts twoslash
+interface SessionQueryOptions {
+  device?: string | string[];  // 按设备过滤（单个或列表）
+  ip?: string;                 // 按 IP 精确过滤
+  loginAfter?: number;         // 仅返回登录时间晚于该时间戳（毫秒）的会话
+  loginBefore?: number;        // 仅返回登录时间早于该时间戳（毫秒）的会话
+  page?: number;               // 页码，从 0 开始
+  pageSize?: number;           // 每页条数，默认 20，最大 100
+  sortBy?: 'loginTime' | 'device';  // 排序字段，默认 loginTime
+  sortOrder?: 'asc' | 'desc';       // 排序方向，默认 desc（最新登录在前）
+}
+
+interface SessionInfo {
+  device: string;
+  loginTime: number;
+  ip?: string;
+  tokenFingerprint: string;    // 隐私边界：不暴露原始 token
+}
+
+interface SessionPage {
+  items: SessionInfo[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+getSessionList(loginId: string, options?: SessionQueryOptions): Promise<SessionPage>
+```
+
+```ts twoslash
+const page = await this.stp.getSessionList('1001', {
+  device: ['pc', 'app'],
+  page: 0,
+  pageSize: 20,
+  sortBy: 'loginTime',
+  sortOrder: 'desc',
+});
+// { items: [{ device: 'pc', loginTime: 1700000000000, tokenFingerprint: 'a1b2...' }], total: 2, page: 0, pageSize: 20 }
+```
+
+### 批量下线 API
+
+按设备列表或用户列表批量下线，返回**实际处理的数量**（不存在的设备 / 无会话用户不计入）。每个设备复用单设备语义并触发对应审计事件（`token.kicked_out` / `token.logged_out`）。
+
+```ts twoslash
+kickoutByDevices(loginId: string, devices: string[]): Promise<number>  // 批量踢下线
+logoutByDevices(loginId: string, devices: string[]): Promise<number>   // 批量登出（自愿）
+kickoutByLoginIds(loginIds: string[]): Promise<number>                 // 批量踢掉多账号全部设备
+logoutByLoginIds(loginIds: string[]): Promise<number>                  // 批量登出多账号全部设备
+```
+
+```ts twoslash
+await this.stp.kickoutByDevices('1001', ['pc', 'app']);   // 2：两个设备都被踢
+await this.stp.kickoutByLoginIds(['1001', '1002']);       // 2：两个账号全部设备下线
 ```
 
 ## 完整示例：管理后台「在线设备」
@@ -213,7 +277,7 @@ kickoutByDevice('1001', 'pc')
 ## 注意事项
 
 - `logout(token)` 会从 `session-list` 移除对应 device，但当前实现仍可能误删共享的 `sessionData`（多 device 场景下需注意 session 数据生命周期）
-- `logoutByLoginId(loginId)` 目前仅处理 `default` device，**多 device 全端登出请用 `forceLogout`**
+- `logoutByLoginId(loginId)` 遍历该账号全部在线设备登出；`forceLogout` 语义相同但走踢下线（KICK_OUT）
 - JWT 模式下踢人走黑名单机制，详见 [JWT 策略](/core/jwt-strategy)
 
 ## 下一步

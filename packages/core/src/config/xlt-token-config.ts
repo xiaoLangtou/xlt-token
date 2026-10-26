@@ -11,6 +11,7 @@ export interface DeviceInfo {
   device: string;
   token: string;
   loginTime: number;
+  ip?: string;
 }
 
 export interface XltTokenConfig {

@@ -16,6 +16,9 @@ export {
   type AuthResult,
   type CreateOptions,
   type XltTokenContext,
+  type SessionInfo,
+  type SessionPage,
+  type SessionQueryOptions,
 } from "@xlt-token/core";
 
 // 配置与类型

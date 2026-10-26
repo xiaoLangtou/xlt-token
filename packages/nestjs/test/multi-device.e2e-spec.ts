@@ -273,3 +273,115 @@ describe("Audit events (e2e)", () => {
     await app.close();
   });
 });
+
+describe("会话管理增强 (e2e)", () => {
+  it("getSessionList 返回脱敏会话且分页正确", async () => {
+    const { app, moduleRef } = await buildTestApp();
+    const stp = moduleRef.get(StpLogic);
+
+    const pcToken = await stp.login("9101", { device: "pc", ip: "10.0.0.1" });
+    const appToken = await stp.login("9101", { device: "app", ip: "10.0.0.2" });
+
+    const page = await stp.getSessionList("9101", { page: 0, pageSize: 1 });
+    expect(page.total).toBe(2);
+    expect(page.items).toHaveLength(1);
+    expect(JSON.stringify(page)).not.toContain(pcToken);
+    expect(JSON.stringify(page)).not.toContain(appToken);
+    expect(page.items[0]).toMatchObject({
+      device: expect.any(String),
+      loginTime: expect.any(Number),
+      tokenFingerprint: expect.stringMatching(/^[0-9a-f]{16}$/),
+    });
+
+    await app.close();
+  });
+
+  it("getSessionList 支持按设备、IP、时间过滤与排序", async () => {
+    const { app, moduleRef } = await buildTestApp();
+    const stp = moduleRef.get(StpLogic);
+
+    await stp.login("9102", { device: "pc", ip: "10.0.0.1" });
+    await stp.login("9102", { device: "app", ip: "10.0.0.2" });
+    await stp.login("9102", { device: "h5", ip: "10.0.0.3" });
+
+    const byIp = await stp.getSessionList("9102", { ip: "10.0.0.2" });
+    expect(byIp.total).toBe(1);
+    expect(byIp.items[0].device).toBe("app");
+
+    const byDevices = await stp.getSessionList("9102", { device: ["pc", "h5"] });
+    expect(byDevices.total).toBe(2);
+
+    const sorted = await stp.getSessionList("9102", { sortBy: "device", sortOrder: "asc" });
+    expect(sorted.items.map((s) => s.device)).toEqual(["app", "h5", "pc"]);
+
+    await app.close();
+  });
+
+  it("kickoutByDevices 批量踢下线且 HTTP 请求 401", async () => {
+    const { app, moduleRef } = await buildTestApp();
+    const stp = moduleRef.get(StpLogic);
+
+    const pcToken = await stp.login("9103", { device: "pc" });
+    const appToken = await stp.login("9103", { device: "app" });
+    const h5Token = await stp.login("9103", { device: "h5" });
+
+    await expect(stp.kickoutByDevices("9103", ["pc", "app", "missing"])).resolves.toBe(2);
+
+    await request(app.getHttpServer()).get("/api/me").set("authorization", pcToken).expect(401);
+    await request(app.getHttpServer()).get("/api/me").set("authorization", appToken).expect(401);
+    await request(app.getHttpServer())
+      .get("/api/me")
+      .set("authorization", h5Token)
+      .expect(200, { id: "9103", token: h5Token });
+
+    await app.close();
+  });
+
+  it("logoutByDevices 批量登出且 HTTP 请求 401", async () => {
+    const { app, moduleRef } = await buildTestApp();
+    const stp = moduleRef.get(StpLogic);
+
+    const pcToken = await stp.login("9104", { device: "pc" });
+    const appToken = await stp.login("9104", { device: "app" });
+
+    await expect(stp.logoutByDevices("9104", ["pc", "app"])).resolves.toBe(2);
+
+    await request(app.getHttpServer()).get("/api/me").set("authorization", pcToken).expect(401);
+    await request(app.getHttpServer()).get("/api/me").set("authorization", appToken).expect(401);
+
+    await app.close();
+  });
+
+  it("kickoutByLoginIds / logoutByLoginIds 批量处理多账号", async () => {
+    const { app, moduleRef } = await buildTestApp();
+    const stp = moduleRef.get(StpLogic);
+
+    const t1 = await stp.login("9105", { device: "pc" });
+    const t2 = await stp.login("9106", { device: "pc" });
+    const t3 = await stp.login("9107", { device: "pc" });
+
+    await expect(stp.kickoutByLoginIds(["9105", "9106", "no-such-user"])).resolves.toBe(2);
+    await expect(stp.logoutByLoginIds(["9107"])).resolves.toBe(1);
+
+    await request(app.getHttpServer()).get("/api/me").set("authorization", t1).expect(401);
+    await request(app.getHttpServer()).get("/api/me").set("authorization", t2).expect(401);
+    await request(app.getHttpServer()).get("/api/me").set("authorization", t3).expect(401);
+
+    await app.close();
+  });
+
+  it("批量下线触发审计事件", async () => {
+    const emit = vi.fn();
+    const { app, moduleRef } = await buildTestApp({ eventSink: { emit } });
+    const stp = moduleRef.get(StpLogic);
+
+    await stp.login("9108", { device: "pc" });
+    await stp.login("9108", { device: "app" });
+
+    await stp.kickoutByDevices("9108", ["pc", "app"]);
+
+    expect(emit.mock.calls.filter(([e]) => e.type === "token.kicked_out")).toHaveLength(2);
+
+    await app.close();
+  });
+});

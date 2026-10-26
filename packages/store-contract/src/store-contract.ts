@@ -91,5 +91,48 @@ export function defineStoreContract(
         expiresAt: null,
       });
     });
+
+    it("scans all matching keys exactly once across cursor pages", async () => {
+      const store = await createStore();
+
+      const total = 150;
+      for (let i = 0; i < total; i += 1) {
+        await store.set(`{contract}:scan:${i}`, `v${i}`, persistentTtl());
+      }
+      await store.set("{contract}:scan-other", "v", persistentTtl());
+
+      const seen: string[] = [];
+      let cursor: string | null = null;
+      do {
+        const result = await store.scan("{contract}:scan:*", { cursor, count: 20 });
+        seen.push(...result.keys);
+        cursor = result.cursor;
+      } while (cursor !== null);
+
+      expect(seen).toHaveLength(total);
+      expect(new Set(seen).size).toBe(total);
+      expect(seen.every((key) => key.startsWith("{contract}:scan:"))).toBe(true);
+      expect(seen.some((key) => key === "{contract}:scan-other")).toBe(false);
+
+      for (let i = 0; i < total; i += 1) {
+        await store.delete(`{contract}:scan:${i}`);
+      }
+      await store.delete("{contract}:scan-other");
+    });
+
+    it("returns all keys when count exceeds the dataset", async () => {
+      const store = await createStore();
+
+      await store.set("{contract}:scan-big:1", "v1", persistentTtl());
+      await store.set("{contract}:scan-big:2", "v2", persistentTtl());
+
+      const result = await store.scan("{contract}:scan-big:*", { cursor: null, count: 100 });
+
+      expect(result.keys).toHaveLength(2);
+      expect(result.cursor).toBeNull();
+
+      await store.delete("{contract}:scan-big:1");
+      await store.delete("{contract}:scan-big:2");
+    });
   });
 }

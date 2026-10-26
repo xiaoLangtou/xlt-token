@@ -290,6 +290,166 @@ describe("StpLogic", () => {
       await expect(logic.getDeviceList("u1")).resolves.toEqual([]);
     });
 
+    it("login 记录 ip 到 session-list", async () => {
+      await logic.login("u1", { device: "pc", ip: "10.0.0.1" });
+      const list = await logic.getDeviceList("u1");
+      expect(list[0]).toMatchObject({ device: "pc", ip: "10.0.0.1" });
+    });
+
+    it("login 不传 ip 时 DeviceInfo 不含 ip 字段", async () => {
+      await logic.login("u1", { device: "pc" });
+      const list = await logic.getDeviceList("u1");
+      expect(list[0]).not.toHaveProperty("ip");
+    });
+
+    it("getSessionList 返回脱敏会话且不暴露原始 token", async () => {
+      const pcToken = await logic.login("u1", { device: "pc" });
+      const appToken = await logic.login("u1", { device: "app" });
+      const page = await logic.getSessionList("u1");
+
+      expect(page.total).toBe(2);
+      expect(page.page).toBe(0);
+      expect(page.pageSize).toBe(20);
+      expect(page.items.map((s) => s.device).toSorted()).toEqual(["app", "pc"]);
+      expect(JSON.stringify(page)).not.toContain(pcToken);
+      expect(JSON.stringify(page)).not.toContain(appToken);
+      for (const item of page.items) {
+        expect(item.tokenFingerprint).toMatch(/^[0-9a-f]{16}$/);
+        expect(item).not.toHaveProperty("token");
+      }
+    });
+
+    it("getSessionList 按设备过滤（单个与列表）", async () => {
+      await logic.login("u1", { device: "pc" });
+      await logic.login("u1", { device: "app" });
+      await logic.login("u1", { device: "h5" });
+
+      const single = await logic.getSessionList("u1", { device: "pc" });
+      expect(single.total).toBe(1);
+      expect(single.items[0].device).toBe("pc");
+
+      const multi = await logic.getSessionList("u1", { device: ["pc", "app"] });
+      expect(multi.total).toBe(2);
+      expect(multi.items.map((s) => s.device).toSorted()).toEqual(["app", "pc"]);
+    });
+
+    it("getSessionList 按 ip 过滤", async () => {
+      await logic.login("u1", { device: "pc", ip: "10.0.0.1" });
+      await logic.login("u1", { device: "app", ip: "10.0.0.2" });
+
+      const page = await logic.getSessionList("u1", { ip: "10.0.0.2" });
+      expect(page.total).toBe(1);
+      expect(page.items[0]).toMatchObject({ device: "app", ip: "10.0.0.2" });
+    });
+
+    it("getSessionList 按登录时间范围过滤", async () => {
+      const listKey = sessionListKey(config, "u1");
+      await store.set(
+        listKey,
+        JSON.stringify([
+          { device: "pc", token: "t-pc", loginTime: 1_000 },
+          { device: "app", token: "t-app", loginTime: 2_000 },
+        ]),
+        { kind: "persistent" },
+      );
+
+      const page = await logic.getSessionList("u1", {
+        loginAfter: 1_000,
+        loginBefore: 3_000,
+      });
+      expect(page.total).toBe(1);
+      expect(page.items[0].device).toBe("app");
+
+      const none = await logic.getSessionList("u1", { loginAfter: 2_000 });
+      expect(none.total).toBe(0);
+    });
+
+    it("getSessionList 支持分页与排序", async () => {
+      const listKey = sessionListKey(config, "u1");
+      await store.set(
+        listKey,
+        JSON.stringify([
+          { device: "pc", token: "t-pc", loginTime: 1_000 },
+          { device: "app", token: "t-app", loginTime: 2_000 },
+          { device: "h5", token: "t-h5", loginTime: 3_000 },
+        ]),
+        { kind: "persistent" },
+      );
+
+      const page1 = await logic.getSessionList("u1", { page: 0, pageSize: 2 });
+      expect(page1.items).toHaveLength(2);
+      expect(page1.total).toBe(3);
+      const page2 = await logic.getSessionList("u1", { page: 1, pageSize: 2 });
+      expect(page2.items).toHaveLength(1);
+
+      const asc = await logic.getSessionList("u1", { sortBy: "device", sortOrder: "asc" });
+      expect(asc.items.map((s) => s.device)).toEqual(["app", "h5", "pc"]);
+
+      const desc = await logic.getSessionList("u1", { sortBy: "loginTime", sortOrder: "desc" });
+      expect(desc.items.map((s) => s.device)).toEqual(["h5", "app", "pc"]);
+    });
+
+    it("getSessionList 对无会话账号返回空页", async () => {
+      const page = await logic.getSessionList("no-such-user");
+      expect(page).toEqual({ items: [], total: 0, page: 0, pageSize: 20 });
+    });
+
+    it("kickoutByDevices 批量踢下线并返回成功数", async () => {
+      const events: XltAuditEvent[] = [];
+      await buildModule(makeConfig(), { emit: (event) => events.push(event) });
+      const pcToken = await logic.login("u1", { device: "pc" });
+      const appToken = await logic.login("u1", { device: "app" });
+      await logic.login("u1", { device: "h5" });
+
+      await expect(logic.kickoutByDevices("u1", ["pc", "app", "missing"])).resolves.toBe(2);
+      await expect(logic.isLogin(makeReq(config, pcToken))).resolves.toBe(false);
+      await expect(logic.isLogin(makeReq(config, appToken))).resolves.toBe(false);
+      await expect(logic.getDeviceList("u1")).resolves.toHaveLength(1);
+      expect(events.filter((e) => e.type === "token.kicked_out")).toHaveLength(2);
+    });
+
+    it("kickoutByDevices 空列表返回 0", async () => {
+      await expect(logic.kickoutByDevices("u1", [])).resolves.toBe(0);
+    });
+
+    it("logoutByDevices 批量登出并返回成功数", async () => {
+      const events: XltAuditEvent[] = [];
+      await buildModule(makeConfig(), { emit: (event) => events.push(event) });
+      const pcToken = await logic.login("u1", { device: "pc" });
+      const appToken = await logic.login("u1", { device: "app" });
+
+      await expect(logic.logoutByDevices("u1", ["pc", "app"])).resolves.toBe(2);
+      await expect(logic.isLogin(makeReq(config, pcToken))).resolves.toBe(false);
+      await expect(logic.isLogin(makeReq(config, appToken))).resolves.toBe(false);
+      expect(events.filter((e) => e.type === "token.logged_out")).toHaveLength(2);
+    });
+
+    it("kickoutByLoginIds 批量踢掉多个账号全部设备", async () => {
+      const events: XltAuditEvent[] = [];
+      await buildModule(makeConfig(), { emit: (event) => events.push(event) });
+      const t1 = await logic.login("u1", { device: "pc" });
+      const t2 = await logic.login("u1", { device: "app" });
+      const t3 = await logic.login("u2", { device: "pc" });
+
+      await expect(logic.kickoutByLoginIds(["u1", "u2", "no-such-user"])).resolves.toBe(2);
+      await expect(logic.isLogin(makeReq(config, t1))).resolves.toBe(false);
+      await expect(logic.isLogin(makeReq(config, t2))).resolves.toBe(false);
+      await expect(logic.isLogin(makeReq(config, t3))).resolves.toBe(false);
+      expect(events.filter((e) => e.type === "token.kicked_out")).toHaveLength(3);
+    });
+
+    it("logoutByLoginIds 批量登出多个账号全部设备", async () => {
+      const events: XltAuditEvent[] = [];
+      await buildModule(makeConfig(), { emit: (event) => events.push(event) });
+      const t1 = await logic.login("u1", { device: "pc" });
+      const t2 = await logic.login("u2", { device: "pc" });
+
+      await expect(logic.logoutByLoginIds(["u1", "u2"])).resolves.toBe(2);
+      await expect(logic.isLogin(makeReq(config, t1))).resolves.toBe(false);
+      await expect(logic.isLogin(makeReq(config, t2))).resolves.toBe(false);
+      expect(events.filter((e) => e.type === "token.logged_out")).toHaveLength(2);
+    });
+
     it("getLoginIdByToken 返回有效 token 的 loginId", async () => {
       const token = await logic.login("u1");
       await expect(logic.getLoginIdByToken(token)).resolves.toBe("u1");

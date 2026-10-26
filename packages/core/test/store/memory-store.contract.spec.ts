@@ -113,4 +113,25 @@ describe("MemoryStore atomic contract", () => {
     ]);
     expect(second.cursor).toBeNull();
   });
+
+  it("scan 游标遍历恰好返回全部匹配键一次", async () => {
+    const total = 150;
+    for (let i = 0; i < total; i += 1) {
+      await store.set(`{contract}:scan:${i}`, `v${i}`, persistentTtl());
+    }
+    await store.set("{contract}:scan-other", "v", persistentTtl());
+
+    const seen: string[] = [];
+    let cursor: string | null = null;
+    do {
+      const result = await store.scan("{contract}:scan:*", { cursor, count: 20 });
+      seen.push(...result.keys);
+      cursor = result.cursor;
+    } while (cursor !== null);
+
+    expect(seen).toHaveLength(total);
+    expect(new Set(seen).size).toBe(total);
+    expect(seen.every((key) => key.startsWith("{contract}:scan:"))).toBe(true);
+    expect(seen.some((key) => key === "{contract}:scan-other")).toBe(false);
+  });
 });

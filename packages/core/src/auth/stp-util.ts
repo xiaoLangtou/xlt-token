@@ -7,7 +7,7 @@ import {
 import type { DeviceInfo } from "../config/xlt-token-config.js";
 import type { XltMode } from "../const/index.js";
 import type { XltSession } from "../session/xlt-session.js";
-import type { StpLogic } from "./stp-logic.js";
+import type { SessionPage, SessionQueryOptions, StpLogic } from "./stp-logic.js";
 import type { StpPermLogic } from "./stp-perm-logic.js";
 
 const noopResponse: ExpressLikeResponse = {
@@ -138,6 +138,29 @@ export class StpUtil {
 
   static async getDeviceList(loginId: string): Promise<DeviceInfo[]> {
     return getStpLogic().getDeviceList(loginId);
+  }
+
+  static async getSessionList(
+    loginId: string,
+    options?: SessionQueryOptions,
+  ): Promise<SessionPage> {
+    return getStpLogic().getSessionList(loginId, options);
+  }
+
+  static async kickoutByDevices(loginId: string, devices: string[]): Promise<number> {
+    return getStpLogic().kickoutByDevices(loginId, devices);
+  }
+
+  static async logoutByDevices(loginId: string, devices: string[]): Promise<number> {
+    return getStpLogic().logoutByDevices(loginId, devices);
+  }
+
+  static async kickoutByLoginIds(loginIds: string[]): Promise<number> {
+    return getStpLogic().kickoutByLoginIds(loginIds);
+  }
+
+  static async logoutByLoginIds(loginIds: string[]): Promise<number> {
+    return getStpLogic().logoutByLoginIds(loginIds);
   }
 
   static async forceLogout(loginId: string): Promise<boolean> {

@@ -6,6 +6,12 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- 会话管理增强（v2.4 范围）：
+  - `StpLogic` / `StpUtil.getSessionList(loginId, options?)`：分页查询在线会话，支持按设备（单个或列表）、IP、登录时间范围过滤，按 `loginTime` / `device` 排序；返回脱敏 `SessionInfo`（`tokenFingerprint`，不暴露原始 token），`pageSize` 上限 100。
+  - 批量下线 API：`kickoutByDevices` / `logoutByDevices`（按设备列表）、`kickoutByLoginIds` / `logoutByLoginIds`（按用户列表），返回实际处理数量，复用单设备审计事件。
+  - `login()` 支持 `ip` 选项，`DeviceInfo` 新增可选 `ip` 字段（向后兼容，旧数据不受影响）。
+  - `@xlt-token/store-contract` 契约测试新增扫描一致性断言（游标遍历恰好返回全部匹配键一次、模式过滤、count 超量语义）；MemoryStore / RedisStore / IORedisStore 均通过。
+
 - 新增 `@xlt-token/inspector` 官方监控台包：单文件零构建 Web 页面 + 框架无关数据桥。
   - `createEventBufferSink()`：把 push-only 的审计事件流变成可增量查询的内存时间线（环形缓冲 + 游标）。
   - `createInspectorBridge()`：强制 `auth` 回调（缺失时创建期报错），默认只读，`allowMutations: true` 才开放踢人 / 强制下线；设备 token 一律以指纹输出。

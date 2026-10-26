@@ -40,6 +40,40 @@ export interface AuthResult {
   reason?: NotLoginType;
 }
 
+export interface SessionQueryOptions {
+  /** 按设备过滤，支持单个或列表 */
+  device?: string | string[];
+  /** 按 IP 精确过滤 */
+  ip?: string;
+  /** 仅返回登录时间晚于该时间戳（毫秒）的会话 */
+  loginAfter?: number;
+  /** 仅返回登录时间早于该时间戳（毫秒）的会话 */
+  loginBefore?: number;
+  /** 页码，从 0 开始 */
+  page?: number;
+  /** 每页条数，默认 20，最大 100 */
+  pageSize?: number;
+  /** 排序字段，默认 loginTime */
+  sortBy?: "loginTime" | "device";
+  /** 排序方向，默认 desc（最新登录在前） */
+  sortOrder?: "asc" | "desc";
+}
+
+/** 脱敏后的会话信息：不暴露原始 token */
+export interface SessionInfo {
+  device: string;
+  loginTime: number;
+  ip?: string;
+  tokenFingerprint: string;
+}
+
+export interface SessionPage {
+  items: SessionInfo[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
 export class StpLogic {
   constructor(
     readonly config: XltTokenConfig,
@@ -59,7 +93,7 @@ export class StpLogic {
    */
   async login(
     loginId: string | number,
-    options: { timeout?: DurationInput; device?: string; token?: string } = {},
+    options: { timeout?: DurationInput; device?: string; token?: string; ip?: string } = {},
   ): Promise<string> {
     if (isNull(loginId) || isUndefined(loginId) || loginId === "")
       throw new Error("invalid loginId");
@@ -143,7 +177,11 @@ export class StpLogic {
     }
 
     // 更新全设备索引
-    await this._addToSessionList(_loginId, { device, token, loginTime: Date.now() }, timeout);
+    await this._addToSessionList(
+      _loginId,
+      { device, token, loginTime: Date.now(), ip: options.ip },
+      timeout,
+    );
     await this.createTokenFamily(_loginId, device, token);
 
     this.emitAuditEvent("token.logged_in", {
@@ -794,6 +832,57 @@ export class StpLogic {
   }
 
   /**
+   * 分页查询某账号的在线会话（脱敏：不暴露原始 token，仅返回指纹）。
+   * 支持按设备、IP、登录时间过滤，按 loginTime / device 排序。
+   * @param loginId
+   * @param options
+   */
+  async getSessionList(
+    loginId: string,
+    options: SessionQueryOptions = {},
+  ): Promise<SessionPage> {
+    const {
+      device,
+      ip,
+      loginAfter,
+      loginBefore,
+      page = 0,
+      pageSize = 20,
+      sortBy = "loginTime",
+      sortOrder = "desc",
+    } = options;
+
+    const devices = device === undefined ? null : Array.isArray(device) ? device : [device];
+    const size = Math.min(Math.max(pageSize, 1), 100);
+    const start = Math.max(page, 0) * size;
+
+    const list = await this.getDeviceList(loginId);
+    const filtered = list.filter((info) => {
+      if (devices && !devices.includes(info.device)) return false;
+      if (ip !== undefined && info.ip !== ip) return false;
+      if (loginAfter !== undefined && info.loginTime <= loginAfter) return false;
+      if (loginBefore !== undefined && info.loginTime >= loginBefore) return false;
+      return true;
+    });
+
+    filtered.sort((a, b) => {
+      const aValue = sortBy === "device" ? a.device : a.loginTime;
+      const bValue = sortBy === "device" ? b.device : b.loginTime;
+      const cmp = aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+      return sortOrder === "asc" ? cmp : -cmp;
+    });
+
+    const items = filtered.slice(start, start + size).map((info) => ({
+      device: info.device,
+      loginTime: info.loginTime,
+      ...(info.ip !== undefined ? { ip: info.ip } : {}),
+      tokenFingerprint: fingerprintToken(info.token),
+    }));
+
+    return { items, total: filtered.length, page: Math.max(page, 0), pageSize: size };
+  }
+
+  /**
    * 查询 token 对应的登录 ID（不校验活跃超时等附加状态）。
    *
    * JWT 策略下验签读取 payload.sub 并检查黑名单；UUID 策略下查询存储映射，
@@ -979,6 +1068,58 @@ export class StpLogic {
       await this.kickoutByDevice(loginId, device);
     }
     return true;
+  }
+
+  /**
+   * 批量踢下线：按设备列表踢掉某账号的多个设备
+   * @returns 成功踢下线的设备数量
+   */
+  async kickoutByDevices(loginId: string, devices: string[]): Promise<number> {
+    if (!loginId || devices.length === 0) return 0;
+    let kicked = 0;
+    for (const device of devices) {
+      if (await this.kickoutByDevice(loginId, device)) kicked += 1;
+    }
+    return kicked;
+  }
+
+  /**
+   * 批量登出：按设备列表登出某账号的多个设备（自愿登出，非强制踢下线）
+   * @returns 成功登出的设备数量
+   */
+  async logoutByDevices(loginId: string, devices: string[]): Promise<number> {
+    if (!loginId || devices.length === 0) return 0;
+    let loggedOut = 0;
+    for (const device of devices) {
+      if (await this.logoutByDevice(loginId, device)) loggedOut += 1;
+    }
+    return loggedOut;
+  }
+
+  /**
+   * 批量踢下线：按用户列表踢掉多个账号的全部设备
+   * @returns 成功踢下线（存在在线会话）的用户数量
+   */
+  async kickoutByLoginIds(loginIds: string[]): Promise<number> {
+    let kicked = 0;
+    for (const loginId of loginIds) {
+      if ((await this.getDeviceList(loginId)).length === 0) continue;
+      await this.forceLogout(loginId);
+      kicked += 1;
+    }
+    return kicked;
+  }
+
+  /**
+   * 批量登出：按用户列表登出多个账号的全部设备
+   * @returns 成功登出的用户数量
+   */
+  async logoutByLoginIds(loginIds: string[]): Promise<number> {
+    let loggedOut = 0;
+    for (const loginId of loginIds) {
+      if (await this.logoutByLoginId(loginId)) loggedOut += 1;
+    }
+    return loggedOut;
   }
 
   /**

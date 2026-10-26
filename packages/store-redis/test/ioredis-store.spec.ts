@@ -59,7 +59,20 @@ describe("IORedisStore", () => {
         return 1;
       },
     );
-    client.scan.mockResolvedValue(["0", []]);
+    client.scan.mockImplementation(async (cursor: string, ...args: any[]) => {
+      const matchIndex = args.indexOf("MATCH");
+      const countIndex = args.indexOf("COUNT");
+      const pattern = args[matchIndex + 1];
+      const count = Number(args[countIndex + 1]);
+      const regex = new RegExp(
+        `^${pattern.replace(/[.+^${}()|[\]\\]/g, "\\$&").replace(/\*/g, ".*")}$`,
+      );
+      const matched = [...values.keys()].filter((key) => regex.test(key)).sort();
+      const start = Number(cursor);
+      const page = matched.slice(start, start + count);
+      const next = start + page.length;
+      return [next < matched.length ? String(next) : "0", page];
+    });
 
     return new IORedisStore(client);
   });

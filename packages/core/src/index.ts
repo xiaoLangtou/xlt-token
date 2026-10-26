@@ -86,6 +86,11 @@ export { NotSafeException } from "./exceptions/not-safe.exception.js";
 export { XltSession } from "./session/xlt-session.js";
 
 export { StpLogic, type AuthResult } from "./auth/stp-logic.js";
+export type {
+  SessionInfo,
+  SessionPage,
+  SessionQueryOptions,
+} from "./auth/stp-logic.js";
 export { StpPermLogic } from "./auth/stp-perm-logic.js";
 export { StpUtil, setStpLogic, setStpPermLogic } from "./auth/stp-util.js";
 

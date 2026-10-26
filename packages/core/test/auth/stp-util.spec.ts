@@ -27,6 +27,11 @@ function createMockStpLogic() {
     consumeTempToken: vi.fn().mockResolvedValue("data"),
     deleteTempToken: vi.fn().mockResolvedValue(undefined),
     getDeviceList: vi.fn().mockResolvedValue([]),
+    getSessionList: vi.fn().mockResolvedValue({ items: [], total: 0, page: 0, pageSize: 20 }),
+    kickoutByDevices: vi.fn().mockResolvedValue(2),
+    logoutByDevices: vi.fn().mockResolvedValue(2),
+    kickoutByLoginIds: vi.fn().mockResolvedValue(1),
+    logoutByLoginIds: vi.fn().mockResolvedValue(1),
     forceLogout: vi.fn().mockResolvedValue(true),
     getOnlineLoginIds: vi.fn().mockResolvedValue(["1001"]),
     getOnlineCount: vi.fn().mockResolvedValue(1),
@@ -88,6 +93,26 @@ describe("StpUtil 静态门面", () => {
       await StpUtil.renewTimeout("t", 7200);
       expect(mockLogic.renewTimeout).toHaveBeenCalledWith("t", 7200);
     });
+
+    it("kickoutByDevices 批量踢下线", async () => {
+      await expect(StpUtil.kickoutByDevices("1001", ["pc", "app"])).resolves.toBe(2);
+      expect(mockLogic.kickoutByDevices).toHaveBeenCalledWith("1001", ["pc", "app"]);
+    });
+
+    it("logoutByDevices 批量登出", async () => {
+      await expect(StpUtil.logoutByDevices("1001", ["pc"])).resolves.toBe(2);
+      expect(mockLogic.logoutByDevices).toHaveBeenCalledWith("1001", ["pc"]);
+    });
+
+    it("kickoutByLoginIds 批量踢多账号", async () => {
+      await expect(StpUtil.kickoutByLoginIds(["1001", "1002"])).resolves.toBe(1);
+      expect(mockLogic.kickoutByLoginIds).toHaveBeenCalledWith(["1001", "1002"]);
+    });
+
+    it("logoutByLoginIds 批量登出多账号", async () => {
+      await expect(StpUtil.logoutByLoginIds(["1001"])).resolves.toBe(1);
+      expect(mockLogic.logoutByLoginIds).toHaveBeenCalledWith(["1001"]);
+    });
   });
 
   describe("登录态查询", () => {
@@ -117,6 +142,18 @@ describe("StpUtil 静态门面", () => {
     it("getTokenValue", async () => {
       const t = await StpUtil.getTokenValue({} as any);
       expect(t).toBe("t");
+    });
+
+    it("getSessionList 委托并透传查询参数", async () => {
+      const options = { device: ["pc"], page: 0, pageSize: 10 };
+      const page = await StpUtil.getSessionList("1001", options);
+      expect(page).toEqual({ items: [], total: 0, page: 0, pageSize: 20 });
+      expect(mockLogic.getSessionList).toHaveBeenCalledWith("1001", options);
+    });
+
+    it("getSessionList 不传 options 时透传 undefined", async () => {
+      await StpUtil.getSessionList("1001");
+      expect(mockLogic.getSessionList).toHaveBeenCalledWith("1001", undefined);
     });
   });
 

@@ -56,7 +56,17 @@ describe("RedisStore", () => {
       });
       return 1;
     });
-    client.scan.mockResolvedValue({ cursor: 0, keys: [] });
+    client.scan.mockImplementation(async (cursor: string, options: any) => {
+      const pattern = options.MATCH;
+      const regex = new RegExp(
+        `^${pattern.replace(/[.+^${}()|[\]\\]/g, "\\$&").replace(/\*/g, ".*")}$`,
+      );
+      const matched = [...values.keys()].filter((key) => regex.test(key)).sort();
+      const start = Number(cursor);
+      const page = matched.slice(start, start + options.COUNT);
+      const next = start + page.length;
+      return { cursor: next < matched.length ? String(next) : 0, keys: page };
+    });
 
     return new RedisStore(client);
   });
